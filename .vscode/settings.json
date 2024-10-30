@@ -1,5 +1,8 @@
 {
 "editor.defaultFormatter": "charliermarsh.ruff",
 "editor.insertSpaces": true,
-"editor.tabSize": 4
+"editor.tabSize": 4,
+"editor.formatOnSave": true, 
+"editor.rulers": [80], 
+"files.eol": "\n"
 }
