@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Any
-from ..database.setup import Database
+from database.setup import Database
 
 
 class User:

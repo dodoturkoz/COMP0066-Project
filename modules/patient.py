@@ -1,4 +1,4 @@
-from .user import User
+from modules.user import User
 
 
 class Patient(User):

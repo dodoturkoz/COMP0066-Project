@@ -1,5 +1,5 @@
-from src.database.setup import Database
-from src.modules.login import login
+from database.setup import Database
+from modules.login import login
 
 db = Database()
 run = True

@@ -1,10 +1,10 @@
 from typing import Union
 
-from .admin import Admin
-from .clinician import Clinician
-from .patient import Patient
-from .user import User
-from ..database.setup import Database
+from modules.admin import Admin
+from modules.clinician import Clinician
+from modules.patient import Patient
+from modules.user import User
+from database.setup import Database
 
 
 def login(db: Database) -> Union[User, None]:
