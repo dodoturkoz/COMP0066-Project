@@ -28,11 +28,11 @@ def login(db: Database) -> Union[User, None]:
 
     if user_data:
         if user_data["role"] == "admin":
-            return Admin(**user_data)
+            return Admin(database=db, **user_data)
         elif user_data["role"] == "clinician":
-            return Clinician(**user_data)
+            return Clinician(database=db, **user_data)
         elif user_data["role"] == "patient":
-            return Patient(**user_data)
+            return Patient(database=db, **user_data)
         else:
             raise Exception("User type not defined in the system")
     else:

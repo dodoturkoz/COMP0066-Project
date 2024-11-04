@@ -11,10 +11,6 @@ class Admin(User):
         # Q - Does this count as a 'summary'?
         pass
 
-    def edit_info(self, User):
-        # Provides an interface to edit details
-        pass
-
     def disable_user(self, User):
         # Disables the user - how will this be implemented?
         # Store as an attribute on the user itself?
