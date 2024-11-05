@@ -34,7 +34,10 @@ class Database:
         self.connection = sqlite3.connect("breeze.db")
         self.connection.row_factory = dict_factory  # sqlite3.Row
         self.cursor = self.connection.cursor()
+        self.setup_tables()
+        self.create_default_users()
 
+    def setup_tables(self):
         # Ensure that all the tables are created
         self.cursor.execute(
             f"""
@@ -47,7 +50,9 @@ class Database:
             is_active BOOLEAN NOT NULL
             )"""
         )
+        self.connection.commit()
 
+    def create_default_users(self):
         # Create the default users if the users table is empty
         users = self.cursor.execute("SELECT username FROM Users")
         if len(users.fetchall()) == 0:
@@ -61,3 +66,7 @@ class Database:
             ]
             self.cursor.executemany("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?)", users)
             self.connection.commit()
+
+    def close(self):
+        if self.connection:
+            self.connection.close()
