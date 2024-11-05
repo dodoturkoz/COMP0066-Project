@@ -5,7 +5,8 @@ db = Database()
 
 try:
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
-    while True:
+    run = True
+    while run:
         selection = input(
             "Please select an option to continue:\n 1. Log In\n 2. Quit\n"
         )
@@ -13,16 +14,17 @@ try:
             print("Invalid option. Please select 1 or 2.")
             continue
         if int(selection) == 2:
-            break
+            run = False
+            continue
         user = login(db)
         if user:
-            user.flow()
-            break
+            run = user.flow() # NOTE: if flow returns True, goes back to login screen, if false, quits the app
 
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
+    # Note: at some point we need to review that this fails gracefully anywhere in the app
     print(e)  # TODO: delete this when we finish development
     print("Please make sure your input is a number.")
 finally:
-    # If we pass the execution loop, exit the app so db connection closes
+    # If we pass the execution loop, explicitly closes db connection
     db.close()

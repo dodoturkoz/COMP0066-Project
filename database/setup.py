@@ -31,13 +31,14 @@ class Database:
 
     def __init__(self):
         # Connect to the database and make the connection and cursor available
+        # TODO: evaluate if we want to put a try/except block here
         self.connection = sqlite3.connect("breeze.db")
-        self.connection.row_factory = dict_factory  # sqlite3.Row
+        self.connection.row_factory = dict_factory
         self.cursor = self.connection.cursor()
-        self.setup_tables()
-        self.create_default_users()
+        self.__setup_tables()
+        self.__create_default_users()
 
-    def setup_tables(self):
+    def __setup_tables(self):
         # Ensure that all the tables are created
         self.cursor.execute(
             f"""
@@ -52,7 +53,7 @@ class Database:
         )
         self.connection.commit()
 
-    def create_default_users(self):
+    def __create_default_users(self):
         # Create the default users if the users table is empty
         users = self.cursor.execute("SELECT username FROM Users")
         if len(users.fetchall()) == 0:
