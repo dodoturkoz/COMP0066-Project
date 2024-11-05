@@ -51,6 +51,54 @@ class Database:
             is_active BOOLEAN NOT NULL
             )"""
         )
+
+        # MoodLog Table
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS MoodLog (
+                log_id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                mood_colour TEXT,
+                timestamp TEXT NOT NULL,
+                notes TEXT,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+            )
+        """)
+
+        # Journal Table
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Journal (
+                entry_id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                timestamp TEXT NOT NULL,
+                content TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+            )
+        """)
+
+        # Exercises Table
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Exercises (
+                exercise_id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                duration INTEGER CHECK(duration >= 0),
+                notes TEXT,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+            )
+        """)
+
+        # Appointments Table
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Appointments (
+                appointment_id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                appointment_date TEXT NOT NULL,
+                description TEXT NOT NULL,
+                is_completed INTEGER DEFAULT 0,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+            )
+        """)
+
         self.connection.commit()
 
     def __create_default_users(self):
