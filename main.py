@@ -17,6 +17,7 @@ try:
         user = login(db)
         if user:
             user.flow()
+            break
 
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
