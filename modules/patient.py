@@ -244,6 +244,9 @@ class Patient(User):
 # A function to ask for mood in a user-friendly way and return mood_no to represent mood with a number.
 #Used code from https://www.geeksforgeeks.org/print-colors-python-terminal/ and https://ss64.com/nt/syntax-ansi.html
 def mood_no():
+    """
+    Get mood from patient using a colour code in input
+    """
     def DarkGreen(skk): print("\033[32m {}\033[00m" .format(skk))
     def Green(skk): print("\033[92m {}\033[00m".format(skk))
     def Yellow(skk): print("\033[93m {}\033[00m".format(skk))
