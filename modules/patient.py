@@ -1,3 +1,5 @@
+import sqlite3
+from typing import Optional
 from modules.user import User
 from datetime import datetime
 
@@ -15,6 +17,40 @@ class Patient(User):
     def mood_of_the_day(self, mood: str) -> bool:
         # Interface for this
         pass
+
+    def display_journal(self, date: Optional[str] = None) -> list[dict[str, str]]:
+        """
+        Displays patient's journal entries, optionally filtering by a specific date.
+        """
+        query = "SELECT timestamp, content FROM Journal WHERE user_id = ?"
+        params = [self.user_id]
+
+        if date:
+            query += " AND DATE(timestamp) = ?"
+            params.append(date)
+
+        query += " ORDER BY timestamp ASC"
+
+        try:
+            self.database.cursor.execute(query, tuple(params))
+            entries = [
+                {"timestamp": row["timestamp"], "content": row["content"]}
+                for row in self.database.cursor.fetchall()
+            ]
+
+            if entries:
+                print(f"\nJournal Entries for {date if date else 'all dates'}:\n")
+                for entry in entries:
+                    print(f"Timestamp: {entry['timestamp']}")
+                    print(f"Content: {entry['content']}\n")
+            else:
+                print("No journal entries found for the specified date.")
+
+            return entries
+
+        except sqlite3.OperationalError as e:
+            print(f"Database error occurred: {e}")
+            return []
 
     def journal(self, content: str) -> bool:
         """
@@ -55,11 +91,12 @@ class Patient(User):
                 "Please select an option:\n"
                 "1. Edit Medical Info\n"
                 "2. Record Mood of the Day\n"
-                "3. Add Journal Entry\n"
-                "4. Search Exercises\n"
-                "5. Book Appointment\n"
-                "6. Cancel Appointment\n"
-                "7. Log Out\n"
+                "3. Read Journal Entries\n"
+                "4. Add Journal Entry\n"
+                "5. Search Exercises\n"
+                "6. Book Appointment\n"
+                "7. Cancel Appointment\n"
+                "8. Log Out\n"
             )
             if choice == "1":
                 attribute = input("Enter the attribute to edit (e.g., email): ")
@@ -69,19 +106,24 @@ class Patient(User):
                 mood = input("Enter your mood for today: ")
                 self.mood_of_the_day(mood)
             elif choice == "3":
-                content = input("Write your journal entry: ")
-                self.journal(content)
+                date = input(
+                    "Enter a date in YYYY-MM-DD format or leave blank to view all previous entries: "
+                )
+                self.display_journal(date)
             elif choice == "4":
+                content = input("Enter new journal entry: ")
+                self.journal(content)
+            elif choice == "5":
                 keyword = input("Enter keyword to search for exercises: ")
                 self.search_exercises(keyword)
-            elif choice == "5":
+            elif choice == "6":
                 date = input("Enter appointment date (YYYY-MM-DD): ")
                 time = input("Enter appointment time (HH:MM): ")
                 self.book_appointment(date, time)
-            elif choice == "6":
+            elif choice == "7":
                 appointment_id = int(input("Enter appointment ID to cancel: "))
                 self.cancel_appointment(appointment_id)
-            elif choice == "7":
+            elif choice == "8":
                 return True
             else:
                 print("Invalid choice. Please try again.")
