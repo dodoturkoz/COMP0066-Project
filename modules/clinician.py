@@ -1,12 +1,12 @@
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
+from datetime import datetime
 
 
 class Clinician(User):
     
 
-    
     def view_calendar(self):
         """
         This allows the clinician to view all upcoming appointments,
