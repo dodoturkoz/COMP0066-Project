@@ -1,16 +1,28 @@
 from modules.user import User
+from modules.patient import Patient
 
 
 class Clinician(User):
     
-
-    
     def view_calendar(self):
-        # Display
+        # Display calendar with all appointments, as well as requested appointments
+        # Option to approve/reject confirmed appointments?
+        pass
+
+    def view_requested_appointments(self):
+        # Show all requested appointments, with option to approve/reject
+        pass
+
+    def edit_patient_info(self, patient: Patient):
+        # Provide interface to add info to a patient's record - condition, extra notes, etc.
+        pass
+
+    def view_dashboard(self):
+        # Display summary of all patients' data + chart per patient with mood tracking
         pass
 
     def flow(self) -> bool:
-        '''Controls flow of the program from the clincian class
+        '''Controls flow of the program from the clinician class
 
         The program stays within the while loop until a condition is met that
         breaks the flow. We return to False to indicate to Main.py that our User
@@ -32,6 +44,3 @@ class Clinician(User):
                 continue
             if int(selection) == 5:
                 return False
-
-
-            
