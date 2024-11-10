@@ -4,21 +4,23 @@ from modules.login import login
 db = Database()
 
 try:
-    print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
+    print("\nWelcome to Breeze, your Mental Health and Wellbeing partner!")
     run = True
     while run:
         selection = input(
-            "Please select an option to continue:\n 1. Log In\n 2. Quit\n"
+            "Please select an option to continue:\n [1] Log In\n [2] Quit\n\n"
         )
         if selection not in ["1", "2"]:
-            print("Invalid option. Please select 1 or 2.")
+            print("\nInvalid option. Please select from the choices listed above.\n")
             continue
         if int(selection) == 2:
             run = False
-            continue
+            break
         user = login(db)
         if user:
-            run = user.flow() # NOTE: if flow returns True, goes back to login screen, if false, quits the app
+            run = user.flow() 
+            # NOTE: if flow returns True -> login screen
+            # if flow returns False -> quits app
 
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
