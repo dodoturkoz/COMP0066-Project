@@ -35,6 +35,7 @@ class Database:
         self.connection = sqlite3.connect("breeze.db")
         self.connection.row_factory = dict_factory
         self.cursor = self.connection.cursor()
+        self.connection.execute("PRAGMA foreign_keys = ON")
         self.__setup_tables()
         self.__create_default_users()
 
@@ -92,8 +93,8 @@ class Database:
                 is_confirmed BOOLEAN DEFAULT 0,
                 is_complete BOOLEAN DEFAULT 0,
                 notes TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id)
-                FOREIGN KEY(clinician_id) REFERENCES Users(user_id) 
+                FOREIGN KEY (user_id) REFERENCES Users(user_id),
+                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) 
             )
         """)
 
