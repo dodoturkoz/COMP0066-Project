@@ -39,63 +39,61 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
-        # Ensure that all the tables are created
+        # Users Table
         self.cursor.execute(
             f"""
             CREATE TABLE IF NOT EXISTS Users (
-            user_id INTEGER PRIMARY KEY,
-            username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            role TEXT CHECK( role IN {roles} ),
-            is_active BOOLEAN NOT NULL
+                user_id INTEGER PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                name TEXT,
+                email TEXT NOT NULL UNIQUE,
+                role TEXT CHECK( role IN {roles} ),
+                is_active BOOLEAN NOT NULL
             )"""
         )
 
-        # MoodLog Table
+        # Patient Information Table
+        # Please keep in mind dates are stored as text in SQLite
         self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS MoodLog (
-                log_id INTEGER PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                mood_colour TEXT,
-                timestamp TEXT NOT NULL,
-                notes TEXT,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+            CREATE TABLE IF NOT EXISTS Patients (
+                user_id INTEGER PRIMARY KEY,
+                emergency_email TEXT,
+                date_of_birth TEXT,
+                diagnosis TEXT,
+                clinician_id INTEGER,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id),
+                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) 
             )
         """)
 
-        # Journal Table
+        # Journal Table (Mood + Text)
+        # To simplify, I am thinking of storing the mood as a whole string (with colour and all)
+        # Nevertheless, we can change this to a FK to a Mood table or whatever we think is best
         self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Journal (
+            CREATE TABLE IF NOT EXISTS JournalEntries (
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
-                timestamp TEXT NOT NULL,
-                content TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id)
-            )
-        """)
-
-        # Exercises Table
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Exercises (
-                exercise_id INTEGER PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                type TEXT NOT NULL,
-                duration INTEGER CHECK(duration >= 0),
-                notes TEXT,
+                date TEXT NOT NULL,
+                mood TEXT,
+                text TEXT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id)
             )
         """)
 
         # Appointments Table
+        # We can use is_completed to mark if the user actually attended the appointment
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS Appointments (
                 appointment_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
-                appointment_date TEXT NOT NULL,
-                description TEXT NOT NULL,
-                is_completed INTEGER DEFAULT 0,
+                clinician_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                is_confirmed BOOLEAN DEFAULT 0,
+                is_complete BOOLEAN DEFAULT 0,
+                notes TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id)
+                FOREIGN KEY(clinician_id) REFERENCES Users(user_id) 
             )
         """)
 
@@ -106,14 +104,65 @@ class Database:
         users = self.cursor.execute("SELECT username FROM Users")
         if len(users.fetchall()) == 0:
             users = [
-                (None, "admin1", "", "admin1@email.com", "admin", True),
-                (None, "patient1", "", "patient1@email.com", "patient", True),
-                (None, "patient2", "", "patient2@email.com", "patient", True),
-                (None, "patient3", "", "patient3@email.com", "patient", True),
-                (None, "mhwp1", "", "mhwp1@email.com", "clinician", True),
-                (None, "mhwp2", "", "mhwp2@email.com", "clinician", True),
+                (1, "admin1", "", "Admin", "admin1@email.com", "admin", True),
+                (
+                    2,
+                    "patient1",
+                    "",
+                    "Patient One",
+                    "patient1@email.com",
+                    "patient",
+                    True,
+                ),
+                (
+                    3,
+                    "patient2",
+                    "",
+                    "Patient Two",
+                    "patient2@email.com",
+                    "patient",
+                    True,
+                ),
+                (
+                    4,
+                    "patient3",
+                    "",
+                    "Patient Three",
+                    "patient3@email.com",
+                    "patient",
+                    True,
+                ),
+                (
+                    5,
+                    "mhwp1",
+                    "",
+                    "Clinician One",
+                    "mhwp1@email.com",
+                    "clinician",
+                    True,
+                ),
+                (
+                    6,
+                    "mhwp2",
+                    "",
+                    "Clinician Two",
+                    "mhwp2@email.com",
+                    "clinician",
+                    True,
+                ),
             ]
-            self.cursor.executemany("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?)", users)
+            self.cursor.executemany("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users)
+
+            # NOTE: We need to define the default state we want for the app
+            # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
+            # This should allow us to test what happens when a patient is not assigned to a clinician
+            patients = [
+                (2, "emergency1@gmail.com", "2000-01-01", None, 5),
+                (3, "emergency2@gmail.com", "1990-06-01", None, None),
+                (4, "emergency3@gmail.com", "1980-09-01", None, None),
+            ]
+            self.cursor.executemany("INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients)
+
             self.connection.commit()
 
     def close(self):
