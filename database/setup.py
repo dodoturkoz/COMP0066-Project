@@ -152,7 +152,9 @@ class Database:
                     True,
                 ),
             ]
-            self.cursor.executemany("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users)
+            self.cursor.executemany(
+                "INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users
+            )
 
             # NOTE: We need to define the default state we want for the app
             # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
@@ -162,7 +164,9 @@ class Database:
                 (3, "emergency2@gmail.com", "1990-06-01", None, None),
                 (4, "emergency3@gmail.com", "1980-09-01", None, None),
             ]
-            self.cursor.executemany("INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients)
+            self.cursor.executemany(
+                "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
+            )
 
             self.connection.commit()
 

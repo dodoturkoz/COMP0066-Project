@@ -1,5 +1,6 @@
 from modules.user import User
 from modules.patient import Patient
+from datetime import datetime
 
 
 class Clinician(User):
