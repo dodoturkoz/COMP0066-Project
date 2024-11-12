@@ -20,11 +20,11 @@ class Clinician(User):
         while run:
             print(f"\nHello, {self.username}!\n")
             selection = input("""What would you like to do?\n 
-                [1] Today's Appointments\n
-                [2] Recent Patients\n
-                [3] Outstanding Case Summaries\n
-                [4] Incoming Referrals\n
-                [5] Quit\n"""
+[1] Today's Appointments\n
+[2] Recent Patients\n
+[3] Outstanding Case Summaries\n
+[4] Incoming Referrals\n
+[5] Quit\n"""
             )
 
             if int(selection) not in [1,2,3,4,5]:
