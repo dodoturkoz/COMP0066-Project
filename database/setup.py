@@ -40,6 +40,7 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
+
         # Users Table
         self.cursor.execute(
             f"""

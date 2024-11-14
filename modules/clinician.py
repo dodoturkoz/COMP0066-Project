@@ -1,11 +1,24 @@
+from database.setup import Database
 from modules.user import User
 from modules.patient import Patient
-from datetime import datetime
 from datetime import datetime
 
 
 class Clinician(User):
-    
+    def __init__(
+        self,
+        database: Database,
+        user_id: str,
+        username: str,
+        name: str,
+        email: str,
+        is_active: bool,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            database, user_id, username, name, email, is_active, *args, **kwargs
+        )
 
     def view_calendar(self):
         """
@@ -62,7 +75,7 @@ class Clinician(User):
         """
         run = True
         while run:
-            print(f"\nHello, {self.username}!\n")
+            print(f"\nHello, {self.name}!\n")
             selection = input(
                 "What would you like to do?\n"
                 "[1] Calendar\n"  # Calendar view
