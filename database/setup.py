@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 roles = ("admin", "patient", "clinician")
 
@@ -25,6 +26,19 @@ def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
         return row[0]
 
 
+# Functions copied from the sqlite3 documentation - allowing us to insert and retrieve dates as python datetimes
+def adapt_datetime_iso(val):
+    """Adapt datetime.datetime to timezone-naive ISO 8601 date."""
+    return val.isoformat()
+
+def convert_datetime(val):
+    """Convert ISO 8601 datetime to datetime.datetime object."""
+    return datetime.fromisoformat(val.decode())
+
+sqlite3.register_adapter(datetime, adapt_datetime_iso)
+sqlite3.register_converter("datetime", convert_datetime)
+
+
 class Database:
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
@@ -32,7 +46,9 @@ class Database:
     def __init__(self):
         # Connect to the database and make the connection and cursor available
         # TODO: evaluate if we want to put a try/except block here
-        self.connection = sqlite3.connect("breeze.db")
+        self.connection = sqlite3.connect(
+            "breeze.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
         self.connection.row_factory = dict_factory
         self.cursor = self.connection.cursor()
         self.connection.execute("PRAGMA foreign_keys = ON")
@@ -89,7 +105,7 @@ class Database:
                 appointment_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 clinician_id INTEGER NOT NULL,
-                date TEXT NOT NULL,
+                date DATETIME NOT NULL,
                 is_confirmed BOOLEAN DEFAULT 0,
                 is_complete BOOLEAN DEFAULT 0,
                 notes TEXT NOT NULL,
@@ -152,7 +168,9 @@ class Database:
                     True,
                 ),
             ]
-            self.cursor.executemany("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users)
+            self.cursor.executemany(
+                "INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users
+            )
 
             # NOTE: We need to define the default state we want for the app
             # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
@@ -162,7 +180,24 @@ class Database:
                 (3, "emergency2@gmail.com", "1990-06-01", None, None),
                 (4, "emergency3@gmail.com", "1980-09-01", None, None),
             ]
-            self.cursor.executemany("INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients)
+            self.cursor.executemany(
+                "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
+            )
+
+            appointments = [
+                (
+                    1,
+                    2,
+                    5,
+                    datetime(2024, 11, 20, hour=12, minute=0),
+                    False,
+                    False,
+                    "detailed notes",
+                )
+            ]
+            self.cursor.executemany(
+                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
+            )
 
             self.connection.commit()
 
