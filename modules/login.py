@@ -20,7 +20,7 @@ def login(db: Database) -> Union[User, None]:
 
     user_data = db.cursor.execute(
         """
-        SELECT user_id, username, email, role, is_active FROM Users
+        SELECT user_id, username, name, email, role, is_active FROM Users
         WHERE username = :username AND password = :password
         """,
         {"username": username, "password": password},

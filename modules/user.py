@@ -7,6 +7,7 @@ class User:
     database: Database
     user_id: int
     username: str
+    name: str
     email: str
     is_active: bool
 
@@ -15,6 +16,7 @@ class User:
         database: Database,
         user_id: str,
         username: str,
+        name: str,
         email: str,
         is_active: bool,
         *args,
@@ -23,6 +25,7 @@ class User:
         self.database = database
         self.user_id = user_id
         self.username = username
+        self.name = name
         self.email = email
         self.is_active = is_active
 
