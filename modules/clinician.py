@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class Clinician(User):
+    
     def __init__(
         self,
         database: Database,
@@ -27,26 +28,20 @@ class Clinician(User):
         """
 
         # Option to approve/reject confirmed appointments?
-        # Current version relies on tables that haven't been implemented yet
-        # Appointments needs to have clinician_id and patient_id
-        # Users needs to have a name attribute or this needs to be taken from
-        # a different table
         # Need to test if the datetime.now() comparison works correctly
 
         cur = self.database.cursor
         appointments = cur.execute(f"""
             SELECT * 
             FROM Appointments 
-            WHERE clinician_id = {self.user_id}
-            AND appointment_date > {datetime.now()}""").fetchall()
+            WHERE clinician_id = {self.user_id}""").fetchall()
 
         for appointment in appointments:
             patient_name = cur.execute(f"""
             SELECT name 
             FROM USERS 
-            WHERE user_id = {appointment.patient_id}""").fetchone()
-            print(f"""{appointment.date} - {patient_name} - 
-            {'Confirmed' if appointment.confirmed else 'Not Confirmed'}""")
+            WHERE user_id = {appointment["user_id"]}""").fetchone()
+            print(f"""{appointment["date"].strftime('%a %d %b %Y, %I:%M%p')} - {patient_name} - {'Confirmed' if appointment["is_confirmed"] else 'Not Confirmed'}""")
 
         self.database.close()
 
@@ -90,3 +85,5 @@ class Clinician(User):
                 continue
             if int(selection) == 5:
                 return False
+            if int(selection) == 1:
+                self.view_calendar()
