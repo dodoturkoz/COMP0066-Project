@@ -47,6 +47,8 @@ class User:
             if hasattr(self, attribute):
                 setattr(self, attribute, value)
 
+            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+
             # Return true as the update was successful
             return True
 

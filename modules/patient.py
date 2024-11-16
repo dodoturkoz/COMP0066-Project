@@ -9,41 +9,78 @@ from datetime import datetime
 class Patient(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
-    def edit_medical_info(self, attribute: str, value: str) -> bool:
+    def edit_medical_info(self) -> bool:
         """
         Allows the patient to change their details.
         """
         # should the user be able to change their name?
+        options = {
+            1: "username",
+            2: "email",
+            3: "password",
+            4: "emergency_email",
+            5: "date_of_birth",
+        }
+
+        print("Select an attribute to edit:")
+        for number, attribute in options.items():
+            print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
+
         try:
+            choice = int(
+                input("Enter the number corresponding to the attribute: ")
+            )
+            attribute = options.get(choice)
+
+            if not attribute:
+                print("Invalid choice. Please select a valid option.")
+                return False
+
+            value = input(
+                f"Enter the new value for {attribute.replace('_', ' ').capitalize()}: "
+            )
+
+            # Update the Users table
             if attribute in self.MODIFIABLE_ATTRIBUTES:
                 return self.edit_info(attribute, value)
+
+            # Update the Patients table
             elif attribute in ["emergency_email", "date_of_birth"]:
                 self.database.cursor.execute(
-                    f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?", (value, self.user_id)
+                    f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
+                    (value, self.user_id),
                 )
                 self.database.connection.commit()
-                print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+                print(
+                    f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+                )
                 return True
             else:
                 print(f"Invalid attribute: {attribute}.")
                 return False
 
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+            return False
         except sqlite3.OperationalError as e:
-            print(f"Error updating {attribute}: {e}")
+            print(f"Error: {e}")
             return False
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return False
 
-
-    def display_previous_moods(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
+    def display_previous_moods(
+        self, limit: Optional[int] = None
+    ) -> list[dict[str, Any]]:
         pass
 
     def mood_of_the_day(self, mood: str) -> bool:
         # Interface for this
         pass
 
-    def display_journal(self, date: Optional[str] = None) -> list[dict[str, str]]:
+    def display_journal(
+        self, date: Optional[str] = None
+    ) -> list[dict[str, str]]:
         """
         Displays patient's journal entries, optionally filtering by a specific date.
         """
@@ -64,7 +101,9 @@ class Patient(User):
             ]
 
             if entries:
-                print(f"\nJournal Entries for {date if date else 'all dates'}:\n")
+                print(
+                    f"\nJournal Entries for {date if date else 'all dates'}:\n"
+                )
                 for entry in entries:
                     print(f"Date: {entry['date']}")
                     print(f"Content: {entry['text']}\n")
@@ -84,7 +123,11 @@ class Patient(User):
         try:
             self.database.cursor.execute(
                 "INSERT INTO JournalEntries (user_id, text, date) VALUES (?, ?, ?)",
-                (self.user_id, content, datetime.now().strftime("%Y-%m-%d")),
+                (
+                    self.user_id,
+                    content,
+                    datetime.now().strftime("%Y-%m-%d"),
+                ),
             )
             self.database.connection.commit()
             print("Journal entry added successfully.")
@@ -96,11 +139,14 @@ class Patient(User):
     @staticmethod
     def search_exercises(keyword: str = None):
         """
-        Looks up exercises and displays them with both an audio file and the relevant transcript.
+        Looks up exercises and displays them with
+        both an audio file and the relevant transcript.
         """
         if keyword:
             filtered_resources = [
-                resource for resource in RELAXATION_RESOURCES if keyword.lower() in resource["title"].lower()
+                resource
+                for resource in RELAXATION_RESOURCES
+                if keyword.lower() in resource["title"].lower()
             ]
         else:
             filtered_resources = RELAXATION_RESOURCES
@@ -119,21 +165,26 @@ class Patient(User):
         try:
             # Check if the patient has an assigned clinician
             self.database.cursor.execute(
-                "SELECT clinician_id FROM Patients WHERE user_id = ?", (self.user_id,)
+                "SELECT clinician_id FROM Patients WHERE user_id = ?",
+                (self.user_id,),
             )
             clinician_id = self.database.cursor.fetchone()
 
             if not clinician_id:
-                print("No clinician assigned. Please contact the admin or select a clinician.")
+                print("No clinician assigned. Please contact the admin.")
                 return False
-
 
             self.database.cursor.execute(
                 """
                 INSERT INTO Appointments (user_id, clinician_id, date, notes, is_complete)
                 VALUES (?, ?, ?, ?, 0)
                 """,
-                (self.user_id, clinician_id, appointment_date, description)
+                (
+                    self.user_id,
+                    clinician_id,
+                    appointment_date,
+                    description,
+                ),
             )
             self.database.connection.commit()
             print("Appointment booked successfully.")
@@ -151,14 +202,16 @@ class Patient(User):
                 """
                 DELETE FROM Appointments WHERE appointment_id = ? AND user_id = ?
                 """,
-                (appointment_id, self.user_id)
+                (appointment_id, self.user_id),
             )
             if self.database.cursor.rowcount > 0:
                 self.database.connection.commit()
                 print("Appointment canceled successfully.")
                 return True
             else:
-                print("Appointment not found or you are not authorized to cancel it.")
+                print(
+                    "Appointment not found or you are not authorized to cancel it."
+                )
                 return False
         except sqlite3.OperationalError as e:
             print(f"Error canceling appointment: {e}")
@@ -168,7 +221,11 @@ class Patient(User):
         """
         Views all appointments for the patient.
         """
-        query = "SELECT appointment_id, date, notes, is_complete FROM Appointments WHERE user_id = ?"
+        query = (
+            "SELECT appointment_id, date, notes, is_complete "
+            "FROM Appointments "
+            "WHERE user_id = ?"
+        )
 
         try:
             self.database.cursor.execute(query, (self.user_id,))
@@ -177,7 +234,7 @@ class Patient(User):
                     "appointment_id": row["appointment_id"],
                     "date": row["date"],
                     "notes": row["notes"],
-                    "is_complete": bool(row["is_complete"])
+                    "is_complete": bool(row["is_complete"]),
                 }
                 for row in self.database.cursor.fetchall()
             ]
@@ -188,7 +245,9 @@ class Patient(User):
                     print(f"ID: {appointment['appointment_id']}")
                     print(f"Date: {appointment['date']}")
                     print(f"Notes: {appointment['notes']}")
-                    print(f"Completed: {'Yes' if appointment['is_complete'] else 'No'}\n")
+                    print(
+                        f"Completed: {'Yes' if appointment['is_complete'] else 'No'}\n"
+                    )
             else:
                 print("You don't have any appointments.")
 
@@ -218,9 +277,7 @@ class Patient(User):
                 "10. Log Out\n"
             )
             if choice == "1":
-                attribute = input("Enter the attribute to edit (e.g., email): ")
-                value = input(f"Enter the new value for {attribute}: ")
-                self.edit_medical_info(attribute, value)
+                self.edit_medical_info()
             elif choice == "2":
                 mood = input("Enter your mood for today: ")
                 self.mood_of_the_day(mood)
@@ -231,7 +288,8 @@ class Patient(User):
                 self.journal(content)
             elif choice == "5":
                 date = input(
-                    "Enter a date in YYYY-MM-DD format or leave blank to view all previous entries: "
+                    "Enter a date in YYYY-MM-DD format or"
+                    + "leave blank to view all previous entries: "
                 )
                 self.display_journal(date)
             elif choice == "6":
@@ -251,3 +309,10 @@ class Patient(User):
                 return True
             else:
                 print("Invalid choice. Please try again.")
+            print(
+                "---------------------------"
+            )  # Visual separator after action
+            next_step = input("Would you like to:\n1. Continue\n2. Log Out\n")
+            if next_step.strip() != "1":
+                print("Goodbye!")
+                break
