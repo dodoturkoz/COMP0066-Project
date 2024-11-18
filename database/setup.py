@@ -31,9 +31,11 @@ def adapt_datetime_iso(val):
     """Adapt datetime.datetime to timezone-naive ISO 8601 date."""
     return val.isoformat()
 
+
 def convert_datetime(val):
     """Convert ISO 8601 datetime to datetime.datetime object."""
     return datetime.fromisoformat(val.decode())
+
 
 sqlite3.register_adapter(datetime, adapt_datetime_iso)
 sqlite3.register_converter("datetime", convert_datetime)
@@ -56,6 +58,8 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
+        self.cursor.execute("DROP TABLE Users")
+
         # Users Table
         self.cursor.execute(
             f"""
@@ -76,7 +80,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS Patients (
                 user_id INTEGER PRIMARY KEY,
                 emergency_email TEXT,
-                date_of_birth TEXT,
+                date_of_birth DATETIME,
                 diagnosis TEXT,
                 clinician_id INTEGER,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id),
@@ -91,7 +95,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS JournalEntries (
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
-                date TEXT NOT NULL,
+                date DATETIME NOT NULL,
                 mood TEXT,
                 text TEXT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id)
@@ -176,9 +180,9 @@ class Database:
             # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
             # This should allow us to test what happens when a patient is not assigned to a clinician
             patients = [
-                (2, "emergency1@gmail.com", "2000-01-01", None, 5),
-                (3, "emergency2@gmail.com", "1990-06-01", None, None),
-                (4, "emergency3@gmail.com", "1980-09-01", None, None),
+                (2, "emergency1@gmail.com", datetime(2000, 1, 1), None, 5),
+                (3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
+                (4, "emergency3@gmail.com", datetime(1980, 9, 1), None, None),
             ]
             self.cursor.executemany(
                 "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
