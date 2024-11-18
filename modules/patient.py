@@ -5,10 +5,12 @@ from modules.constants import RELAXATION_RESOURCES
 from modules.user import User
 from datetime import datetime
 
-#Function for mood input. 
+# Function for getting mood input and returning what will be stored on the database. There is no ending speech marks around the 
+# returning value so not sure if I describe the value returned as a string or not.
+
 def mood_input():
     """
-    Get mood from patient using a colour code in input
+    Get mood from patient using a colour or number code in input
     """
 
     print("\033[32m {}\033[00m" .format("6. dark green Outstanding \U0001f600"))
@@ -44,7 +46,7 @@ class Patient(User):
         """
         Allows the patient to change their details.
         """
-        # should the user be able to change their name?
+        # should the user be able to change their name? yes
         options = {
             1: "username",
             2: "email",
@@ -109,10 +111,6 @@ class Patient(User):
         query = "SELECT date, text, mood FROM JournalEntries WHERE user_id = ?"
         params = [self.user_id]
 
-        #query += " AND mood IS NOT NULL"
-
-        #query += " AND mood !="""
-
         if date:
             query += " AND DATE(date) = ?"
             params.append(date)
@@ -174,8 +172,6 @@ class Patient(User):
         """
         query = "SELECT date, text FROM JournalEntries WHERE user_id = ?"
         params = [self.user_id]
-
-        #query += " AND mood IS NULL OR mood = """
 
         if date:
             query += " AND DATE(date) = ?"
