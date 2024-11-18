@@ -46,7 +46,9 @@ class Database:
     def __init__(self):
         # Connect to the database and make the connection and cursor available
         # TODO: evaluate if we want to put a try/except block here
-        self.connection = sqlite3.connect("breeze.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        self.connection = sqlite3.connect(
+            "breeze.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
         self.connection.row_factory = dict_factory
         self.cursor = self.connection.cursor()
         self.connection.execute("PRAGMA foreign_keys = ON")
@@ -54,6 +56,7 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
+        self.cursor.execute("DROP TABLE Users")
 
         # Users Table
         self.cursor.execute(
@@ -75,7 +78,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS Patients (
                 user_id INTEGER PRIMARY KEY,
                 emergency_email TEXT,
-                date_of_birth TEXT,
+                date_of_birth DATETIME,
                 diagnosis TEXT,
                 clinician_id INTEGER,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id),
@@ -90,7 +93,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS JournalEntries (
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
-                date TEXT NOT NULL,
+                date DATETIME NOT NULL,
                 mood TEXT,
                 text TEXT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id)
@@ -175,16 +178,24 @@ class Database:
             # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
             # This should allow us to test what happens when a patient is not assigned to a clinician
             patients = [
-                (2, "emergency1@gmail.com", "2000-01-01", None, 5),
-                (3, "emergency2@gmail.com", "1990-06-01", None, None),
-                (4, "emergency3@gmail.com", "1980-09-01", None, None),
+                (2, "emergency1@gmail.com", datetime(2000, 1, 1), None, 5),
+                (3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
+                (4, "emergency3@gmail.com", datetime(1980, 9, 1), None, None),
             ]
             self.cursor.executemany(
                 "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
             )
 
             appointments = [
-                (1, 2, 5, datetime(2024, 11, 20, hour=12, minute=0), False, False, "detailed notes")
+                (
+                    1,
+                    2,
+                    5,
+                    datetime(2024, 11, 20, hour=12, minute=0),
+                    False,
+                    False,
+                    "detailed notes",
+                )
             ]
             self.cursor.executemany(
                 "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
