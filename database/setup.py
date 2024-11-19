@@ -58,7 +58,6 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
-
         # Users Table
         self.cursor.execute(
             f"""
@@ -82,38 +81,51 @@ class Database:
                 date_of_birth DATETIME,
                 diagnosis TEXT,
                 clinician_id INTEGER,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id),
-                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) 
+                FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
             )
         """)
 
-        # Journal Table (Mood + Text)
-        # To simplify, I am thinking of storing the mood as a whole string (with colour and all)
-        # Nevertheless, we can change this to a FK to a Mood table or whatever we think is best
+        # Journal Table
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS JournalEntries (
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 date DATETIME NOT NULL,
+                text TEXT,
+                FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+            )
+        """)
+
+        # Mood Table (Mood + Text)
+        # To simplify, I am thinking of storing the mood as a whole string (with colour and all)
+        # Nevertheless, we can change this to a FK to a Mood table or whatever we think is best
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS MoodEntries (
+                entry_id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                date DATETIME NOT NULL,
                 mood TEXT,
                 text TEXT,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id)
+                FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
             )
         """)
 
         # Appointments Table
         # We can use is_completed to mark if the user actually attended the appointment
+        # If the clinician is deleted the appoitment still remains so we dont lose the
+        # notes for the user, but we can change this to CASCADE
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS Appointments (
                 appointment_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
-                clinician_id INTEGER NOT NULL,
+                clinician_id INTEGER,
                 date DATETIME NOT NULL,
                 is_confirmed BOOLEAN DEFAULT 0,
                 is_complete BOOLEAN DEFAULT 0,
                 notes TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES Users(user_id),
-                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) 
+                FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+                FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
             )
         """)
 
