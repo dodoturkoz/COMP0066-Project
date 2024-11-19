@@ -8,7 +8,7 @@ try:
     run = True
     while run:
         selection = input(
-            "Please select an option to continue:\n [1] Log In\n [2] Quit\n\n"
+            "Please select an option to continue:\n [1] Log In\n [2] Quit\n"
         )
         if selection not in ["1", "2"]:
             print("\nInvalid option. Please select from the choices listed above.\n")
@@ -18,7 +18,7 @@ try:
             break
         user = login(db)
         if user:
-            run = user.flow() 
+            run = user.flow()
             # NOTE: if flow returns True -> login screen
             # if flow returns False -> quits app
 
