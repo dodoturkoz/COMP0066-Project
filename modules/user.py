@@ -14,7 +14,7 @@ class User:
     def __init__(
         self,
         database: Database,
-        user_id: str,
+        user_id: int,
         username: str,
         name: str,
         email: str,
