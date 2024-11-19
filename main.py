@@ -1,10 +1,12 @@
 from database.setup import Database
 from modules.login import login
+from modules.utilities import clear_terminal
 
 db = Database()
 
 try:
-    print("\nWelcome to Breeze, your Mental Health and Wellbeing partner!")
+    clear_terminal()
+    print("Welcome to Breeze, your Mental Health and Wellbeing partner!")
     run = True
     while run:
         selection = input(

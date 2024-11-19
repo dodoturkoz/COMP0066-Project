@@ -5,6 +5,7 @@ from modules.clinician import Clinician
 from modules.patient import Patient
 from modules.user import User
 from database.setup import Database
+from modules.utilities import clear_terminal
 
 
 def login(db: Database) -> Union[User, None]:
@@ -14,7 +15,7 @@ def login(db: Database) -> Union[User, None]:
 
     Prints if the login was successfull or not, and returns None (FOR NOW!!)
     """
-
+    clear_terminal()
     username = input("Your username: ")
     password = input("Your password: ")
 
@@ -36,4 +37,9 @@ def login(db: Database) -> Union[User, None]:
         else:
             raise Exception("User type not defined in the system")
     else:
-        print("Your username and password combination does not exist in our system")
+        print("Invalid password or username entered.")
+        print("Press Enter to return to the homepage.")
+        while True:
+            if input() == "":
+                clear_terminal()
+                return False

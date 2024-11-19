@@ -105,6 +105,8 @@ class Clinician(User):
                 print("Invalid selection")
                 continue
             if int(selection) == 5:
+                clear_terminal()
+                print("Thanks for using Breeze!")
                 return False
             if int(selection) == 1:
                 self.view_calendar()
