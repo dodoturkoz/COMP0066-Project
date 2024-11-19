@@ -56,7 +56,6 @@ class Database:
         self.__create_default_users()
 
     def __setup_tables(self):
-        self.cursor.execute("DROP TABLE Users")
 
         # Users Table
         self.cursor.execute(

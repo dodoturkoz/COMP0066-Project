@@ -21,6 +21,14 @@ class Clinician(User):
             database, user_id, username, name, email, is_active, *args, **kwargs
         )
 
+    def get_available_slots(self, day: datetime) -> list:
+        """Used to get all available slots for a clinician on a specified day"""
+        pass
+
+    def request_appointment(self, slot: datetime) -> bool:
+        """Use to request a specific timeslot"""
+        pass
+
     def view_calendar(self):
         """
         This allows the clinician to view all upcoming appointments,
@@ -28,7 +36,6 @@ class Clinician(User):
         """
 
         # Option to approve/reject confirmed appointments?
-        # Need to test if the datetime.now() comparison works correctly
 
         cur = self.database.cursor
         appointments = cur.execute(f"""
