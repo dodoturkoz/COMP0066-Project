@@ -34,6 +34,10 @@ class User:
         Updates the attribute both in the object and in the database,
         returns the result of the update
         """
+        if attribute not in self.MODIFIABLE_ATTRIBUTES:
+            print("You don't have the permissions to change this value.")
+            return False
+
         try:
             # First update on the database
             self.database.cursor.execute(
@@ -45,6 +49,8 @@ class User:
             # Then in the object if that particular attribute is stored here
             if hasattr(self, attribute):
                 setattr(self, attribute, value)
+
+            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
 
             # Return true as the update was successful
             return True
