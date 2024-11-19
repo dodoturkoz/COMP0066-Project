@@ -1,14 +1,16 @@
 from database.setup import Database
 from modules.login import login
+from modules.emergency import display_emergency_numbers
 
 db = Database()
 
 try:
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
+    display_emergency_numbers()
     run = True
     while run:
         selection = input(
-            "Please select an option to continue:\n 1. Log In\n 2. Quit\n"
+            "\nPlease select an option to continue:\n 1. Log In\n 2. Quit\n"
         )
         if selection not in ["1", "2"]:
             print("Invalid option. Please select 1 or 2.")
