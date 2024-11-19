@@ -2,10 +2,10 @@ from database.setup import Database
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
+from modules.utilities import clear_terminal
 
 
 class Clinician(User):
-    
     def __init__(
         self,
         database: Database,
@@ -33,24 +33,38 @@ class Clinician(User):
         """
         This allows the clinician to view all upcoming appointments,
         showing whether they are confirmed or not.
+
+        Ben I have modified this as the connection was being closed prematurely
+        and causing errors on successive calls.
         """
 
         # Option to approve/reject confirmed appointments?
-
-        cur = self.database.cursor
-        appointments = cur.execute(f"""
-            SELECT * 
-            FROM Appointments 
-            WHERE clinician_id = {self.user_id}""").fetchall()
-
-        for appointment in appointments:
-            patient_name = cur.execute(f"""
-            SELECT name 
-            FROM USERS 
-            WHERE user_id = {appointment["user_id"]}""").fetchone()
-            print(f"""{appointment["date"].strftime('%a %d %b %Y, %I:%M%p')} - {patient_name} - {'Confirmed' if appointment["is_confirmed"] else 'Not Confirmed'}""")
-
-        self.database.close()
+        clear_terminal()
+        cur = self.database.connection
+        try:
+            appointments = cur.execute(f"""
+                SELECT * 
+                FROM Appointments 
+                WHERE clinician_id = {self.user_id}""").fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
+        if appointments:
+            for appointment in appointments:
+                patient_name = cur.execute(f"""
+                SELECT name 
+                FROM USERS 
+                WHERE user_id = {appointment["user_id"]}""").fetchone()
+                print(
+                    f"{appointment["date"].strftime('%a %d %b %Y, %I:%M%p')}"
+                    + f"- {patient_name} - "
+                    + f"{'Confirmed' if appointment["is_confirmed"] else 'Not Confirmed'}\n"
+                )
+        else:
+            print("There are no appointments.")
+        while True:
+            if input("Press enter to return to the dashboard") == "":
+                clear_terminal()
+                return True
 
     def view_requested_appointments(self):
         # Show all requested appointments, with option to approve/reject
@@ -77,7 +91,8 @@ class Clinician(User):
         """
         run = True
         while run:
-            print(f"\nHello, {self.name}!\n")
+            clear_terminal()
+            print(f"Hello, {self.name}!")
             selection = input(
                 "What would you like to do?\n"
                 "[1] Calendar\n"  # Calendar view
@@ -86,7 +101,6 @@ class Clinician(User):
                 "[4] Referrals\n"  # Clinician could assign and book here
                 "[5] Quit\n"
             )
-
             if int(selection) not in [1, 2, 3, 4, 5]:
                 print("Invalid selection")
                 continue
