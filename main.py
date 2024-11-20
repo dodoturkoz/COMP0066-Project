@@ -2,7 +2,7 @@ from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
 from modules.utilities.display import display_choice
-from modules.utilities import clear_terminal
+from modules.utilities.display import clear_terminal
 
 db = Database()
 
@@ -12,8 +12,7 @@ try:
     run = True
     while run:
         selection = display_choice(
-            "Please select an option to continue:",
-            ["Log In", "Sign Up", "Quit"]
+            "Please select an option to continue:", ["Log In", "Sign Up", "Quit"]
         )
         if selection == 3:
             run = False

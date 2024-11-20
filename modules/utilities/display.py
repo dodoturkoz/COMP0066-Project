@@ -1,3 +1,5 @@
+import os
+
 def display_choice(header: str, options: list[str]) -> int:
     """
     Displays a list of options to the user and returns their choice.
@@ -19,3 +21,10 @@ def display_dict(dict: dict[str, any]) -> None:
     """
     for key, value in dict.items():
         print(f"{key}: {value}")
+
+def clear_terminal():
+    # Check if the operating system is Windows
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")

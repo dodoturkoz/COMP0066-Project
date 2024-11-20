@@ -2,7 +2,7 @@ from database.setup import Database
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
-from modules.utilities import clear_terminal
+from modules.utilities.display import clear_terminal
 
 
 class Clinician(User):

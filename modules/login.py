@@ -5,11 +5,10 @@ from modules.admin import Admin
 from modules.clinician import Clinician
 from modules.patient import Patient
 from modules.user import User
-from modules.utilities.display import display_choice, display_dict
+from modules.utilities.display import display_choice, display_dict, clear_terminal
 from database.setup import Database, roles
 from modules.utilities.input import get_valid_email
 from modules.utilities.send_email import send_email
-from modules.utilities import clear_terminal
 
 
 def login(db: Database) -> Union[User, None]:
@@ -175,20 +174,15 @@ def signup(db: Database) -> bool:
         db.connection.commit()
         # Send registration email
         if user_info["role"] == "patient":
-            message = (
-                f"Welcome to Breeze {user_info['name'].title()},\n\nWe will asign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
-            )
+            message = f"Welcome to Breeze {user_info['name'].title()},\n\nWe will asign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
         else:
-            message = (
-                f"Welcome to Breeze {user_info['name'].title()},\n\nAn admin will review and activate your profile soon.\n\nBest regards,\nBreeze Team"
-            )
+            message = f"Welcome to Breeze {user_info['name'].title()},\n\nAn admin will review and activate your profile soon.\n\nBest regards,\nBreeze Team"
         send_email(
             user_info["email"],
             "Welcome to Breeze",
             message,
         )
 
-        
         print("\nYou are now registered with Breeze")
         return True
     except Exception as e:
