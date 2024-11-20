@@ -56,7 +56,7 @@ class Clinician(User):
                 WHERE user_id = {appointment["user_id"]}""").fetchone()
                 print(
                     f"{appointment["date"].strftime('%a %d %b %Y, %I:%M%p')}"
-                    + f"- {patient_name} - "
+                    + f" - {patient_name} - "
                     + f"{'Confirmed' if appointment["is_confirmed"] else 'Not Confirmed'}\n"
                 )
         else:
@@ -93,20 +93,28 @@ class Clinician(User):
         while run:
             clear_terminal()
             print(f"Hello, {self.name}!")
+            # Ben I have preserved number five as quit for now -> appreciate it
+            # looks a little odd.
             selection = input(
                 "What would you like to do?\n"
                 "[1] Calendar\n"  # Calendar view
-                "[2] Your Patients\n"  # Dashboard of all patients
-                "[3] Outstanding Case Summaries\n"
-                "[4] Referrals\n"  # Clinician could assign and book here
+                "[2] Your Patient Dashboard\n"  # Dashboard of all patients
+                "[3] -\n"  # Extras here e.g. link to medical news websites
+                "[4] -\n"  # Extras here  - or streamline
                 "[5] Quit\n"
             )
             if int(selection) not in [1, 2, 3, 4, 5]:
                 print("Invalid selection")
                 continue
+            if int(selection) == 1:
+                self.view_calendar()
+            if int(selection) == 2:
+                pass
+            if int(selection) == 3:
+                pass
+            if int(selection) == 4:
+                pass
             if int(selection) == 5:
                 clear_terminal()
                 print("Thanks for using Breeze!")
                 return False
-            if int(selection) == 1:
-                self.view_calendar()
