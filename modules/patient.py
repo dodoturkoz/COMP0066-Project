@@ -143,25 +143,69 @@ class Patient(User):
     def mood_of_the_day(self, mood: str, comment: str) -> bool:
         # Interface for this
         """
-        Creates a mood and comment entry for the patient.
+        1. Check if mood entry for the day exists.
+        2. Update mood for the day is entry for the day exists
+        3. Creates a new mood and comment entry for the patient if record for the day does not exist.
         """
+
+        query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
+        params = [self.user_id]
+
+        query += " AND DATE(date) = ?"
+        params.append(datetime.now().strftime("%Y-%m-%d"))
+
         try:
-            self.database.cursor.execute(
-                "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
-                (
-                    self.user_id,
-                    comment,
-                    datetime.now().strftime("%Y-%m-%d"),
-                    mood,
-                ),
-            )
-            self.database.connection.commit()
-            print("Mood entry added successfully.")
-            return True
+            self.database.cursor.execute(query, tuple(params))
+            entries = [
+                {"mood": row["mood"]}
+                for row in self.database.cursor.fetchall()
+            ]
+
         except Exception as e:
-            print(f"Error adding mood entry: {e}")
+            print(f"Error checking whether mood entry already exists for the day: {e}")
             return False
 
+        #variable storing the record of the mood for a particular date is not empty. Update mood.:
+        if entries:    
+
+            query = "UPDATE MoodEntries SET text = ?, mood = ?"
+            params = [comment, mood]
+               
+            query += " WHERE DATE(date) = ?"
+            params.append(datetime.now().strftime("%Y-%m-%d"))
+
+            query += " AND user_id = ?"
+            params.append(self.user_id)
+            
+            try:                
+                self.database.cursor.execute(query, tuple(params))
+                self.database.connection.commit()
+                print("Mood entry updated successfully.")
+                return True
+            
+            except Exception as e:
+                print(f"Error updating mood entry: {e}")
+                return False
+        
+        #variable storing the record of the mood for a particular date is empty.Insert mood
+        else:
+            try:
+                self.database.cursor.execute(
+                    "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
+                    (
+                        self.user_id,
+                        comment,
+                        datetime.now().strftime("%Y-%m-%d"),
+                        mood,
+                    ),
+                )
+                self.database.connection.commit()
+                print("Mood entry added successfully.")
+                return True
+            except Exception as e:
+                print(f"Error adding mood entry: {e}")
+                return False
+        
     def display_journal(
         self, date: Optional[str] = None
     ) -> list[dict[str, str]]:
