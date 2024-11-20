@@ -10,31 +10,48 @@ def mood_input():
     Get mood from patient using a colour or number code in input
     """
 
-    print("\033[32m {}\033[00m" .format("6. dark green Outstanding \U0001f600"))
-    print("\033[92m {}\033[00m".format("5. green Great \U0001F642"))
-    print("\033[93m {}\033[00m".format("4. yellow Okay \U0001F610"))
-    print("\033[33m {}\033[00m".format("3. orange Bit bad \U0001F641"))
-    print("\033[91m {}\033[00m".format("2. red Very bad \U0001F61E"))
-    print("\033[31m {}\033[00m".format("1. brown Terrible \U0001F622"))
+    print("\nMOOD TRACKER:\n")
+    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding \U0001f600    "))
+    print("\033[92;40m {}\033[00m".format("5. green Great \U0001F642               "))
+    print("\033[93;40m {}\033[00m".format("4. yellow Okay \U0001F610               "))
+    print("\033[31;40m {}\033[00m".format("3. orange Bit bad \U0001F641            "))
+    print("\033[91;40m {}\033[00m".format("2. red Very bad \U0001F61E              "))
+    print("\033[33;40m {}\033[00m".format("1. brown Terrible \U0001F622            "))
 
-    mood_colour=input("Enter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
+    mood_colour=input("\nEnter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown\n")
     if mood_colour =="dark green" or mood_colour =="6" or mood_colour =="6.":
-        mood_description= "\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
+        mood_description= "\033[1;32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
     elif mood_colour =="green" or mood_colour =="5" or mood_colour =="5.":
-        mood_description= "\033[92m {}\033[00m" .format("Green Great \U0001F642") 
+        mood_description= "\033[1;92m {}\033[00m" .format("Green Great \U0001F642") 
     elif mood_colour =="yellow" or mood_colour =="4" or mood_colour =="4.":
-        mood_description= "\033[93m {}\033[00m" .format("Yellow Okay \U0001F610") 
+        mood_description= "\033[1;93m {}\033[00m" .format("Yellow Okay \U0001F610") 
     elif mood_colour =="orange" or mood_colour =="3" or mood_colour =="3.":
-        mood_description= "\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
+        mood_description= "\033[1;33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
     elif mood_colour =="red" or mood_colour =="2" or mood_colour =="2.":
-        mood_description= "\033[91m {}\033[00m" .format("Red Very bad \U0001F61E") 
+        mood_description= "\033[1;91m {}\033[00m" .format("Red Very bad \U0001F61E") 
     elif mood_colour =="brown" or mood_colour =="1" or mood_colour =="1.":
-        mood_description= "\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+        mood_description= "ESC[47m[1;31m {}\033[00m" .format("Brown Terrible \U0001F622") 
     else:
         print("Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
         mood_description=mood_input()
 
     return mood_description
+
+
+def comment_input():
+    """
+    Ask if patient wants to comment and then pass the comment to patient method.
+    """
+    do_comment = input("Would you like to enter any comments regarding your mood?\nChoose a number.\n1.Yes\n2.No\n ")
+    if do_comment == "1" or do_comment == "1." or do_comment == "Yes" or do_comment == "yes":
+        comment = input("Enter any comments regarding your mood:\n")
+    elif do_comment == "2" or do_comment == "2." or do_comment == "No" or do_comment == "no":
+        comment = "There is no comment associated with the mood of this day.\n"
+    else:
+        print("Please ensure you enter the number 1 or 2.") 
+        comment=comment_input()
+
+    return comment
 
 class Patient(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
@@ -127,8 +144,7 @@ class Patient(User):
                 )
                 for entry in entries:
                     print(f"Date: {entry['date']}")
-                    print("Mood:") 
-                    print(str(entry['mood'])+"\n")
+                    print("Mood:" + str(entry['mood']))
                     print(f"Content: {entry['text']}\n")
 
             else:
@@ -148,34 +164,22 @@ class Patient(User):
         3. Creates a new mood and comment entry for the patient if record for the day does not exist.
         """
 
-        query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
-        params = [self.user_id]
-
-        query += " AND DATE(date) = ?"
-        params.append(datetime.now().strftime("%Y-%m-%d"))
+        query = "SELECT mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
+        params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
 
         try:
             self.database.cursor.execute(query, tuple(params))
-            entries = [
-                {"mood": row["mood"]}
-                for row in self.database.cursor.fetchall()
-            ]
+            entries =  self.database.cursor.fetchone()
 
         except Exception as e:
             print(f"Error checking whether mood entry already exists for the day: {e}")
             return False
 
-        #variable storing the record of the mood for a particular date is not empty. Update mood.:
+        #Update mood since previously described mood of the day,
         if entries:    
 
-            query = "UPDATE MoodEntries SET text = ?, mood = ?"
-            params = [comment, mood]
-               
-            query += " WHERE DATE(date) = ?"
-            params.append(datetime.now().strftime("%Y-%m-%d"))
-
-            query += " AND user_id = ?"
-            params.append(self.user_id)
+            query = "UPDATE MoodEntries SET text = ?, mood = ? WHERE DATE(date) = ? AND user_id = ?"
+            params = [comment, mood, datetime.now().strftime("%Y-%m-%d"), self.user_id]
             
             try:                
                 self.database.cursor.execute(query, tuple(params))
@@ -187,8 +191,8 @@ class Patient(User):
                 print(f"Error updating mood entry: {e}")
                 return False
         
-        #variable storing the record of the mood for a particular date is empty.Insert mood
-        else:
+        #Insert new mood since mood not previously recorded that day.
+        elif not entries:
             try:
                 self.database.cursor.execute(
                     "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
@@ -408,7 +412,7 @@ class Patient(User):
                 self.edit_medical_info()
             elif choice == "2":
                 mood = mood_input()
-                comment = input("Enter any comments regarding your mood: ")
+                comment = comment_input()
                 self.mood_of_the_day(mood, comment)
             elif choice == "3":
                 self.display_previous_moods()
