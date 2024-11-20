@@ -1,6 +1,7 @@
 from database.setup import Database
-from modules.login import login
+from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
+from modules.utilities.display import display_choice
 
 db = Database()
 
@@ -9,14 +10,15 @@ try:
     display_emergency_numbers()
     run = True
     while run:
-        selection = input(
-            "\nPlease select an option to continue:\n 1. Log In\n 2. Quit\n"
+        selection = display_choice(
+            "Please select an option to continue:",
+            ["Log In", "Sign Up", "Quit"]
         )
-        if selection not in ["1", "2"]:
-            print("Invalid option. Please select 1 or 2.")
-            continue
-        if int(selection) == 2:
+        if selection == 3:
             run = False
+            continue
+        if selection == 2:
+            signup(db)
             continue
         user = login(db)
         if user:
