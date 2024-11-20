@@ -5,9 +5,6 @@ from modules.constants import RELAXATION_RESOURCES
 from modules.user import User
 from datetime import datetime
 
-# Function for getting mood input and returning what will be stored on the database. There is no ending speech marks around the 
-# returning value so not sure if I describe the value returned as a string or not.
-
 def mood_input():
     """
     Get mood from patient using a colour or number code in input
@@ -108,7 +105,7 @@ class Patient(User):
         """
         Displays patient's moods, optionally filtering by a specific date.
         """
-        query = "SELECT date, text, mood FROM JournalEntries WHERE user_id = ?"
+        query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
         params = [self.user_id]
 
         if date:
@@ -130,9 +127,10 @@ class Patient(User):
                 )
                 for entry in entries:
                     print(f"Date: {entry['date']}")
-                    print(f"Content: {entry['text']}\n")
                     print("Mood:") 
                     print(str(entry['mood'])+"\n")
+                    print(f"Content: {entry['text']}\n")
+
             else:
                 print("No mood entries found for the specified date.")
 
@@ -149,7 +147,7 @@ class Patient(User):
         """
         try:
             self.database.cursor.execute(
-                "INSERT INTO JournalEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
+                "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
                 (
                     self.user_id,
                     comment,
