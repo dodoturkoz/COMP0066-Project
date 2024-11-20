@@ -1,23 +1,26 @@
 from database.setup import Database
-from modules.login import login
+from modules.login import login, signup
+from modules.emergency import display_emergency_numbers
+from modules.utilities.display import display_choice
 from modules.utilities import clear_terminal
 
 db = Database()
 
 try:
     clear_terminal()
-    print("Welcome to Breeze, your Mental Health and Wellbeing partner!")
+    print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
     run = True
     while run:
-        selection = input(
-            "Please select an option to continue:\n [1] Log In\n [2] Quit\n"
+        selection = display_choice(
+            "Please select an option to continue:",
+            ["Log In", "Sign Up", "Quit"]
         )
-        if selection not in ["1", "2"]:
-            print("\nInvalid option. Please select from the choices listed above.\n")
-            continue
-        if int(selection) == 2:
+        if selection == 3:
             run = False
-            break
+            continue
+        if selection == 2:
+            signup(db)
+            continue
         user = login(db)
         if user:
             run = user.flow()
