@@ -1,4 +1,3 @@
-from database.setup import Database
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
@@ -6,6 +5,18 @@ from modules.utilities.display import clear_terminal
 
 
 class Clinician(User):
+    def get_appointments(self) -> list:
+        """Find all appointments registered for the clinician, including unconfirmed ones"""
+        cur = self.database.connection
+        try:
+            appointments = cur.execute(f"""
+                SELECT * 
+                FROM Appointments 
+                WHERE clinician_id = {self.user_id}""").fetchall()
+            return appointments
+        except Exception as e:
+            print(f"Error: {e}")
+
     def get_available_slots(self, day: datetime) -> list:
         """Used to get all available slots for a clinician on a specified day"""
         pass
