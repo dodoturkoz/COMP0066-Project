@@ -88,7 +88,7 @@ class Clinician(User):
                 "[4] -\n"  # Extras here  - or streamline
                 "[5] Quit\n"
             )
-            if int(selection) not in [1, 2, 3, 4, 5, 6]:
+            if int(selection) not in [1, 2, 3, 4, 5]:
                 print("Invalid selection")
                 continue
             if int(selection) == 1:
