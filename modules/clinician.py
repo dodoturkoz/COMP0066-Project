@@ -1,7 +1,7 @@
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
-from modules.utilities.display import clear_terminal
+from modules.utilities.display import clear_terminal, display_choice
 import sqlite3
 
 
@@ -182,35 +182,23 @@ class Clinician(User):
         breaks the flow. We return to False to indicate to Main.py that our User
         has quit.
         """
-        run = True
-        while run:
-            clear_terminal()
+        while True:
             print(f"Hello, {self.name}!")
             # Ben I have preserved number five as quit for now -> appreciate it
             # looks a little odd.
-            try:
-                selection = input(
-                    "What would you like to do?\n"
-                    "[1] Calendar\n"  # Calendar view
-                    "[2] Your Patient Dashboard\n"  # Dashboard of all patients
-                    "[3] -\n"  # Extras here e.g. link to medical news websites
-                    "[4] -\n"  # Extras here  - or streamline
-                    "[5] Quit\n"
-                )
-            except Exception as e:
-                if selection not in ["1", "2", "3", "4", "5"]:
-                    pass
-                print("Invalid selection:" + e)
 
-            if selection == "1":
+            choices = ["Calendar", "Your Patient Dashboard", "-", "-", "Quit"]            
+            selection = display_choice("What would you like to do?", choices)
+
+            if selection == 1:
                 self.view_calendar()
-            if selection == "2":
+            if selection == 2:
                 pass
-            if selection == "3":
+            if selection == 3:
                 pass
-            if selection == "4":
+            if selection == 4:
                 pass
-            if selection == "5":
+            if selection == 5:
                 clear_terminal()
                 print("Thanks for using Breeze!")
                 return False
