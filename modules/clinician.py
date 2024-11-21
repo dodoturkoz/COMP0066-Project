@@ -2,6 +2,7 @@ from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
 from modules.utilities.display import clear_terminal
+import sqlite3
 
 
 class Clinician(User):
@@ -33,9 +34,100 @@ class Clinician(User):
 
         return available_slots
 
-    def request_appointment(self, slot: datetime) -> bool:
-        """Use to request a specific timeslot"""
-        pass
+    def request_appointment(self, patient: Patient) -> bool:
+        """Allows the patient to request an appointment with their clinician"""
+
+        # Loop to take a requested date from the user
+        def choose_date() -> datetime:
+            while True:
+                try:
+                    date_string = input(
+                        "Please enter a date when you would like to see your clinician (DD/MM/YY):"
+                    )
+
+                    requested_date = datetime.strptime(date_string, "%d/%m/%y")
+                    if requested_date < datetime.today():
+                        print("You cannot book an appointment before the current date.")
+                    else:
+                        return requested_date
+                except ValueError:
+                    print(
+                        "You have entered an invalid date. Please enter in the format DD/MM/YY."
+                    )
+
+        # Loop to select a valid time from the available slots
+        def choose_slot(slots: list) -> datetime:
+            print("Here are the available times on that day:")
+            print(f"[{i + 1}] {slot.strftime('%H:%M')}" for i, slot in enumerate(slots))
+
+            while True:
+                selection = int(
+                    input(
+                        f"Which time would you like to request? [{range(1, len(slots))}] "
+                    )
+                )
+
+                if selection not in list(range(1, len(slots))):
+                    print(f"Please select from options [{range(1, len(slots))}]")
+                    continue
+                else:
+                    return slots[selection - 1]
+
+        # Check that the patient is registered with this clinician
+        self.database.cursor.execute(
+            "SELECT clinician_id FROM Patients WHERE user_id = ?", [patient.user_id]
+        )
+        clinician_id = self.database.cursor.fetchone()
+
+        if clinician_id != self.user_id:
+            print(
+                "You are not registered with this clinician. Please contact the admin."
+            )
+            return False
+
+        # Take a description from the user - Phil can you advise on correct language here?
+        description = input(
+            "Please describe why you would like to see your clinician (optional):"
+        )
+
+        while True:
+            # Take in a requested date
+            requested_date = choose_date()
+
+            # Get available slots on that day
+            slots = self.get_available_slots(requested_date)
+
+            if not slots:
+                choose_again = input(
+                    "Sorry, your clinician has no availability on that day - would you like to choose another day? (Y/N)"
+                )
+                if choose_again == "N":
+                    return False
+                else:
+                    continue
+
+            chosen_time = choose_slot(slots)
+            break
+
+        try:
+            self.database.cursor.execute(
+                """
+                    INSERT INTO Appointments (user_id, clinician_id, date, notes)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                (
+                    patient.user_id,
+                    self.user_id,
+                    chosen_time,
+                    description,
+                ),
+            )
+            self.database.connection.commit()
+            print("Your appointment has been requested. You'll receive an email once your clinician has confirmed it.")
+            return True
+        except sqlite3.IntegrityError as e:
+            print(f"Failed to book appointment: {e}")
+            return False
 
     def view_calendar(self):
         """
@@ -48,10 +140,13 @@ class Clinician(User):
         appointments = self.get_appointments()
         if appointments:
             for appointment in appointments:
-                patient_name = self.database.cursor.execute("""
+                patient_name = self.database.cursor.execute(
+                    """
                 SELECT name 
                 FROM USERS 
-                WHERE user_id = ?""", [appointment['user_id']]).fetchone()
+                WHERE user_id = ?""",
+                    [appointment["user_id"]],
+                ).fetchone()
                 print(
                     f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
                     + f" - {patient_name} - "
