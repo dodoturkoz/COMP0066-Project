@@ -1,4 +1,3 @@
-from database.setup import Database
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
@@ -6,20 +5,18 @@ from modules.utilities import clear_terminal
 
 
 class Clinician(User):
-    def __init__(
-        self,
-        database: Database,
-        user_id: str,
-        username: str,
-        name: str,
-        email: str,
-        is_active: bool,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(
-            database, user_id, username, name, email, is_active, *args, **kwargs
-        )
+
+    def get_appointments(self) -> list:
+        """Find all appointments registered for the clinician, including unconfirmed ones"""
+        cur = self.database.connection
+        try:
+            appointments = cur.execute(f"""
+                SELECT * 
+                FROM Appointments 
+                WHERE clinician_id = {self.user_id}""").fetchall()
+            return appointments
+        except Exception as e:
+            print(f"Error: {e}")        
 
     def get_available_slots(self, day: datetime) -> list:
         """Used to get all available slots for a clinician on a specified day"""
@@ -40,16 +37,10 @@ class Clinician(User):
 
         # Option to approve/reject confirmed appointments?
         clear_terminal()
-        cur = self.database.connection
-        try:
-            appointments = cur.execute(f"""
-                SELECT * 
-                FROM Appointments 
-                WHERE clinician_id = {self.user_id}""").fetchall()
-        except Exception as e:
-            print(f"Error: {e}")
+        appointments = self.get_appointments()
         if appointments:
             for appointment in appointments:
+                cur = self.database.connection
                 patient_name = cur.execute(f"""
                 SELECT name 
                 FROM USERS 
