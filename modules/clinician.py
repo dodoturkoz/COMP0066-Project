@@ -14,13 +14,22 @@ class Clinician(User):
                 SELECT * 
                 FROM Appointments 
                 WHERE clinician_id = {self.user_id}""").fetchall()
+            print(appointments)
             return appointments
         except Exception as e:
             print(f"Error: {e}")        
 
     def get_available_slots(self, day: datetime) -> list:
         """Used to get all available slots for a clinician on a specified day"""
-        pass
+        appointments = self.get_appointments()
+        possible_hours = [9, 10, 11, 12, 14, 15, 16]
+        available_slots = []
+
+        for hour in possible_hours:
+            if datetime(day.year, day.month, day.day, hour, 0) not in [appointment["date"] for appointment in appointments]:
+                available_slots.push(datetime(day.year, day.month, day.day, hour, 0))
+        
+        return available_slots
 
     def request_appointment(self, slot: datetime) -> bool:
         """Use to request a specific timeslot"""
