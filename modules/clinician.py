@@ -6,21 +6,6 @@ from modules.utilities.display import clear_terminal
 
 
 class Clinician(User):
-    def __init__(
-        self,
-        database: Database,
-        user_id: str,
-        username: str,
-        name: str,
-        email: str,
-        is_active: bool,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(
-            database, user_id, username, name, email, is_active, *args, **kwargs
-        )
-
     def get_available_slots(self, day: datetime) -> list:
         """Used to get all available slots for a clinician on a specified day"""
         pass
@@ -103,7 +88,7 @@ class Clinician(User):
                 "[4] -\n"  # Extras here  - or streamline
                 "[5] Quit\n"
             )
-            if int(selection) not in [1, 2, 3, 4, 5]:
+            if int(selection) not in [1, 2, 3, 4, 5, 6]:
                 print("Invalid selection")
                 continue
             if int(selection) == 1:
