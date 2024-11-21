@@ -7,9 +7,8 @@ from modules.utilities.display import clear_terminal
 class Clinician(User):
     def get_appointments(self) -> list:
         """Find all appointments registered for the clinician, including unconfirmed ones"""
-        cur = self.database.connection
         try:
-            appointments = cur.execute(f"""
+            appointments = self.database.cursor.execute(f"""
                 SELECT * 
                 FROM Appointments 
                 WHERE clinician_id = {self.user_id}""").fetchall()
