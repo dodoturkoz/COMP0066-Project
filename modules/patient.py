@@ -10,27 +10,30 @@ def mood_input():
     Get mood from patient using a colour or number code in input
     """
 
-    print("\nMOOD TRACKER:\n")
-    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding \U0001f600    "))
-    print("\033[92;40m {}\033[00m".format("5. green Great \U0001F642               "))
-    print("\033[93;40m {}\033[00m".format("4. yellow Okay \U0001F610               "))
-    print("\033[31;40m {}\033[00m".format("3. orange Bit bad \U0001F641            "))
-    print("\033[91;40m {}\033[00m".format("2. red Very bad \U0001F61E              "))
-    print("\033[33;40m {}\033[00m".format("1. brown Terrible \U0001F622            "))
+    print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
+    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") + "\U0001f600")
+    print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
+    print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
+    print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
+    print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
+    print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") + "\U0001F622")
+
+    #We can add 0x0001F44D U+1F44D and U+1F44E for thumbs up and down if someone likes that. And put U+21A5 as up arrow and U+21A7
+    #for the down arrow. U+23CA
 
     mood_colour=input("\nEnter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown\n")
     if mood_colour =="dark green" or mood_colour =="6" or mood_colour =="6.":
-        mood_description= "\033[1;32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
+        mood_description= "\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
     elif mood_colour =="green" or mood_colour =="5" or mood_colour =="5.":
-        mood_description= "\033[1;92m {}\033[00m" .format("Green Great \U0001F642") 
+        mood_description= "\033[92m {}\033[00m" .format("Green Great \U0001F642") 
     elif mood_colour =="yellow" or mood_colour =="4" or mood_colour =="4.":
-        mood_description= "\033[1;93m {}\033[00m" .format("Yellow Okay \U0001F610") 
+        mood_description= "\033[93m {}\033[00m" .format("Yellow Okay \U0001F610") 
     elif mood_colour =="orange" or mood_colour =="3" or mood_colour =="3.":
-        mood_description= "\033[1;33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
+        mood_description= "\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
     elif mood_colour =="red" or mood_colour =="2" or mood_colour =="2.":
-        mood_description= "\033[1;91m {}\033[00m" .format("Red Very bad \U0001F61E") 
+        mood_description= "\033[91m {}\033[00m" .format("Red Very bad \U0001F61E") 
     elif mood_colour =="brown" or mood_colour =="1" or mood_colour =="1.":
-        mood_description= "ESC[47m[1;31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+        mood_description= "\033[47m[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
     else:
         print("Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
         mood_description=mood_input()
