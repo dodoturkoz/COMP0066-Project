@@ -33,7 +33,7 @@ def mood_input():
     elif mood_colour =="red" or mood_colour =="2" or mood_colour =="2.":
         mood_description= "\033[91m {}\033[00m" .format("Red Very bad \U0001F61E") 
     elif mood_colour =="brown" or mood_colour =="1" or mood_colour =="1.":
-        mood_description= "\033[47m[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+        mood_description= "\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
     else:
         print("Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
         mood_description=mood_input()
