@@ -8,10 +8,13 @@ class Clinician(User):
     def get_appointments(self) -> list:
         """Find all appointments registered for the clinician, including unconfirmed ones"""
         try:
-            appointments = self.database.cursor.execute(f"""
+            appointments = self.database.cursor.execute(
+                """
                 SELECT * 
                 FROM Appointments 
-                WHERE clinician_id = {self.user_id}""").fetchall()
+                WHERE clinician_id = ?""",
+                [self.user_id],
+            ).fetchall()
             return appointments
         except Exception as e:
             print(f"Error: {e}")
@@ -38,30 +41,21 @@ class Clinician(User):
         """
         This allows the clinician to view all upcoming appointments,
         showing whether they are confirmed or not.
-
-        Ben I have modified this as the connection was being closed prematurely
-        and causing errors on successive calls.
         """
 
         # Option to approve/reject confirmed appointments?
         clear_terminal()
-        try:
-            appointments = self.database.cursor.execute(f"""
-                SELECT * 
-                FROM Appointments 
-                WHERE clinician_id = {self.user_id}""").fetchall()
-        except Exception as e:
-            print(f"Error: {e}")
+        appointments = self.get_appointments()
         if appointments:
             for appointment in appointments:
-                patient_name = self.database.cursor.execute(f"""
+                patient_name = self.database.cursor.execute("""
                 SELECT name 
                 FROM USERS 
-                WHERE user_id = {appointment["user_id"]}""").fetchone()
+                WHERE user_id = ?""", [appointment['user_id']]).fetchone()
                 print(
-                    f"{appointment["date"].strftime('%a %d %b %Y, %I:%M%p')}"
+                    f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
                     + f" - {patient_name} - "
-                    + f"{'Confirmed' if appointment["is_confirmed"] else 'Not Confirmed'}\n"
+                    + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
                 )
         else:
             print("There are no appointments.")
