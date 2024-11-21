@@ -54,3 +54,29 @@ RELAXATION_RESOURCES = [
              "audio_file": "https://selfhelp.cntw.nhs.uk/application/files/6317/0913/7031/NHS-Cumbria-Work_Stress.mp3",
              "transcript": "https://www.cntw.nhs.uk/home/accessible-information/audio/self-help-guides-audio-transcripts/work-stress-audio-transcript/"}
         ]
+
+
+moods = {"6.":"\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600"),
+         "6":"\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600"),
+         "dark green":"\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600"),
+         
+         "5.":"\033[92m {}\033[00m" .format("Green Great \U0001F642"),
+         "5":"\033[92m {}\033[00m" .format("Green Great \U0001F642"),
+         "green":"\033[92m {}\033[00m" .format("Green Great \U0001F642"),
+         
+         "4.":"\033[93m {}\033[00m" .format("Yellow Okay \U0001F610"),
+         "4":"\033[93m {}\033[00m" .format("Yellow Okay \U0001F610"),
+         "yellow":"\033[93m {}\033[00m" .format("Yellow Okay \U0001F610"),
+         
+         "3.":"\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641"),
+         "3":"\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641"),
+         "orange":"\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641"),
+         
+         "2.":"\033[91m {}\033[00m" .format("Red Very bad \U0001F61E"),
+         "2":"\033[91m {}\033[00m" .format("Red Very bad \U0001F61E"),
+         "red":"\033[91m {}\033[00m" .format("Red Very bad \U0001F61E"),
+         
+         "1.":"\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") ,
+         "1":"\033[31m {}\033[00m" .format("Brown Terrible \U0001F622"),
+         "brown":"\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+         }

@@ -2,6 +2,7 @@ import sqlite3
 from typing import Optional, Any
 
 from modules.constants import RELAXATION_RESOURCES
+from modules.constants import moods
 from modules.user import User
 from datetime import datetime
 
@@ -11,32 +12,26 @@ def mood_input():
     """
 
     print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
-    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") + "\U0001f600")
+    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") 
+          + "\U0001f600")
     print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
     print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
     print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
     print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
-    print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") + "\U0001F622")
+    print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") 
+           + "\U0001F622")
 
-    #We can add 0x0001F44D U+1F44D and U+1F44E for thumbs up and down if someone likes that. And put U+21A5 as up arrow and U+21A7
-    #for the down arrow. U+23CA
+    # Background changed black to ensure terminal background colour not changing colours. 
+    # Needs group review though low priority.
 
-    mood_colour=input("\nEnter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown\n")
-    if mood_colour =="dark green" or mood_colour =="6" or mood_colour =="6.":
-        mood_description= "\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
-    elif mood_colour =="green" or mood_colour =="5" or mood_colour =="5.":
-        mood_description= "\033[92m {}\033[00m" .format("Green Great \U0001F642") 
-    elif mood_colour =="yellow" or mood_colour =="4" or mood_colour =="4.":
-        mood_description= "\033[93m {}\033[00m" .format("Yellow Okay \U0001F610") 
-    elif mood_colour =="orange" or mood_colour =="3" or mood_colour =="3.":
-        mood_description= "\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
-    elif mood_colour =="red" or mood_colour =="2" or mood_colour =="2.":
-        mood_description= "\033[91m {}\033[00m" .format("Red Very bad \U0001F61E") 
-    elif mood_colour =="brown" or mood_colour =="1" or mood_colour =="1.":
-        mood_description= "\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+    mood_colour=(input("\nEnter your mood for today. Select an option from 6 to 1 or type the "
+    "following words: dark green, green, yellow, orange, red, brown\n")).lower()
+    if mood_colour in moods:
+        mood_description = moods[mood_colour]
     else:
-        print("Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
-        mood_description=mood_input()
+        print("Please ensure you type a number from 6 to 1 or type the following words"
+        " : dark green, green, yellow, orange, red, brown ")
+        mood_description = mood_input()
 
     return mood_description
 
@@ -45,14 +40,15 @@ def comment_input():
     """
     Ask if patient wants to comment and then pass the comment to patient method.
     """
-    do_comment = input("Would you like to enter any comments regarding your mood?\nChoose a number.\n1.Yes\n2.No\n ")
-    if do_comment == "1" or do_comment == "1." or do_comment == "Yes" or do_comment == "yes":
+    do_comment = (input("Would you like to enter any comments regarding your mood?"
+    "\nChoose a number.\n1.Yes\n2.No\n ")).lower()
+    if do_comment in ("1", "1.", "yes"):
         comment = input("Enter any comments regarding your mood:\n")
-    elif do_comment == "2" or do_comment == "2." or do_comment == "No" or do_comment == "no":
-        comment = "There is no comment associated with the mood of this day.\n"
+    elif do_comment in ("2", "2.", "no"):
+        comment = "There was no comment provided with the mood of this day.\n"
     else:
         print("Please ensure you enter the number 1 or 2.") 
-        comment=comment_input()
+        comment = comment_input()
 
     return comment
 
