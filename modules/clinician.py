@@ -12,7 +12,6 @@ class Clinician(User):
                 SELECT * 
                 FROM Appointments 
                 WHERE clinician_id = {self.user_id}""").fetchall()
-            print(appointments)
             return appointments
         except Exception as e:
             print(f"Error: {e}")
@@ -24,9 +23,11 @@ class Clinician(User):
         available_slots = []
 
         for hour in possible_hours:
-            if datetime(day.year, day.month, day.day, hour, 0) not in [appointment["date"] for appointment in appointments]:
-                available_slots.push(datetime(day.year, day.month, day.day, hour, 0))
-        
+            if datetime(day.year, day.month, day.day, hour, 0) not in [
+                appointment["date"] for appointment in appointments
+            ]:
+                available_slots.append(datetime(day.year, day.month, day.day, hour, 0))
+
         return available_slots
 
     def request_appointment(self, slot: datetime) -> bool:
