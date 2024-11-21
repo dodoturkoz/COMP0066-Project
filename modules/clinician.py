@@ -5,19 +5,17 @@ from modules.utilities.display import clear_terminal
 
 
 class Clinician(User):
-
     def get_appointments(self) -> list:
         """Find all appointments registered for the clinician, including unconfirmed ones"""
-        cur = self.database.connection
         try:
-            appointments = cur.execute(f"""
+            appointments = self.database.cursor.execute(f"""
                 SELECT * 
                 FROM Appointments 
                 WHERE clinician_id = {self.user_id}""").fetchall()
             print(appointments)
             return appointments
         except Exception as e:
-            print(f"Error: {e}")        
+            print(f"Error: {e}")
 
     def get_available_slots(self, day: datetime) -> list:
         """Used to get all available slots for a clinician on a specified day"""
@@ -46,11 +44,16 @@ class Clinician(User):
 
         # Option to approve/reject confirmed appointments?
         clear_terminal()
-        appointments = self.get_appointments()
+        try:
+            appointments = self.database.cursor.execute(f"""
+                SELECT * 
+                FROM Appointments 
+                WHERE clinician_id = {self.user_id}""").fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
         if appointments:
             for appointment in appointments:
-                cur = self.database.connection
-                patient_name = cur.execute(f"""
+                patient_name = self.database.cursor.execute(f"""
                 SELECT name 
                 FROM USERS 
                 WHERE user_id = {appointment["user_id"]}""").fetchone()
@@ -95,26 +98,29 @@ class Clinician(User):
             print(f"Hello, {self.name}!")
             # Ben I have preserved number five as quit for now -> appreciate it
             # looks a little odd.
-            selection = input(
-                "What would you like to do?\n"
-                "[1] Calendar\n"  # Calendar view
-                "[2] Your Patient Dashboard\n"  # Dashboard of all patients
-                "[3] -\n"  # Extras here e.g. link to medical news websites
-                "[4] -\n"  # Extras here  - or streamline
-                "[5] Quit\n"
-            )
-            if int(selection) not in [1, 2, 3, 4, 5]:
-                print("Invalid selection")
-                continue
-            if int(selection) == 1:
+            try:
+                selection = input(
+                    "What would you like to do?\n"
+                    "[1] Calendar\n"  # Calendar view
+                    "[2] Your Patient Dashboard\n"  # Dashboard of all patients
+                    "[3] -\n"  # Extras here e.g. link to medical news websites
+                    "[4] -\n"  # Extras here  - or streamline
+                    "[5] Quit\n"
+                )
+            except Exception as e:
+                if selection not in ["1", "2", "3", "4", "5"]:
+                    pass
+                print("Invalid selection:" + e)
+
+            if selection == "1":
                 self.view_calendar()
-            if int(selection) == 2:
+            if selection == "2":
                 pass
-            if int(selection) == 3:
+            if selection == "3":
                 pass
-            if int(selection) == 4:
+            if selection == "4":
                 pass
-            if int(selection) == 5:
+            if selection == "5":
                 clear_terminal()
                 print("Thanks for using Breeze!")
                 return False
