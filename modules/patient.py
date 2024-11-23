@@ -167,7 +167,7 @@ class Patient(User):
         comment = comment_input()
 
         query = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
-        params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
+        params = [self.user_id,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
 
         try:
             self.database.cursor.execute(query, tuple(params))
@@ -206,7 +206,7 @@ class Patient(User):
 
             if consent in ("1", "1.", "yes"):
                 query = "UPDATE MoodEntries SET text = ?, mood = ? WHERE DATE(date) = ? AND user_id = ?"
-                params = [comment, mood, datetime.now().strftime("%Y-%m-%d"), self.user_id]
+                params = [comment, mood, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.user_id]
             
                 try:                
                     self.database.cursor.execute(query, tuple(params))
@@ -229,7 +229,7 @@ class Patient(User):
                     (
                         self.user_id,
                         comment,
-                        datetime.now().strftime("%Y-%m-%d"),
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         mood,
                     ),
                 )
@@ -288,7 +288,7 @@ class Patient(User):
                 (
                     self.user_id,
                     content,
-                    datetime.now().strftime("%Y-%m-%d"),
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 ),
             )
             self.database.connection.commit()
