@@ -1,6 +1,9 @@
 import os
 
-def display_choice(header: str, options: list[str]) -> int:
+# I have added the option to change the input string given when the choice is offered
+def display_choice(
+    header: str, options: list[str], choice_str: str = "Your selection: "
+) -> int:
     """
     Displays a list of options to the user and returns their choice.
     """
@@ -9,11 +12,12 @@ def display_choice(header: str, options: list[str]) -> int:
     for i, option in enumerate(options):
         print(f"[{i + 1}] {option}")
     while True:
-        choice = input("Your selection: ")
+        choice = input(choice_str)
         if choice.isnumeric() and 1 <= int(choice) <= len(options):
             return int(choice)
         else:
             print("Invalid choice. Please try again.")
+
 
 def display_dict(dict: dict[str, any]) -> None:
     """
@@ -21,6 +25,7 @@ def display_dict(dict: dict[str, any]) -> None:
     """
     for key, value in dict.items():
         print(f"{key}: {value}")
+
 
 def clear_terminal():
     # Check if the operating system is Windows

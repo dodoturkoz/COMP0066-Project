@@ -29,9 +29,11 @@ class Clinician(User):
         # This checks whether an appointment already exists at that day and time
         # and that it isn't earlier than the current time
         for hour in possible_hours:
-            if datetime(day.year, day.month, day.day, hour, 0) not in [
-                appointment["date"] for appointment in appointments
-            ] and datetime(day.year, day.month, day.day) > datetime.now():
+            if (
+                datetime(day.year, day.month, day.day, hour, 0)
+                not in [appointment["date"] for appointment in appointments]
+                and datetime(day.year, day.month, day.day) > datetime.now()
+            ):
                 available_slots.append(datetime(day.year, day.month, day.day, hour, 0))
 
         return available_slots
@@ -48,7 +50,7 @@ class Clinician(User):
                     )
 
                     requested_date = datetime.strptime(date_string.strip(), "%d/%m/%y")
-                    
+
                     # Constructing a datetime for today's date minus the current time -
                     # this allows patients to book slots on the day
                     today = datetime.today()
@@ -56,7 +58,9 @@ class Clinician(User):
                     if requested_date < current_day:
                         print("You cannot book an appointment before the current date.")
                     elif requested_date.weekday() in [5, 6]:
-                        print("Your clinician only works Monday-Friday. Please choose a date during the week.")
+                        print(
+                            "Your clinician only works Monday-Friday. Please choose a date during the week."
+                        )
                     else:
                         return requested_date
                 except ValueError:
@@ -120,7 +124,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                     return False
                 else:
                     continue
-            
+
             # Offer time slots to the user
             chosen_time = choose_slot(slots)
 
@@ -180,8 +184,120 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                 return True
 
     def view_requested_appointments(self):
-        # Show all requested appointments, with option to approve/reject
-        pass
+        """This allows the clinician to view all appointments that have been
+        requested but not confirmed yet, and gives the option to confirm or
+        reject them"""
+        clear_terminal()
+        appointments = self.get_appointments()
+        unconfirmed_appointments = []
+        choice_strings = []
+
+        # Find any unconfirmed appointments and store them in the array
+        # Add a string for each appointment to the choice_strings array
+        # Q: Should this display past appointments that were unconfirmed? Should those exist at all?
+        if appointments:
+            for appointment in appointments:
+                if not appointment["is_confirmed"]:
+                    unconfirmed_appointments.append(appointment)
+                    patient_name = self.database.cursor.execute(
+                        """
+                    SELECT name 
+                    FROM USERS 
+                    WHERE user_id = ?""",
+                        [appointment["user_id"]],
+                    ).fetchone()
+                    choice_strings.append(
+                        f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+                        + f" - {patient_name}"
+                    )
+            choice_strings.append("Exit")
+
+
+            while unconfirmed_appointments:
+                # Let user choose an appointment
+                confirm_choice = display_choice(
+                    "Here are your unconfirmed appointments:",
+                    choice_strings,
+                    f"Would you like to confirm or reject any appointment? Please choose from the following options {[*range(1, len(unconfirmed_appointments) + 2)]}: ",
+                )
+
+                if confirm_choice == len(unconfirmed_appointments) + 1:
+                    break
+                else:
+                    options = ["Confirm", "Reject", "Go Back"]
+                    accept_or_reject = display_choice(
+                        f"You have selected {choice_strings[confirm_choice - 1]} - would you like to confirm or reject the appointment?",
+                        options,
+                    )
+
+                    # Confirm the appointment
+                    if accept_or_reject == 1:
+                        
+                        accepted_appointment = unconfirmed_appointments[
+                            confirm_choice - 1
+                        ]
+
+                        try:
+                            self.database.cursor.execute("""
+                                UPDATE Appointments
+                                SET is_confirmed = 1
+                                WHERE appointment_id = ?""",
+                                [accepted_appointment['appointment_id']])
+                            self.database.connection.commit()
+                            print('The appointment has been confirmed. An email with full details will be sent to you and the patient.')
+                            # Need to implement email
+                        except sqlite3.IntegrityError as e:
+                            print(f"Failed to confirm appointment: {e}")
+                            return False
+
+                        next_action = display_choice('What would you like to do next?',
+                                                     ['Accept/Reject another appointment', 'Exit'])
+                        if next_action == 1:
+                            continue
+                        else:
+                            return True
+                        
+                    # Delete the appointment
+                    elif accept_or_reject == 2:
+                        
+                        rejected_appointment = unconfirmed_appointments[
+                            confirm_choice - 1
+                        ]
+                        try:
+                            self.database.cursor.execute(
+                                """
+                                DELETE FROM Appointments
+                                WHERE appointment_id = ?""",
+                                [rejected_appointment["appointment_id"]],
+                            )
+                            self.database.connection.commit()
+                            print(
+                                "The appointment has been rejected. A confirmation email will be sent to you and the patient."
+                            )
+
+                            # Need to implement email
+                        except sqlite3.IntegrityError as e:
+                            print(f"Failed to confirm appointment: {e}")
+                            return False
+
+                        next_action = display_choice(
+                            "What would you like to do next?",
+                            ["Accept/Reject another appointment", "Exit"],
+                        )
+                        if next_action == 1:
+                            continue
+                        else:
+                            return True
+                        
+                    elif accept_or_reject == 3:
+                        continue
+
+        else:
+            print("There are no requested appointments.")
+        while True:
+            if input("Press enter to return to the dashboard") == "":
+                clear_terminal()
+                return True
 
     def edit_patient_info(self, patient: Patient):
         # Provide interface to add info to a patient's record - condition,
@@ -207,7 +323,13 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
             # Ben I have preserved number five as quit for now -> appreciate it
             # looks a little odd.
 
-            choices = ["Calendar", "Your Patient Dashboard", "-", "-", "Quit"]
+            choices = [
+                "Calendar",
+                "Your Patient Dashboard",
+                "View Requested Appointments",
+                "-",
+                "Quit",
+            ]
             selection = display_choice("What would you like to do?", choices)
 
             if selection == 1:
@@ -215,7 +337,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
             if selection == 2:
                 pass
             if selection == 3:
-                pass
+                self.view_requested_appointments()
             if selection == 4:
                 pass
             if selection == 5:
