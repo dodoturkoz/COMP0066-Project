@@ -6,52 +6,6 @@ from modules.constants import moods
 from modules.user import User
 from datetime import datetime
 
-def mood_input():
-    """
-    Get mood from patient using a colour or number code in input
-    """
-
-    print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
-    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") 
-          + "\U0001f600")
-    print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
-    print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
-    print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
-    print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
-    print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") 
-           + "\U0001F622")
-
-    # Background changed black to ensure terminal background colour not changing colours. 
-    # Needs group review though low priority.
-
-    mood_colour=(input("\nEnter your mood for today. Select an option from 6 to 1 or type the "
-    "following words: dark green, green, yellow, orange, red, brown\n")).lower()
-    if mood_colour in moods:
-        mood_description = moods[mood_colour]
-    else:
-        print("Please ensure you type a number from 6 to 1 or type the following words"
-        " : dark green, green, yellow, orange, red, brown ")
-        mood_description = mood_input()
-
-    return mood_description
-
-
-def comment_input():
-    """
-    Ask if patient wants to comment and then pass the comment to patient method.
-    """
-    do_comment = (input("Would you like to enter any comments regarding your mood?"
-    "\nChoose a number.\n1.Yes\n2.No\n ")).lower()
-    if do_comment in ("1", "1.", "yes"):
-        comment = input("Enter any comments regarding your mood:\n")
-    elif do_comment in ("2", "2.", "no"):
-        comment = "There was no comment provided with the mood of this day.\n"
-    else:
-        print("Please ensure you enter the number 1 or 2.") 
-        comment = comment_input()
-
-    return comment
-
 class Patient(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
@@ -155,13 +109,53 @@ class Patient(User):
             print(f"Database error occurred: {e}")
             return []
 
-    def mood_of_the_day(self, mood: str, comment: str) -> bool:
+    def mood_of_the_day(self) -> bool:
         # Interface for this
         """
         1. Check if mood entry for the day exists.
         2. Update mood for the day is entry for the day exists
         3. Creates a new mood and comment entry for the patient if record for the day does not exist.
         """
+
+        """
+        Get mood from patient using a colour or number code in input
+        """
+
+        print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
+        print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") 
+          + "\U0001f600")
+        print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
+        print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
+        print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
+        print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
+        print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") 
+           + "\U0001F622")
+
+        # Background changed black to ensure terminal background colour not changing colours. 
+        # Needs group review though low priority.
+
+        mood_colour=(input("\nEnter your mood for today. Select an option from 6 to 1 or type the "
+        "following words: dark green, green, yellow, orange, red, brown\n")).lower()
+        if mood_colour in moods:
+            mood = moods[mood_colour]
+        else:
+            print("Please ensure you type a number from 6 to 1 or type the following words"
+             " : dark green, green, yellow, orange, red, brown ")
+            mood = mood_input()
+
+        """
+        Ask if patient wants to comment and then pass the comment to patient method.
+        """
+        do_comment = (input("Would you like to enter any comments regarding your mood?"
+        "\nChoose a number.\n1.Yes\n2.No\n ")).lower()
+        if do_comment in ("1", "1.", "yes"):
+             comment = input("Enter any comments regarding your mood:\n")
+        elif do_comment in ("2", "2.", "no"):
+            comment = "There was no comment provided with the mood of this day.\n"
+        else:
+            print("Please ensure you enter the number 1 or 2.") 
+            comment = comment_input()
+
 
         query = "SELECT mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
         params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
@@ -410,9 +404,7 @@ class Patient(User):
             if choice == "1":
                 self.edit_medical_info()
             elif choice == "2":
-                mood = mood_input()
-                comment = comment_input()
-                self.mood_of_the_day(mood, comment)
+                self.mood_of_the_day()
             elif choice == "3":
                 self.display_previous_moods()
             elif choice == "4":

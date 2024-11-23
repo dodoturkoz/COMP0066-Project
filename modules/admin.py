@@ -1,7 +1,7 @@
 from database.setup import Database as db
 from modules.user import User
-import pandas as pd
-import numpy as np
+#import pandas as pd
+#import numpy as np
 
 class Admin(User):
 
@@ -41,8 +41,8 @@ class Admin(User):
         User.view_info(User)
 
         # First, makes a query into the database that takes the 
-        if User = 
-         
+        if User == "":
+         pass
         #Then, edit the user information
         User.edit_info(is_active, False)
         # NB - add checks that these methods can only be applied to patients and practitioners
