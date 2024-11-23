@@ -167,7 +167,7 @@ class Patient(User):
         comment = comment_input()
 
         query = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
-        params = [self.user_id,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+        params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
 
         try:
             self.database.cursor.execute(query, tuple(params))
