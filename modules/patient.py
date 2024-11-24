@@ -109,190 +109,95 @@ class Patient(User):
             return []
 
     def mood_of_the_day(self) -> bool:
-        # Interface for this
         """
-        1. Check if mood entry for the day exists.
-        2. Update mood for the day is entry for the day exists
-        3. Creates a new mood and comment entry for the patient if record for the day does not exist.
+        Manages the mood entry for the current day:
+        - Updates the existing entry if one exists.
+        - Creates a new mood entry if none exists.
         """
 
         def mood_input():
             """
-            Get mood from patient using a colour or number code in input
+            Get mood input from the patient using a number or color name.
             """
+            print("\nMOOD TRACKER:\n")
+            for i in range(1, 7):
+                print(f"{i}. " + moods[f"{i}"])
 
-            print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
-            print(
-                "\033[32;40m {}\033[00m".format(
-                    "6. dark green Outstanding  \U0001f44d \u0197  "
-                )
-                + "\U0001f600"
-            )
-            print(
-                "\033[92;40m {}\033[00m".format(
-                    "5. green Great                \u0197  "
-                )
-                + "\U0001f642"
-            )
-            print(
-                "\033[93;40m {}\033[00m".format(
-                    "4. yellow Okay                \u0197  "
-                )
-                + "\U0001f610"
-            )
-            print(
-                "\033[31;40m {}\033[00m".format(
-                    "3. orange Bit bad             \u0197  "
-                )
-                + "\U0001f641"
-            )
-            print(
-                "\033[91;40m {}\033[00m".format(
-                    "2. red Very bad               \u0197  "
-                )
-                + "\U0001f61e"
-            )
-            print(
-                "\033[1;2;91;40m {}\033[00m".format(
-                    "1. brown Terrible          \U0001f44e \u0197  "
-                )
-                + "\U0001f622"
-            )
-
-            # Background changed black to ensure terminal background colour not changing colours.
-            # Needs group review though low priority.
-
-            mood_colour = (
-                input(
-                    "\nEnter your mood for today. Type a number from 6 to 1 or type the "
-                    "following words: dark green, green, yellow, orange, red, brown\n"
-                )
-            ).lower()
-            if mood_colour in moods:
-                mood_description = moods[mood_colour]
-            else:
+            while True:
+                mood_colour = input(
+                    "\nEnter your mood for today (number 6 to 1 or color name): "
+                ).lower()
+                if mood_colour in moods:
+                    return moods[mood_colour]
                 print(
-                    "Please ensure you type a number from 6 to 1 or type the following words"
-                    " : dark green, green, yellow, orange, red, brown "
+                    "Invalid input. Please enter a number from 6 to 1 or a valid color name."
                 )
-                mood_description = mood_input()
-
-            return mood_description
 
         def comment_input():
             """
-            Ask if patient wants to comment and then pass the comment to patient method.
+            Prompt the user for a comment about their mood.
             """
-            do_comment = (
-                input(
-                    "\nWould you like to enter any comments regarding your mood?"
-                    "\nType 1 or 2.\n1.Yes\n2.No\n "
-                )
-            ).lower()
-            if do_comment in ("1", "1.", "yes"):
-                comment = input("\nEnter any comments regarding your mood:\n")
-            elif do_comment in ("2", "2.", "no"):
-                comment = (
-                    "There was no comment provided with the mood of this day.\n"
-                )
-            else:
-                print("Please ensure you enter the number 1 or 2.")
-                comment = comment_input()
-
-            return comment
+            while True:
+                do_comment = input(
+                    "Would you like to add a comment? (Yes/No): "
+                ).lower()
+                if do_comment in ("yes", "y", "1"):
+                    return input("Enter your comment: ")
+                elif do_comment in ("no", "n", "2"):
+                    return "No comment provided."
+                print("Invalid input. Please enter Yes or No.")
 
         mood = mood_input()
         comment = comment_input()
 
-        query = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
-        params = [self.user_id, datetime.now().strftime("%Y-%m-%d")]
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        query_check = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
+        query_update = "UPDATE MoodEntries SET text = ?, mood = ? WHERE user_id = ? AND DATE(date) = ?"
+        query_insert = "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)"
 
         try:
-            self.database.cursor.execute(query, tuple(params))
-            entries = [
-                {"text": row["text"], "mood": row["mood"]}
-                for row in self.database.cursor.fetchall()
-            ]
-
-        except Exception as e:
-            print(
-                f"Error checking whether mood entry already exists for the day: {e}"
+            # Check if an entry already exists for today
+            self.database.cursor.execute(
+                query_check, (self.user_id, today_date)
             )
-            return False
+            entry = self.database.cursor.fetchone()
 
-        # Update mood since previously described mood of the day,
-        if entries:
-            for entry in entries:
-                print("\nPreviously described mood:" + str(entry["mood"]))
-                print(f"Previously described comment: {entry['text']}")
-            print("Mood described now: " + str(mood))
-            if (
-                comment
-                == "There was no comment provided with the mood of this day.\n"
-            ):
+            if entry:
                 print(
-                    "No comment described now. Updating mood entry now removes previously described comment"
+                    f"\nExisting entry found:\nMood: {entry['mood']}\nComment: {entry['text']}"
                 )
-            else:
-                print("Comment described now: " + str(comment) + "\n")
-            print("You already have a mood entry.")
+                print("New Mood: ", mood)
+                print("New Comment: ", comment)
 
-            def consent_input():
+                # Confirm update
                 consent = input(
-                    "WARNING: Are you sure you wish to update your mood entry of the day?\n"
-                    "1.Yes \n2.No \nType 1 or 2."
+                    "Do you want to update the mood entry for today? (Yes/No): "
                 ).lower()
-
-                if consent not in ("1", "1.", "yes", "2", "2.", "no"):
-                    print("Please ensure you enter the number 1 or 2.")
-                    consent = consent_input()
-
-                return consent
-
-            consent = consent_input()
-
-            if consent in ("1", "1.", "yes"):
-                query = "UPDATE MoodEntries SET text = ?, mood = ? WHERE DATE(date) = ? AND user_id = ?"
-                params = [
-                    comment,
-                    mood,
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    self.user_id,
-                ]
-
-                try:
-                    self.database.cursor.execute(query, tuple(params))
+                if consent in ("yes", "y", "1"):
+                    self.database.cursor.execute(
+                        query_update, (comment, mood, self.user_id, today_date)
+                    )
                     self.database.connection.commit()
                     print("Mood entry updated successfully.")
                     return True
-
-                except Exception as e:
-                    print(f"Error updating mood entry: {e}")
+                else:
+                    print("Mood entry was not updated.")
                     return False
-
-            elif consent in ("2", "2.", "no"):
-                print(
-                    "Your mood and comment was not updated as you chose not to."
-                )
-
-        # Insert new mood since mood not previously recorded that day.
-        elif not entries:
-            try:
+            else:
+                # Insert new mood entry
                 self.database.cursor.execute(
-                    "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
-                    (
-                        self.user_id,
-                        comment,
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        mood,
-                    ),
+                    query_insert, (self.user_id, comment, today_date, mood)
                 )
                 self.database.connection.commit()
                 print("Mood entry added successfully.")
                 return True
-            except Exception as e:
-                print(f"Error adding mood entry: {e}")
-                return False
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return False
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return False
 
     def display_journal(
         self, date: Optional[str] = None
@@ -527,7 +432,7 @@ class Patient(User):
             print(
                 "---------------------------"
             )  # Visual separator after action
-            next_step = input("Would you like to:\n1. Continue\n2. Log Out\n")
+            next_step = input("Would you like to:\n1. Continue\n2. Quit\n")
             if next_step.strip() != "1":
                 print("Goodbye!")
                 break
