@@ -6,6 +6,7 @@ from modules.constants import moods
 from modules.user import User
 from datetime import datetime
 
+
 class Patient(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
@@ -92,12 +93,10 @@ class Patient(User):
             ]
 
             if entries:
-                print(
-                    f"\nMood Entries for {date if date else 'all dates'}:\n"
-                )
+                print(f"\nMood Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
                     print(f"Date: {entry['date']}")
-                    print("Mood:" + str(entry['mood']))
+                    print("Mood:" + str(entry["mood"]))
                     print(f"Content: {entry['text']}\n")
 
             else:
@@ -123,105 +122,160 @@ class Patient(User):
             """
 
             print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
-            print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") 
-                  + "\U0001f600")
-            print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
-            print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
-            print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
-            print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
-            print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") 
-                  + "\U0001F622")
+            print(
+                "\033[32;40m {}\033[00m".format(
+                    "6. dark green Outstanding  \U0001f44d \u0197  "
+                )
+                + "\U0001f600"
+            )
+            print(
+                "\033[92;40m {}\033[00m".format(
+                    "5. green Great                \u0197  "
+                )
+                + "\U0001f642"
+            )
+            print(
+                "\033[93;40m {}\033[00m".format(
+                    "4. yellow Okay                \u0197  "
+                )
+                + "\U0001f610"
+            )
+            print(
+                "\033[31;40m {}\033[00m".format(
+                    "3. orange Bit bad             \u0197  "
+                )
+                + "\U0001f641"
+            )
+            print(
+                "\033[91;40m {}\033[00m".format(
+                    "2. red Very bad               \u0197  "
+                )
+                + "\U0001f61e"
+            )
+            print(
+                "\033[1;2;91;40m {}\033[00m".format(
+                    "1. brown Terrible          \U0001f44e \u0197  "
+                )
+                + "\U0001f622"
+            )
 
-            # Background changed black to ensure terminal background colour not changing colours. 
+            # Background changed black to ensure terminal background colour not changing colours.
             # Needs group review though low priority.
 
-            mood_colour=(input("\nEnter your mood for today. Type a number from 6 to 1 or type the "
-            "following words: dark green, green, yellow, orange, red, brown\n")).lower()
+            mood_colour = (
+                input(
+                    "\nEnter your mood for today. Type a number from 6 to 1 or type the "
+                    "following words: dark green, green, yellow, orange, red, brown\n"
+                )
+            ).lower()
             if mood_colour in moods:
                 mood_description = moods[mood_colour]
             else:
-                print("Please ensure you type a number from 6 to 1 or type the following words"
-                " : dark green, green, yellow, orange, red, brown ")
+                print(
+                    "Please ensure you type a number from 6 to 1 or type the following words"
+                    " : dark green, green, yellow, orange, red, brown "
+                )
                 mood_description = mood_input()
 
             return mood_description
 
-            
         def comment_input():
             """
             Ask if patient wants to comment and then pass the comment to patient method.
             """
-            do_comment = (input("\nWould you like to enter any comments regarding your mood?"
-            "\nType 1 or 2.\n1.Yes\n2.No\n ")).lower()
+            do_comment = (
+                input(
+                    "\nWould you like to enter any comments regarding your mood?"
+                    "\nType 1 or 2.\n1.Yes\n2.No\n "
+                )
+            ).lower()
             if do_comment in ("1", "1.", "yes"):
                 comment = input("\nEnter any comments regarding your mood:\n")
             elif do_comment in ("2", "2.", "no"):
-                comment = "There was no comment provided with the mood of this day.\n"
+                comment = (
+                    "There was no comment provided with the mood of this day.\n"
+                )
             else:
-                print("Please ensure you enter the number 1 or 2.") 
+                print("Please ensure you enter the number 1 or 2.")
                 comment = comment_input()
 
             return comment
-        
+
         mood = mood_input()
         comment = comment_input()
 
         query = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
-        params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
+        params = [self.user_id, datetime.now().strftime("%Y-%m-%d")]
 
         try:
             self.database.cursor.execute(query, tuple(params))
-            entries =  [
+            entries = [
                 {"text": row["text"], "mood": row["mood"]}
                 for row in self.database.cursor.fetchall()
-                ]
+            ]
 
         except Exception as e:
-            print(f"Error checking whether mood entry already exists for the day: {e}")
+            print(
+                f"Error checking whether mood entry already exists for the day: {e}"
+            )
             return False
 
-        #Update mood since previously described mood of the day,
-        if entries:  
+        # Update mood since previously described mood of the day,
+        if entries:
             for entry in entries:
-                    print("\nPreviously described mood:" + str(entry['mood']))
-                    print(f"Previously described comment: {entry['text']}")
-            print("Mood described now: " + str(mood)) 
-            if comment == "There was no comment provided with the mood of this day.\n":
-                print("No comment described now. Updating mood entry now removes previously described comment")
+                print("\nPreviously described mood:" + str(entry["mood"]))
+                print(f"Previously described comment: {entry['text']}")
+            print("Mood described now: " + str(mood))
+            if (
+                comment
+                == "There was no comment provided with the mood of this day.\n"
+            ):
+                print(
+                    "No comment described now. Updating mood entry now removes previously described comment"
+                )
             else:
-                print("Comment described now: " + str(comment)+"\n") 
-            print("You already have a mood entry.") 
+                print("Comment described now: " + str(comment) + "\n")
+            print("You already have a mood entry.")
 
             def consent_input():
-                consent = input("WARNING: Are you sure you wish to update your mood entry of the day?\n"
-                            "1.Yes \n2.No \nType 1 or 2.").lower()
-                
-                if consent not in ("1", "1.", "yes","2", "2.","no"):
-                    print("Please ensure you enter the number 1 or 2.") 
+                consent = input(
+                    "WARNING: Are you sure you wish to update your mood entry of the day?\n"
+                    "1.Yes \n2.No \nType 1 or 2."
+                ).lower()
+
+                if consent not in ("1", "1.", "yes", "2", "2.", "no"):
+                    print("Please ensure you enter the number 1 or 2.")
                     consent = consent_input()
 
                 return consent
-            
+
             consent = consent_input()
 
             if consent in ("1", "1.", "yes"):
                 query = "UPDATE MoodEntries SET text = ?, mood = ? WHERE DATE(date) = ? AND user_id = ?"
-                params = [comment, mood, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.user_id]
-            
-                try:                
+                params = [
+                    comment,
+                    mood,
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    self.user_id,
+                ]
+
+                try:
                     self.database.cursor.execute(query, tuple(params))
                     self.database.connection.commit()
                     print("Mood entry updated successfully.")
                     return True
-            
+
                 except Exception as e:
                     print(f"Error updating mood entry: {e}")
                     return False
-                
-            elif consent in ("2", "2.", "no"):
-                print("Your mood and comment was not updated as you chose not to.") 
 
-        #Insert new mood since mood not previously recorded that day.
+            elif consent in ("2", "2.", "no"):
+                print(
+                    "Your mood and comment was not updated as you chose not to."
+                )
+
+        # Insert new mood since mood not previously recorded that day.
         elif not entries:
             try:
                 self.database.cursor.execute(
@@ -239,7 +293,7 @@ class Patient(User):
             except Exception as e:
                 print(f"Error adding mood entry: {e}")
                 return False
-        
+
     def display_journal(
         self, date: Optional[str] = None
     ) -> list[dict[str, str]]:
