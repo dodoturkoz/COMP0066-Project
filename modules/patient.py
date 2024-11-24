@@ -5,38 +5,67 @@ from modules.constants import RELAXATION_RESOURCES
 from modules.user import User
 from datetime import datetime
 
+
 def mood_input():
     """
     Get mood from patient using a colour or number code in input
     """
 
     print("\n" + "\033[1m {}\033[00m".format("MOOD TRACKER:\n"))
-    print("\033[32;40m {}\033[00m".format("6. dark green Outstanding  \U0001F44D \u0197  ") + "\U0001f600")
-    print("\033[92;40m {}\033[00m".format("5. green Great                \u0197  ") + "\U0001F642")
-    print("\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ") + "\U0001F610")
-    print("\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ") + "\U0001F641")
-    print("\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ") + "\U0001F61E")
-    print("\033[1;2;91;40m {}\033[00m".format("1. brown Terrible          \U0001F44E \u0197  ") + "\U0001F622")
+    print(
+        "\033[32;40m {}\033[00m".format(
+            "6. dark green Outstanding  \U0001f44d \u0197  "
+        )
+        + "\U0001f600"
+    )
+    print(
+        "\033[92;40m {}\033[00m".format("5. green Great                \u0197  ")
+        + "\U0001f642"
+    )
+    print(
+        "\033[93;40m {}\033[00m".format("4. yellow Okay                \u0197  ")
+        + "\U0001f610"
+    )
+    print(
+        "\033[31;40m {}\033[00m".format("3. orange Bit bad             \u0197  ")
+        + "\U0001f641"
+    )
+    print(
+        "\033[91;40m {}\033[00m".format("2. red Very bad               \u0197  ")
+        + "\U0001f61e"
+    )
+    print(
+        "\033[1;2;91;40m {}\033[00m".format(
+            "1. brown Terrible          \U0001f44e \u0197  "
+        )
+        + "\U0001f622"
+    )
 
-    #We can add 0x0001F44D U+1F44D and U+1F44E for thumbs up and down if someone likes that. And put U+21A5 as up arrow and U+21A7
-    #for the down arrow. U+23CA
+    # We can add 0x0001F44D U+1F44D and U+1F44E for thumbs up and down if someone likes that. And put U+21A5 as up arrow and U+21A7
+    # for the down arrow. U+23CA
 
-    mood_colour=input("\nEnter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown\n")
-    if mood_colour =="dark green" or mood_colour =="6" or mood_colour =="6.":
-        mood_description= "\033[32m {}\033[00m" .format("Dark green Outstanding \U0001f600")
-    elif mood_colour =="green" or mood_colour =="5" or mood_colour =="5.":
-        mood_description= "\033[92m {}\033[00m" .format("Green Great \U0001F642") 
-    elif mood_colour =="yellow" or mood_colour =="4" or mood_colour =="4.":
-        mood_description= "\033[93m {}\033[00m" .format("Yellow Okay \U0001F610") 
-    elif mood_colour =="orange" or mood_colour =="3" or mood_colour =="3.":
-        mood_description= "\033[33m {}\033[00m" .format("Orange Bit bad \U0001F641") 
-    elif mood_colour =="red" or mood_colour =="2" or mood_colour =="2.":
-        mood_description= "\033[91m {}\033[00m" .format("Red Very bad \U0001F61E") 
-    elif mood_colour =="brown" or mood_colour =="1" or mood_colour =="1.":
-        mood_description= "\033[31m {}\033[00m" .format("Brown Terrible \U0001F622") 
+    mood_colour = input(
+        "\nEnter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown\n"
+    )
+    if mood_colour == "dark green" or mood_colour == "6" or mood_colour == "6.":
+        mood_description = "\033[32m {}\033[00m".format(
+            "Dark green Outstanding \U0001f600"
+        )
+    elif mood_colour == "green" or mood_colour == "5" or mood_colour == "5.":
+        mood_description = "\033[92m {}\033[00m".format("Green Great \U0001f642")
+    elif mood_colour == "yellow" or mood_colour == "4" or mood_colour == "4.":
+        mood_description = "\033[93m {}\033[00m".format("Yellow Okay \U0001f610")
+    elif mood_colour == "orange" or mood_colour == "3" or mood_colour == "3.":
+        mood_description = "\033[33m {}\033[00m".format("Orange Bit bad \U0001f641")
+    elif mood_colour == "red" or mood_colour == "2" or mood_colour == "2.":
+        mood_description = "\033[91m {}\033[00m".format("Red Very bad \U0001f61e")
+    elif mood_colour == "brown" or mood_colour == "1" or mood_colour == "1.":
+        mood_description = "\033[31m {}\033[00m".format("Brown Terrible \U0001f622")
     else:
-        print("Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown ")
-        mood_description=mood_input()
+        print(
+            "Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown "
+        )
+        mood_description = mood_input()
 
     return mood_description
 
@@ -45,19 +74,36 @@ def comment_input():
     """
     Ask if patient wants to comment and then pass the comment to patient method.
     """
-    do_comment = input("Would you like to enter any comments regarding your mood?\nChoose a number.\n1.Yes\n2.No\n ")
-    if do_comment == "1" or do_comment == "1." or do_comment == "Yes" or do_comment == "yes":
+    do_comment = input(
+        "Would you like to enter any comments regarding your mood?\nChoose a number.\n1.Yes\n2.No\n "
+    )
+    if (
+        do_comment == "1"
+        or do_comment == "1."
+        or do_comment == "Yes"
+        or do_comment == "yes"
+    ):
         comment = input("Enter any comments regarding your mood:\n")
-    elif do_comment == "2" or do_comment == "2." or do_comment == "No" or do_comment == "no":
+    elif (
+        do_comment == "2"
+        or do_comment == "2."
+        or do_comment == "No"
+        or do_comment == "no"
+    ):
         comment = "There is no comment associated with the mood of this day.\n"
     else:
-        print("Please ensure you enter the number 1 or 2.") 
-        comment=comment_input()
+        print("Please ensure you enter the number 1 or 2.")
+        comment = comment_input()
 
     return comment
 
+
 class Patient(User):
-    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
+    MODIFIABLE_ATTRIBUTES = [
+        "username",
+        "email",
+        "password",
+    ]  # We need diagnosis here for clinicians to update
 
     def edit_medical_info(self) -> bool:
         """
@@ -77,9 +123,7 @@ class Patient(User):
             print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
 
         try:
-            choice = int(
-                input("Enter the number corresponding to the attribute: ")
-            )
+            choice = int(input("Enter the number corresponding to the attribute: "))
             attribute = options.get(choice)
 
             if not attribute:
@@ -142,12 +186,10 @@ class Patient(User):
             ]
 
             if entries:
-                print(
-                    f"\nMood Entries for {date if date else 'all dates'}:\n"
-                )
+                print(f"\nMood Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
                     print(f"Date: {entry['date']}")
-                    print("Mood:" + str(entry['mood']))
+                    print("Mood:" + str(entry["mood"]))
                     print(f"Content: {entry['text']}\n")
 
             else:
@@ -168,33 +210,32 @@ class Patient(User):
         """
 
         query = "SELECT mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
-        params = [self.user_id,datetime.now().strftime("%Y-%m-%d")]
+        params = [self.user_id, datetime.now().strftime("%Y-%m-%d")]
 
         try:
             self.database.cursor.execute(query, tuple(params))
-            entries =  self.database.cursor.fetchone()
+            entries = self.database.cursor.fetchone()
 
         except Exception as e:
             print(f"Error checking whether mood entry already exists for the day: {e}")
             return False
 
-        #Update mood since previously described mood of the day,
-        if entries:    
-
+        # Update mood since previously described mood of the day,
+        if entries:
             query = "UPDATE MoodEntries SET text = ?, mood = ? WHERE DATE(date) = ? AND user_id = ?"
             params = [comment, mood, datetime.now().strftime("%Y-%m-%d"), self.user_id]
-            
-            try:                
+
+            try:
                 self.database.cursor.execute(query, tuple(params))
                 self.database.connection.commit()
                 print("Mood entry updated successfully.")
                 return True
-            
+
             except Exception as e:
                 print(f"Error updating mood entry: {e}")
                 return False
-        
-        #Insert new mood since mood not previously recorded that day.
+
+        # Insert new mood since mood not previously recorded that day.
         elif not entries:
             try:
                 self.database.cursor.execute(
@@ -212,10 +253,8 @@ class Patient(User):
             except Exception as e:
                 print(f"Error adding mood entry: {e}")
                 return False
-        
-    def display_journal(
-        self, date: Optional[str] = None
-    ) -> list[dict[str, str]]:
+
+    def display_journal(self, date: Optional[str] = None) -> list[dict[str, str]]:
         """
         Displays patient's journal entries, optionally filtering by a specific date.
         """
@@ -236,9 +275,7 @@ class Patient(User):
             ]
 
             if entries:
-                print(
-                    f"\nJournal Entries for {date if date else 'all dates'}:\n"
-                )
+                print(f"\nJournal Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
                     print(f"Date: {entry['date']}")
                     print(f"Content: {entry['text']}\n")
@@ -344,9 +381,7 @@ class Patient(User):
                 print("Appointment canceled successfully.")
                 return True
             else:
-                print(
-                    "Appointment not found or you are not authorized to cancel it."
-                )
+                print("Appointment not found or you are not authorized to cancel it.")
                 return False
         except sqlite3.OperationalError as e:
             print(f"Error canceling appointment: {e}")
@@ -445,9 +480,7 @@ class Patient(User):
                 return True
             else:
                 print("Invalid choice. Please try again.")
-            print(
-                "---------------------------"
-            )  # Visual separator after action
+            print("---------------------------")  # Visual separator after action
             next_step = input("Would you like to:\n1. Continue\n2. Log Out\n")
             if next_step.strip() != "1":
                 print("Goodbye!")
