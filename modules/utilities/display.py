@@ -1,5 +1,6 @@
 import os
 
+
 # I have added the option to change the input string given when the choice is offered
 def display_choice(
     header: str, options: list[str], choice_str: str = "Your selection: "
@@ -7,7 +8,6 @@ def display_choice(
     """
     Displays a list of options to the user and returns their choice.
     """
-    print("\n")
     print(header)
     for i, option in enumerate(options):
         print(f"[{i + 1}] {option}")
