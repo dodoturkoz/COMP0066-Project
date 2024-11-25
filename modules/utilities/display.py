@@ -8,6 +8,7 @@ def display_choice(
     """
     Displays a list of options to the user and returns their choice.
     """
+
     print(header)
     for i, option in enumerate(options):
         print(f"[{i + 1}] {option}")
@@ -18,7 +19,7 @@ def display_choice(
         else:
             print("Invalid choice. Please try again.")
 
-
+            
 def display_dict(dict: dict[str, any]) -> None:
     """
     Displays a dictionary in a clean way.

@@ -2,13 +2,14 @@ from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
 from modules.utilities.display import display_choice
-from modules.utilities.display import clear_terminal
+from modules
 
 db = Database()
 
 try:
     clear_terminal()
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
+    display_emergency_numbers()
     run = True
     while run:
         selection = display_choice(
