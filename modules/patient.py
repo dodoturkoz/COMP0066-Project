@@ -52,19 +52,23 @@ class Patient(User):
         "username",
         "email",
         "password",
+        "first_name",
+        "surname",
     ]  # We need diagnosis here for clinicians to update
 
     def edit_medical_info(self) -> bool:
         """
         Allows the patient to change their details.
         """
-        # should the user be able to change their name? yes
+        # should the user be able to change their first_name and surname? yes
         options = {
             1: "username",
             2: "email",
             3: "password",
             4: "emergency_email",
             5: "date_of_birth",
+            6: "first_name",
+            7: "surname",
         }
 
         print("Select an attribute to edit:")
@@ -88,7 +92,10 @@ class Patient(User):
                 return self.edit_info(attribute, value)
 
             # Update the Patients table
-            elif attribute in ["emergency_email", "date_of_birth"]:
+            elif attribute in [
+                "emergency_email",
+                "date_of_birth",
+            ]:
                 self.database.cursor.execute(
                     f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
                     (value, self.user_id),
