@@ -374,14 +374,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                     WHERE Patients.user_id = ?""",
                     [patient_id],
                 ).fetchone()
-                patient = Patient(
-                    self.database,
-                    patient_details["user_id"],
-                    patient_details["username"],
-                    patient_details["name"],
-                    patient_details["email"],
-                    patient_details["is_active"],
-                )
+                patient = Patient(self.database, **patient_details)
                 self.edit_patient_info(patient)
                 clear_terminal()
                 return False
