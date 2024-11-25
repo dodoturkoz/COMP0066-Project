@@ -19,7 +19,7 @@ def display_choice(
         else:
             print("Invalid choice. Please try again.")
 
-            
+
 def display_dict(dict: dict[str, any]) -> None:
     """
     Displays a dictionary in a clean way.
@@ -34,3 +34,12 @@ def clear_terminal():
         os.system("cls")
     else:
         os.system("clear")
+
+
+def wait_terminal():
+    """We can use this function to wait for the user to press enter
+    before continuing, such as after displaying a message or data."""
+    while True:
+        if input("Press enter to return to the dashboard") == "":
+            clear_terminal()
+            return False
