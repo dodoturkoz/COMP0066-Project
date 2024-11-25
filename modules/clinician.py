@@ -168,14 +168,14 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
             for appointment in appointments:
                 patient_name = self.database.cursor.execute(
                     """
-                SELECT name 
+                SELECT first_name, surname 
                 FROM USERS 
                 WHERE user_id = ?""",
                     [appointment["user_id"]],
                 ).fetchone()
                 print(
                     f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                    + f" - {patient_name} - "
+                    + f" - {patient_name['first_name']} {patient_name['surname']} - "
                     + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
                 )
         else:
@@ -203,14 +203,14 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                     unconfirmed_appointments.append(appointment)
                     patient_name = self.database.cursor.execute(
                         """
-                    SELECT name 
+                    SELECT first_name, surname 
                     FROM USERS 
                     WHERE user_id = ?""",
                         [appointment["user_id"]],
                     ).fetchone()
                     choice_strings.append(
                         f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                        + f" - {patient_name}"
+                        + f" - {patient_name['first_name']} {patient_name['surname']}"
                     )
             choice_strings.append("Exit")
 
@@ -337,16 +337,19 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
         while True:
             edit_choice = display_choice(
                 "What would you like to edit?",
-                ["Name", "Diagnosis", "Exit"],
+                ["First Name", "Surname", "Diagnosis", "Exit"],
                 "Please choose from the above options: ",
             )
             if edit_choice == 1:
-                new_name = input("Please enter the new name: ")
-                patient.edit_info("name", new_name)
+                new_first_name = input("Please enter the new first name: ")
+                patient.edit_info("first_name", new_first_name)
             if edit_choice == 2:
+                new_surname = input("Please enter the new surname: ")
+                patient.edit_info("surname", new_surname)
+            if edit_choice == 3:
                 new_diagnosis = input("Please enter the new diagnosis: ")
                 patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 3:
+            if edit_choice == 4:
                 return False
 
     def view_dashboard(self):
@@ -365,7 +368,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
             print("Here are all your patients:")
             for patient in patients:
                 print(
-                    f"ID: {patient['user_id']} - {patient['username']} - {patient['diagnosis']}"
+                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
                 )
             decision = input(
                 "Would you like to edit any patient's information? (Y/N): "
@@ -380,14 +383,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                     WHERE Patients.user_id = ?""",
                     [patient_id],
                 ).fetchone()
-                patient = Patient(
-                    self.database,
-                    patient_details["user_id"],
-                    patient_details["username"],
-                    patient_details["name"],
-                    patient_details["email"],
-                    patient_details["is_active"],
-                )
+                patient = Patient(self.database, *patient_details)
                 self.edit_patient_info(patient)
                 clear_terminal()
                 return False
@@ -407,7 +403,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
             print(f"Here are all your patients with the diagnosis {diagnosis}:")
             for patient in patients:
                 print(
-                    f"ID: {patient['user_id']} - {patient['username']} - {patient['diagnosis']}"
+                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
                 )
             while True:
                 if input("Press enter to return to the dashboard") == "":
@@ -427,7 +423,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
         """
         while True:
             clear_terminal()
-            print(f"Hello, {self.name}!")
+            print(f"Hello, {self.first_name} {self.surname}!")
             # Ben I have preserved number five as quit for now -> appreciate it
             # looks a little odd.
 
