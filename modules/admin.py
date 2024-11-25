@@ -14,7 +14,8 @@ class Admin(User):
     def disable_user(self, User):
         # Disables the user - how will this be implemented?
         # Store as an attribute on the user itself?
-        # NB - add checks that these methods can only be applied to patients and practitioners
+        # NB - add checks that these methods can only be applied to patients 
+        # and practitioners
         pass
 
     def flow(self) -> bool:

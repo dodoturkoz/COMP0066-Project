@@ -1,11 +1,454 @@
 from modules.user import User
+from modules.patient import Patient
+from datetime import datetime
+from modules.utilities.display import clear_terminal, display_choice
+import sqlite3
 
 
 class Clinician(User):
+    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
+
+    def get_appointments(self) -> list:
+        """Find all appointments registered for the clinician, including unconfirmed ones"""
+        try:
+            appointments = self.database.cursor.execute(
+                """
+                SELECT * 
+                FROM Appointments 
+                WHERE clinician_id = ?""",
+                [self.user_id],
+            ).fetchall()
+            return appointments
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def get_available_slots(self, day: datetime) -> list:
+        """Used to get all available slots for a clinician on a specified day"""
+        appointments = self.get_appointments()
+        possible_hours = [9, 10, 11, 12, 14, 15, 16]
+        available_slots = []
+
+        # This checks whether an appointment already exists at that day and time
+        # and that it isn't earlier than the current time
+        for hour in possible_hours:
+            if (
+                datetime(day.year, day.month, day.day, hour, 0)
+                not in [appointment["date"] for appointment in appointments]
+                and datetime(day.year, day.month, day.day) > datetime.now()
+            ):
+                available_slots.append(datetime(day.year, day.month, day.day, hour, 0))
+
+        return available_slots
+
+    def request_appointment(self, patient: Patient) -> bool:
+        """Allows the patient to request an appointment with their clinician"""
+
+        # Loop to take a valid requested date from the user
+        def choose_date() -> datetime:
+            while True:
+                try:
+                    date_string = input(
+                        "Please enter a date when you would like to see your clinician (DD/MM/YY): "
+                    )
+
+                    requested_date = datetime.strptime(date_string.strip(), "%d/%m/%y")
+
+                    # Constructing a datetime for today's date minus the current time -
+                    # this allows patients to book slots on the day
+                    today = datetime.today()
+                    current_day = datetime(today.year, today.month, today.day)
+                    if requested_date < current_day:
+                        print("You cannot book an appointment before the current date.")
+                    elif requested_date.weekday() in [5, 6]:
+                        print(
+                            "Your clinician only works Monday-Friday. Please choose a date during the week."
+                        )
+                    else:
+                        return requested_date
+                except ValueError:
+                    print(
+                        "You have entered an invalid date. Please enter in the format DD/MM/YY."
+                    )
+
+        # Loop to select a valid time from the available slots
+        def choose_slot(slots: list) -> datetime:
+            print("\nHere are the available times on that day:")
+
+            for i, slot in enumerate(slots):
+                print(f"[{i + 1}] {slot.strftime('%H:%M')}")
+            print(f"[{len(slots) + 1}] Select a different day")
+
+            while True:
+                selection = int(
+                    input(
+                        f"""\nWhich time would you like to request? 
+Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
+                    )
+                )
+
+                if selection not in list(range(1, len(slots) + 2)):
+                    print("Invalid input. Please try again.")
+                    continue
+                elif selection == len(slots) + 1:
+                    return False
+                else:
+                    return slots[selection - 1]
+
+        # Check that the patient is registered with this clinician
+        self.database.cursor.execute(
+            "SELECT clinician_id FROM Patients WHERE user_id = ?", [patient.user_id]
+        )
+        clinician_id = self.database.cursor.fetchone()
+
+        if clinician_id != self.user_id:
+            print(
+                "You are not registered with this clinician. Please contact the admin."
+            )
+            return False
+
+        # Take a description from the user - Phil can you advise on correct language here?
+        description = input(
+            "Please describe why you would like to see your clinician (optional): "
+        )
+
+        while True:
+            # Take in a requested date
+            requested_date = choose_date()
+
+            # Get available slots on that day
+            slots = self.get_available_slots(requested_date)
+
+            if not slots:
+                choose_again = input(
+                    "Sorry, your clinician has no availability on that day - would you like to choose another day? (Y/N) "
+                )
+                if choose_again == "N":
+                    return False
+                else:
+                    continue
+
+            # Offer time slots to the user
+            chosen_time = choose_slot(slots)
+
+            if chosen_time:
+                break
+
+        try:
+            self.database.cursor.execute(
+                """
+                    INSERT INTO Appointments (user_id, clinician_id, date, notes)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                (
+                    patient.user_id,
+                    self.user_id,
+                    chosen_time,
+                    description,
+                ),
+            )
+            self.database.connection.commit()
+            print(
+                "\nYour appointment has been requested. You'll receive an email once your clinician has confirmed it."
+            )
+            return True
+        except sqlite3.IntegrityError as e:
+            print(f"Failed to book appointment: {e}")
+            return False
+
     def view_calendar(self):
-        # Display
-        pass
+        """
+        This allows the clinician to view all upcoming appointments,
+        showing whether they are confirmed or not.
+        """
+
+        # Option to approve/reject confirmed appointments?
+        clear_terminal()
+        appointments = self.get_appointments()
+        if appointments:
+            for appointment in appointments:
+                patient_name = self.database.cursor.execute(
+                    """
+                SELECT name 
+                FROM USERS 
+                WHERE user_id = ?""",
+                    [appointment["user_id"]],
+                ).fetchone()
+                print(
+                    f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+                    + f" - {patient_name} - "
+                    + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
+                )
+        else:
+            print("There are no appointments.")
+        while True:
+            if input("Press enter to return to the dashboard") == "":
+                clear_terminal()
+                return True
+
+    def view_requested_appointments(self):
+        """This allows the clinician to view all appointments that have been
+        requested but not confirmed yet, and gives the option to confirm or
+        reject them"""
+        clear_terminal()
+        appointments = self.get_appointments()
+        unconfirmed_appointments = []
+        choice_strings = []
+
+        # Find any unconfirmed appointments and store them in the array
+        # Add a string for each appointment to the choice_strings array
+        # Q: Should this display past appointments that were unconfirmed? Should those exist at all?
+        if appointments:
+            for appointment in appointments:
+                if not appointment["is_confirmed"]:
+                    unconfirmed_appointments.append(appointment)
+                    patient_name = self.database.cursor.execute(
+                        """
+                    SELECT name 
+                    FROM USERS 
+                    WHERE user_id = ?""",
+                        [appointment["user_id"]],
+                    ).fetchone()
+                    choice_strings.append(
+                        f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+                        + f" - {patient_name}"
+                    )
+            choice_strings.append("Exit")
+
+            while unconfirmed_appointments:
+                # Let user choose an appointment
+                confirm_choice = display_choice(
+                    "Here are your unconfirmed appointments:",
+                    choice_strings,
+                    f"Would you like to confirm or reject any appointment? Please choose from the following options {[*range(1, len(unconfirmed_appointments) + 2)]}: ",
+                )
+
+                if confirm_choice == len(unconfirmed_appointments) + 1:
+                    break
+                else:
+                    options = ["Confirm", "Reject", "Go Back"]
+                    accept_or_reject = display_choice(
+                        f"You have selected {choice_strings[confirm_choice - 1]} - would you like to confirm or reject the appointment?",
+                        options,
+                    )
+
+                    # Confirm the appointment
+                    if accept_or_reject == 1:
+                        accepted_appointment = unconfirmed_appointments[
+                            confirm_choice - 1
+                        ]
+
+                        try:
+                            self.database.cursor.execute(
+                                """
+                                UPDATE Appointments
+                                SET is_confirmed = 1
+                                WHERE appointment_id = ?""",
+                                [accepted_appointment["appointment_id"]],
+                            )
+                            self.database.connection.commit()
+                            print(
+                                "The appointment has been confirmed. An email with full details will be sent to you and the patient."
+                            )
+                            # Need to implement email
+                        except sqlite3.IntegrityError as e:
+                            print(f"Failed to confirm appointment: {e}")
+                            return False
+
+                        next_action = display_choice(
+                            "What would you like to do next?",
+                            ["Accept/Reject another appointment", "Exit"],
+                        )
+                        if next_action == 1:
+                            continue
+                        else:
+                            return True
+
+                    # Delete the appointment
+                    elif accept_or_reject == 2:
+                        rejected_appointment = unconfirmed_appointments[
+                            confirm_choice - 1
+                        ]
+                        try:
+                            self.database.cursor.execute(
+                                """
+                                DELETE FROM Appointments
+                                WHERE appointment_id = ?""",
+                                [rejected_appointment["appointment_id"]],
+                            )
+                            self.database.connection.commit()
+                            print(
+                                "The appointment has been rejected. A confirmation email will be sent to you and the patient."
+                            )
+
+                            # Need to implement email
+                        except sqlite3.IntegrityError as e:
+                            print(f"Failed to confirm appointment: {e}")
+                            return False
+
+                        next_action = display_choice(
+                            "What would you like to do next?",
+                            ["Accept/Reject another appointment", "Exit"],
+                        )
+                        if next_action == 1:
+                            continue
+                        else:
+                            return True
+
+                    elif accept_or_reject == 3:
+                        continue
+
+        else:
+            print("There are no requested appointments.")
+        while True:
+            if input("Press enter to return to the dashboard") == "":
+                clear_terminal()
+                return False
+
+    def get_all_patients(self):
+        try:
+            return self.database.cursor.execute(
+                """SELECT * 
+                FROM Patients
+                INNER JOIN Users ON Patients.user_id = Users.user_id
+                WHERE clinician_id = ?""",
+                [self.user_id],
+            ).fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def get_all_patients_by_diagnosis(self, diagnosis: str):
+        try:
+            return self.database.cursor.execute(
+                """SELECT * 
+                FROM Patients
+                INNER JOIN Users ON Patients.user_id = Users.user_id
+                WHERE clinician_id = ? AND diagnosis = ?""",
+                [self.user_id, diagnosis],
+            ).fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def edit_patient_info(self, patient: Patient):
+        """Edit patient information
+
+        WORK IN PROGRESS! -> User obj has no MODIFIABLE ATTRIBUTES
+        """
+
+        while True:
+            edit_choice = display_choice(
+                "What would you like to edit?",
+                ["Name", "Diagnosis", "Exit"],
+                "Please choose from the above options: ",
+            )
+            if edit_choice == 1:
+                new_name = input("Please enter the new name: ")
+                patient.edit_info("name", new_name)
+            if edit_choice == 2:
+                new_diagnosis = input("Please enter the new diagnosis: ")
+                patient.edit_info("diagnosis", new_diagnosis)
+            if edit_choice == 3:
+                return False
+
+    def view_dashboard(self):
+        """View the dashboard.
+
+        All methods used are declared as class methods to allow for other classes to access them.
+        """
+        clear_terminal()
+        dashboard_home_choice = display_choice(
+            "Welcome to your dashboard. Where would you like to go?",
+            ["View All", "Filter By Diagnosis", "Exit"],
+        )
+        if dashboard_home_choice == 1:
+            clear_terminal()
+            patients = self.get_all_patients()
+            print("Here are all your patients:")
+            for patient in patients:
+                print(
+                    f"ID: {patient['user_id']} - {patient['username']} - {patient['diagnosis']}"
+                )
+            decision = input(
+                "Would you like to edit any patient's information? (Y/N): "
+            )
+            if decision == "Y":
+                patient_id = int(input("Please enter the patient's ID: "))
+                patient_details = self.database.cursor.execute(
+                    """
+                    SELECT * 
+                    FROM Patients
+                    INNER JOIN Users ON Patients.user_id = Users.user_id
+                    WHERE Patients.user_id = ?""",
+                    [patient_id],
+                ).fetchone()
+                patient = Patient(
+                    self.database,
+                    patient_details["user_id"],
+                    patient_details["username"],
+                    patient_details["name"],
+                    patient_details["email"],
+                    patient_details["is_active"],
+                )
+                self.edit_patient_info(patient)
+                clear_terminal()
+                return False
+            if decision == "N":
+                while True:
+                    if input("Press enter to return to the dashboard") == "":
+                        clear_terminal()
+                    return False
+
+        if dashboard_home_choice == 2:
+            clear_terminal()
+            # Filter by diagnosis
+            diagnosis = input(
+                "Please enter the diagnosis you would like to filter by: "
+            )
+            patients = self.get_all_patients_by_diagnosis(diagnosis)
+            print(f"Here are all your patients with the diagnosis {diagnosis}:")
+            for patient in patients:
+                print(
+                    f"ID: {patient['user_id']} - {patient['username']} - {patient['diagnosis']}"
+                )
+            while True:
+                if input("Press enter to return to the dashboard") == "":
+                    clear_terminal()
+                    return False
+        if dashboard_home_choice == 3:
+            # Edit patient info
+            clear_terminal()
+            return False
 
     def flow(self) -> bool:
-        print("Hello Clinician")
-        return False
+        """Controls flow of the program from the clinician class
+
+        The program stays within the while loop until a condition is met that
+        breaks the flow. We return to False to indicate to Main.py that our User
+        has quit.
+        """
+        while True:
+            clear_terminal()
+            print(f"Hello, {self.name}!")
+            # Ben I have preserved number five as quit for now -> appreciate it
+            # looks a little odd.
+
+            choices = [
+                "Calendar",
+                "Your Patient Dashboard",
+                "View Requested Appointments",
+                "-",
+                "Quit",
+            ]
+            selection = display_choice("What would you like to do?", choices)
+
+            if selection == 1:
+                self.view_calendar()
+            if selection == 2:
+                self.view_dashboard()
+            if selection == 3:
+                self.view_requested_appointments()
+            if selection == 4:
+                pass
+            if selection == 5:
+                clear_terminal()
+                print("Thanks for using Breeze!")
+                return False
