@@ -1,8 +1,7 @@
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
-from modules.utilities.display import display_choice
-from modules
+from modules.utilities.display import display_choice, clear_terminal
 
 db = Database()
 
