@@ -1,7 +1,7 @@
 from modules.user import User
 from modules.patient import Patient
 from datetime import datetime
-from modules.utilities.display import clear_terminal, display_choice
+from modules.utilities.display import clear_terminal, display_choice, wait_terminal
 import sqlite3
 
 
@@ -180,10 +180,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                 )
         else:
             print("There are no appointments.")
-        while True:
-            if input("Press enter to return to the dashboard") == "":
-                clear_terminal()
-                return True
+        wait_terminal()
 
     def view_requested_appointments(self):
         """This allows the clinician to view all appointments that have been
@@ -299,10 +296,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
 
         else:
             print("There are no requested appointments.")
-        while True:
-            if input("Press enter to return to the dashboard") == "":
-                clear_terminal()
-                return False
+        wait_terminal()
 
     def get_all_patients(self):
         try:
@@ -392,10 +386,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                 clear_terminal()
                 return False
             if decision == "N":
-                while True:
-                    if input("Press enter to return to the dashboard") == "":
-                        clear_terminal()
-                    return False
+                wait_terminal()
 
         if dashboard_home_choice == 2:
             clear_terminal()
@@ -409,10 +400,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                 print(
                     f"ID: {patient['user_id']} - {patient['username']} - {patient['diagnosis']}"
                 )
-            while True:
-                if input("Press enter to return to the dashboard") == "":
-                    clear_terminal()
-                    return False
+            wait_terminal()
         if dashboard_home_choice == 3:
             # Edit patient info
             clear_terminal()
