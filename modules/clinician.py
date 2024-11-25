@@ -4,6 +4,19 @@ from datetime import datetime
 from modules.utilities.display import clear_terminal, display_choice, wait_terminal
 import sqlite3
 
+diagnoses = [
+    "Depression",
+    "Anxiety",
+    "Bipolar",
+    "Schizophrenia",
+    "PTSD",
+    "OCD",
+    "ADHD",
+    "Autism",
+    "Drug Induced Psychosis",
+    "Other",
+]
+
 
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
@@ -338,7 +351,9 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                 new_name = input("Please enter the new name: ")
                 patient.edit_info("name", new_name)
             if edit_choice == 2:
-                new_diagnosis = input("Please enter the new diagnosis: ")
+                new_diagnosis = display_choice(
+                    "Please select the new diagnosis: ", diagnoses
+                )
                 patient.edit_info("diagnosis", new_diagnosis)
             if edit_choice == 3:
                 return False
@@ -374,7 +389,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
                     WHERE Patients.user_id = ?""",
                     [patient_id],
                 ).fetchone()
-                patient = Patient(self.database, **patient_details)
+                patient = Patient(self.database, *patient_details)
                 self.edit_patient_info(patient)
                 clear_terminal()
                 return False
@@ -384,8 +399,8 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """
         if dashboard_home_choice == 2:
             clear_terminal()
             # Filter by diagnosis
-            diagnosis = input(
-                "Please enter the diagnosis you would like to filter by: "
+            diagnosis = display_choice(
+                "Please enter the diagnosis you would like to filter by: ", diagnoses
             )
             patients = self.get_all_patients_by_diagnosis(diagnosis)
             print(f"Here are all your patients with the diagnosis {diagnosis}:")
