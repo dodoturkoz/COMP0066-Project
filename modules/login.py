@@ -24,7 +24,7 @@ def login(db: Database) -> Union[User, None]:
 
     user_data = db.cursor.execute(
         """
-        SELECT user_id, username, name, email, role, is_active FROM Users
+        SELECT user_id, username, first_name, surname, email, role, is_active FROM Users
         WHERE username = :username AND password = :password
         """,
         {"username": username, "password": password},
@@ -53,7 +53,8 @@ def registration_input(
     registration_info = {
         "username": "",
         "password": "",
-        "name": "",
+        "first_name": "",
+        "surname": "",
         "email": "",
         "role": "",
     }
@@ -85,8 +86,8 @@ def registration_input(
             registration_info["password"] = password
             break
 
-    registration_info["name"] = input("Your name: ")
-
+    registration_info["first_name"] = input("Your first name: ")
+    registration_info["surname"] = input("Your surname: ")
     # Get a valid email that is not already in the database
     registration_info["email"] = get_valid_email(
         prompt="Your email: ", existing_emails=existing_emails
@@ -143,13 +144,14 @@ def signup(db: Database) -> bool:
         db.cursor.execute(
             """
             INSERT INTO Users
-            VALUES (:user_id, :username, :password, :name, :email, :role, :is_active)
+            VALUES (:user_id, :username, :password, :first_name, :surname, :email, :role, :is_active)
             """,
             {
                 "user_id": user_id,
                 "username": user_info["username"],
                 "password": user_info["password"],
-                "name": user_info["name"],
+                "first_name": user_info["first_name"],
+                "surname": user_info["surname"],
                 "email": user_info["email"],
                 "role": user_info["role"],
                 "is_active": is_patient,
@@ -174,9 +176,9 @@ def signup(db: Database) -> bool:
         db.connection.commit()
         # Send registration email
         if user_info["role"] == "patient":
-            message = f"Welcome to Breeze {user_info['name'].title()},\n\nWe will asign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
+            message = f"Welcome to Breeze {user_info['first_name'].title()},\n\nWe will asign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
         else:
-            message = f"Welcome to Breeze {user_info['name'].title()},\n\nAn admin will review and activate your profile soon.\n\nBest regards,\nBreeze Team"
+            message = f"Welcome to Breeze {user_info['first_name'].title()} {user_info['surname'].title()},\n\nAn admin will review and activate your profile soon.\n\nBest regards,\nBreeze Team"
         send_email(
             user_info["email"],
             "Welcome to Breeze",
