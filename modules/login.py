@@ -7,7 +7,7 @@ from modules.patient import Patient
 from modules.user import User
 from modules.utilities.display import display_choice, display_dict, clear_terminal
 from database.setup import Database, roles
-from modules.utilities.input import get_valid_email
+from modules.utilities.input import get_valid_email, get_valid_date
 from modules.utilities.send_email import send_email
 
 
@@ -97,20 +97,12 @@ def registration_input(
         registration_info["emergency_email"] = get_valid_email(
             prompt="Your emergency contact email: "
         )
-        while True:
-            # TODO: Discuss if we are setting a minimum age for patients
-            date_of_birth = input("Your date of birth (YYYY-MM-DD): ")
-            try:
-                date_of_birth = datetime.strptime(date_of_birth, "%Y-%m-%d")
-                if date_of_birth > datetime.now():
-                    print("Date of birth cannot be in the future. Please try again.")
-                    continue
-                else:
-                    registration_info["date_of_birth"] = date_of_birth
-                    break
-            except Exception:
-                print("Invalid date format. Please try again.")
-                continue
+        registration_info["date_of_birth"] = get_valid_date(
+            prompt="Your date of birth (YYYY-MM-DD): ",
+            min_date=datetime(1900, 1, 1),
+            max_date=datetime.today(),
+            max_date_message="Date of birth cannot be in the future. Please try again.",
+        )
 
     print("\nThis is your registration information:")
     display_dict(registration_info)

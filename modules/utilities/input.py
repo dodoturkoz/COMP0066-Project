@@ -1,5 +1,6 @@
 import re
 from typing import Union
+from datetime import datetime
 
 
 def get_valid_email(prompt: str, existing_emails: Union[list[str], None] = None) -> str:
@@ -16,3 +17,38 @@ def get_valid_email(prompt: str, existing_emails: Union[list[str], None] = None)
             continue
         else:
             return email
+
+
+def get_valid_date(
+    prompt: str,
+    min_date: datetime,
+    max_date: datetime,
+    min_date_message: Union[str, None] = None,
+    max_date_message: Union[str, None] = None,
+) -> datetime:
+    """
+    Get a valid date from the user and return it
+    """
+    while True:
+        date = input(prompt)
+        try:
+            valid_date = datetime.strptime(date, "%Y-%m-%d")
+            if valid_date > max_date:
+                print(
+                    max_date_message
+                    if max_date_message
+                    else f"Input date must be before {max_date.date()}, please try again."
+                )
+                continue
+            elif valid_date < min_date:
+                print(
+                    min_date_message
+                    if min_date_message
+                    else f"Input date must be after {min_date.date()}, please try again."
+                )
+                continue
+            else:
+                return valid_date
+        except Exception:
+            print("Invalid date format. Please try again.")
+            continue
