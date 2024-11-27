@@ -56,6 +56,7 @@ class Clinician(User):
         reject them"""
         # Importing here to avoid circular imports
         from modules.appointments import get_appointments
+
         clear_terminal()
         appointments = get_appointments(self)
         unconfirmed_appointments = []
@@ -116,7 +117,12 @@ class Clinician(User):
                             print(
                                 "The appointment has been confirmed. An email with full details will be sent to you and the patient."
                             )
+
+                            # Remove the appointment from the list so it is not displayed to the user again
+                            unconfirmed_appointments.remove(accepted_appointment)
+
                             # Need to implement email
+
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
                             return False
@@ -147,7 +153,11 @@ class Clinician(User):
                                 "The appointment has been rejected. A confirmation email will be sent to you and the patient."
                             )
 
+                            # Remove the appointment from the list so it is not displayed to the user again
+                            unconfirmed_appointments.remove(rejected_appointment)
+
                             # Need to implement email
+
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
                             return False
@@ -164,6 +174,8 @@ class Clinician(User):
                     elif accept_or_reject == 3:
                         continue
 
+            if not unconfirmed_appointments:
+                print("You have no unconfirmed appointments.")
         else:
             print("There are no requested appointments.")
         wait_terminal()
