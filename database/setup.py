@@ -5,7 +5,7 @@ roles = ("admin", "patient", "clinician")
 diagnoses = (
     "Depression",
     "Anxiety",
-    "Bipolar",
+    "Bipolar Disorder",
     "Schizophrenia",
     "PTSD",
     "OCD",
