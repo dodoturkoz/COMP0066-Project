@@ -163,38 +163,102 @@ class Admin(User):
     # REMINDER: When I finish with my changes, I'll have to commit them using
     # the following function: self.datbaase.commit()
     
+    #Admin FLow 
     def flow(self) -> bool:
-        while True:
-            print("\nAdmin Menu:")
-            print("1. Register Patient to Practitioner")
-            print("2. View User Information")
-            print("3. Disable a User")
-            print("4. Exit")
+     while True:
 
-            choice = input("Enter your choice (1-4): ")
+        # Display the Admin menu
+        print("\nHello Admin!")
+        print("1. Register Patient to Practitioner")
+        print("2. View All Users")
+        print("3. View Specific User")
+        print("4. Edit User Information")
+        print("5. Disable a User")
+        print("6. Delete a User")
+        print("7. Exit")
 
-            if choice == "1":
-                try:
-                    patient_id = int(input("Enter patient ID: "))
-                    practitioner_id = int(input("Enter practitioner ID: "))
-                    self.register_patient(patient_id, practitioner_id)
-                except ValueError:
-                    print("Invalid input. Please enter numeric IDs.")
-            elif choice == "2":
-                try:
-                    user_id = int(input("Enter user ID to view: "))
-                    self.view_info(user_id)
-                except ValueError:
-                    print("Invalid input. Please enter a numeric ID.")
-            elif choice == "3":
-                try:
-                    user_id = int(input("Enter user ID to disable: "))
-                    self.disable_user(user_id)
-                except ValueError:
-                    print("Invalid input. Please enter a numeric ID.")
-            elif choice == "4":
-                print("Exiting Admin Menu.")
-                return False
-            else:
-                print("Invalid choice. Please select a valid option.")
-        return False
+        # Menu choices 
+        choice = input("Enter your choice (1-7): ").strip()
+
+        #Assign a pateint to clinician 
+
+        if choice == "1":  
+            try:
+                print("\nAssign Patient to Clinician")
+                print("Current Patients Without Clinicians:")
+                unassigned_patients = self.df[self.df["clinician_id"].isnull()]
+                print(unassigned_patients[["user_id", "name", "email"]])
+
+                print("\nClinicians List:")
+                clinicians = self.df[self.df["role"] == "clinician"]
+                print(clinicians[["user_id", "name", "email"]])
+
+                patient_id = int(input("Enter the patient ID: "))
+                clinician_id = int(input("Enter the clinician ID: "))
+                self.register_patient(patient_id, clinician_id)
+            except Exception as e:
+                print(f"Error: {e}")
+
+       #View all user info 
+        elif choice == "2":  
+            print("\nAll Users:")
+            print(self.df)
+
+       #View speicifc users - not sure if this is needed
+        elif choice == "3":  
+            try:
+                user_id = int(input("Enter the user ID to view: "))
+                user_data = self.df[self.df["user_id"] == user_id]
+                if not user_data.empty:
+                    print("\nUser Information:")
+                    print(user_data)
+                else:
+                    print("User not found.")
+            except ValueError:
+                print("Invalid input. Please enter a valid user ID.")
+
+       #Edit info
+        elif choice == "4":  
+            try:
+                user_id = int(input("Enter the user ID to edit: "))
+                user_data = self.df[self.df["user_id"] == user_id]
+                if not user_data.empty:
+                    print("\nEditable User Information:")
+                    print(user_data)
+                    attribute = input("Enter the attribute to edit (e.g., email, name): ").strip()
+                    value = input("Enter the new value: ").strip()
+                    self.edit_table_info("Users", user_data.index[0], attribute, value)
+                else:
+                    print("User not found.")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        #Disable someone 
+        elif choice == "5":  
+            try:
+                user_id = int(input("Enter the User ID to disable: "))
+                self.disable_user(user_id)
+            except Exception as e:
+                print(f"Error: {e}")
+
+        #Deleting user 
+        elif choice == "6":  
+            try:
+                user_id = int(input("Enter the user ID to delete: "))
+                confirmation = input("Are you sure you want to delete this user? (yes/no): ").strip().lower()
+                if confirmation == "yes":
+                    self.delete_user("Users", user_id)
+                else:
+                    print("Operation cancelled.")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        #Exit 
+        elif choice == "7":  
+            print("Exiting Admin Menu.")
+            return False
+
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+        
