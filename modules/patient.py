@@ -3,7 +3,6 @@ from typing import Optional, Any
 
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
-from modules.clinician import Clinician
 from datetime import datetime
 
 
