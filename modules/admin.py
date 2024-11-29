@@ -139,7 +139,6 @@ class Admin(User):
         )
 
         altered_user.edit_info(attribute, value)
-        # return self.refresh
 
         # LONGER TERM CONSIDERATIONS:
         # df.iloc[] takes the data in order of memory, so we can use this to impliment
@@ -150,9 +149,8 @@ class Admin(User):
         Executes the query to delete the relevant user in the database
         """
         try:
-            # First 
             self.database.cursor.execute(
-                "DELETE FROM Users WHERE user_id = ?", (user_id)
+                "DELETE FROM Users WHERE user_id = ?", (user_id,)
             )
             self.database.connection.commit()
 
@@ -165,7 +163,6 @@ class Admin(User):
             return False
 
         # TODO: Add checks that these methods can only be applied to patients and practitioners
-
 
     def function_logic(self, function_name):
         # DRAFT: This might be a way to reduce logic overhead
@@ -188,9 +185,9 @@ class Admin(User):
 
     # Admin FLow
     def flow(self) -> bool:
-        while True: 
-            self.refresh
-            
+        while True:
+            self.refresh()
+
             # Display the Admin menu
             print("\nHello Admin!")
             print("1. Register Patient to Practitioner")
@@ -200,29 +197,30 @@ class Admin(User):
             print("5. Disable a User")
             print("6. Delete a User")
             print("7. Exit")
+            # TODO: We should probably have a cancel option during any of these 7 operations
 
             # Menu choices
             choice = input("Enter your choice (1-7): ").strip()
 
-            #Assign a patient to clinician
+            # Assign a patient to clinician
 
             if choice == "1":
                 print("\nAssign Patient to Clinician: \n")
                 self.view_table("Unregistered Patients")
                 new_patient_id = input("Choose a user_id to assign: ")
-                
+
                 print("\nClinicians List:\n")
                 self.view_table("Unregistered Clinicians")
                 new_clinician_id = input("Choose a user_id to assign: ")
 
                 self.alter_user(new_patient_id, "clinician_id", new_clinician_id)
 
-        #View all user info
+            # View all user info
             elif choice == "2":
                 print("\nAll Users:")
                 print(self.df)
 
-        #View speicifc users - not sure if this is needed
+            # View speicifc users - not sure if this is needed
             elif choice == "3":
                 try:
                     user_id = int(input("Enter the user ID to view: "))
@@ -235,7 +233,7 @@ class Admin(User):
                 except ValueError:
                     print("Invalid input. Please enter a valid user ID.")
 
-        #Edit info
+            # Edit info
             elif choice == "4":
                 print("\nDo you want to edit a patient or a clinician?")
                 table_choice = input("Press 1 for patient, press 2 for clinician:")
@@ -247,7 +245,7 @@ class Admin(User):
                         "Enter the attribute to edit (e.g., email, name): "
                     ).strip()
                     value = input("Enter the new value: ").strip()
-                    try: 
+                    try:
                         self.alter_user(user_id, attribute, value)
                         print("")
                     except Exception as e:
@@ -259,29 +257,29 @@ class Admin(User):
                         "Enter the attribute to edit (e.g., email, name): "
                     ).strip()
                     value = input("Enter the new value: ").strip()
-                    try: 
+                    try:
                         self.alter_user(user_id, attribute, value)
                     except Exception as e:
                         print(f"Error: {e}")
-                else: 
-                    continue 
-            # Would be nice to have a 
+                else:
+                    continue
+            # Would be nice to have a
 
-                # # try:
-                #     user_id = int(input("Enter the user ID to edit: "))
-                #     user_data = self.df[self.df["user_id"] == user_id]
-                #     if not user_data.empty:
-                #         print("\nEditable User Information:")
-                #         print(user_data)
-                #         attribute = input("Enter the attribute to edit (e.g., email, name): ").strip()
-                #         value = input("Enter the new value: ").strip()
-                #         self.edit_table_info("Users", user_data.index[0], attribute, value)
-                #     else:
-                #         print("User not found.")
-                # except Exception as e:
-                #     print(f"Error: {e}")
+            # # try:
+            #     user_id = int(input("Enter the user ID to edit: "))
+            #     user_data = self.df[self.df["user_id"] == user_id]
+            #     if not user_data.empty:
+            #         print("\nEditable User Information:")
+            #         print(user_data)
+            #         attribute = input("Enter the attribute to edit (e.g., email, name): ").strip()
+            #         value = input("Enter the new value: ").strip()
+            #         self.edit_table_info("Users", user_data.index[0], attribute, value)
+            #     else:
+            #         print("User not found.")
+            # except Exception as e:
+            #     print(f"Error: {e}")
 
-            #Disable someone
+            # Disable someone
             elif choice == "5":
                 try:
                     user_id = int(input("Enter the User ID to disable: "))
@@ -289,19 +287,23 @@ class Admin(User):
                 except Exception as e:
                     print(f"Error: {e}")
 
-            #Deleting user
+            # Deleting user
             elif choice == "6":
                 try:
                     user_id = int(input("Enter the user ID to delete: "))
-                    confirmation = input("Are you sure you want to delete this user? (yes/no): ").strip().lower()
+                    confirmation = (
+                        input("Are you sure you want to delete this user? (yes/no): ")
+                        .strip()
+                        .lower()
+                    )
                     if confirmation == "yes":
-                        self.delete_user("Users", user_id)
+                        self.delete_user(user_id)
                     else:
                         print("Operation cancelled.")
                 except Exception as e:
                     print(f"Error: {e}")
 
-            #Exit
+            # Exit
             elif choice == "7":
                 print("Exiting Admin Menu.")
                 return False
