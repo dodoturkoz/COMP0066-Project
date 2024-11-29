@@ -52,3 +52,18 @@ def get_valid_date(
         except Exception:
             print("Invalid date format. Please try again.")
             continue
+
+
+def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
+    """
+    Get a valid yes or no value from the user and return it
+    """
+    while True:
+        value = input(prompt)
+        if value.lower() in ["y", "yes"]:
+            return True
+        elif value.lower() in ["n", "no"]:
+            return False
+        else:
+            print("Invalid boolean value. Please try again.")
+            continue
