@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 
 # I have added the option to change the input string given when the choice is offered
@@ -19,13 +20,16 @@ def display_choice(
         else:
             print("Invalid choice. Please try again.")
 
-            
+
 def display_dict(dict: dict[str, any]) -> None:
     """
     Displays a dictionary in a clean way.
     """
     for key, value in dict.items():
-        print(f"{key}: {value}")
+        print(
+            f"{key.replace('_', ' ').capitalize()}: "
+            + f"{value.date() if isinstance(value, datetime) else value}"
+        )
 
 
 def clear_terminal():
