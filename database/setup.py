@@ -351,7 +351,7 @@ class Database:
             patients = [
                 (2, "emergency1@gmail.com", datetime(2000, 1, 1), None, 5),
                 (3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
-                (6, "emergency5@gmail.com", datetime(1982, 11, 3), "Depression", None),
+                (4, "emergency5@gmail.com", datetime(1982, 11, 3), "Depression", None),
                 (7, "emergency6@gmail.com", datetime(1983, 12, 4), "Schizophrenia", 5),
                 (
                     8,
