@@ -67,3 +67,19 @@ def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
         else:
             print("Invalid boolean value. Please try again.")
             continue
+
+
+def get_valid_string(prompt: str, max_len: int = 250, min_len: int = 0) -> str:
+    """
+    Get a valid string of more than 2 characters and less than 50
+    from the user and return it
+    """
+    while True:
+        value = input(prompt)
+        if value and len(value) > min_len and len(value) < max_len:
+            return value
+        else:
+            print(
+                f"Invalid input. Please try again. Input must be between {min_len} and {max_len} characters."
+            )
+            continue
