@@ -1,74 +1,26 @@
 import sqlite3
 from typing import Optional, Any
 
-from modules.constants import RELAXATION_RESOURCES
+from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
+from modules.clinician import Clinician
 from datetime import datetime
-
-# Function for getting mood input and returning what will be stored on the database. There is no ending speech marks around the
-# returning value so not sure if I describe the value returned as a string or not.
-
-
-def mood_input():
-    """
-    Get mood from patient using a colour or number code in input
-    """
-
-    print("\033[32m {}\033[00m".format("6. dark green Outstanding \U0001f600"))
-    print("\033[92m {}\033[00m".format("5. green Great \U0001f642"))
-    print("\033[93m {}\033[00m".format("4. yellow Okay \U0001f610"))
-    print("\033[33m {}\033[00m".format("3. orange Bit bad \U0001f641"))
-    print("\033[91m {}\033[00m".format("2. red Very bad \U0001f61e"))
-    print("\033[31m {}\033[00m".format("1. brown Terrible \U0001f622"))
-
-    mood_colour = input(
-        "Enter your mood for today. Select an option from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown "
-    )
-    if mood_colour == "dark green" or mood_colour == "6" or mood_colour == "6.":
-        mood_description = "\033[32m {}\033[00m".format(
-            "Dark green Outstanding \U0001f600"
-        )
-    elif mood_colour == "green" or mood_colour == "5" or mood_colour == "5.":
-        mood_description = "\033[92m {}\033[00m".format("Green Great \U0001f642")
-    elif mood_colour == "yellow" or mood_colour == "4" or mood_colour == "4.":
-        mood_description = "\033[93m {}\033[00m".format("Yellow Okay \U0001f610")
-    elif mood_colour == "orange" or mood_colour == "3" or mood_colour == "3.":
-        mood_description = "\033[33m {}\033[00m".format("Orange Bit bad \U0001f641")
-    elif mood_colour == "red" or mood_colour == "2" or mood_colour == "2.":
-        mood_description = "\033[91m {}\033[00m".format("Red Very bad \U0001f61e")
-    elif mood_colour == "brown" or mood_colour == "1" or mood_colour == "1.":
-        mood_description = "\033[31m {}\033[00m".format("Brown Terrible \U0001f622")
-    else:
-        print(
-            "Please ensure you type a number from 6 to 1 or type the following words in lowercase only: dark green, green, yellow, orange, red, brown "
-        )
-        mood_description = mood_input()
-
-    return mood_description
 
 
 class Patient(User):
-    MODIFIABLE_ATTRIBUTES = [
-        "username",
-        "email",
-        "password",
-        "first_name",
-        "surname",
-    ]  # We need diagnosis here for clinicians to update
+    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
-    def edit_medical_info(self) -> bool:
+    def edit_patient_info(self) -> bool:
         """
         Allows the patient to change their details.
         """
-        # should the user be able to change their first_name and surname? yes
+        # should the user be able to change their name? yes
         options = {
             1: "username",
             2: "email",
             3: "password",
             4: "emergency_email",
             5: "date_of_birth",
-            6: "first_name",
-            7: "surname",
         }
 
         print("Select an attribute to edit:")
@@ -76,7 +28,9 @@ class Patient(User):
             print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
 
         try:
-            choice = int(input("Enter the number corresponding to the attribute: "))
+            choice = int(
+                input("Enter the number corresponding to the attribute: ")
+            )
             attribute = options.get(choice)
 
             if not attribute:
@@ -92,10 +46,7 @@ class Patient(User):
                 return self.edit_info(attribute, value)
 
             # Update the Patients table
-            elif attribute in [
-                "emergency_email",
-                "date_of_birth",
-            ]:
+            elif attribute in ["emergency_email", "date_of_birth"]:
                 self.database.cursor.execute(
                     f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
                     (value, self.user_id),
@@ -125,7 +76,7 @@ class Patient(User):
         """
         Displays patient's moods, optionally filtering by a specific date.
         """
-        query = "SELECT date, text, mood FROM JournalEntries WHERE user_id = ?"
+        query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
         params = [self.user_id]
 
         if date:
@@ -144,10 +95,10 @@ class Patient(User):
             if entries:
                 print(f"\nMood Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
-                    print(f"Date: {entry['date']}")
+                    print(f"Date: {str(entry['date']).split()[0]}")
+                    print("Mood: " + str(entry["mood"]))
                     print(f"Content: {entry['text']}\n")
-                    print("Mood:")
-                    print(str(entry["mood"]) + "\n")
+
             else:
                 print("No mood entries found for the specified date.")
 
@@ -157,29 +108,109 @@ class Patient(User):
             print(f"Database error occurred: {e}")
             return []
 
-    def mood_of_the_day(self, mood: str, comment: str) -> bool:
-        # Interface for this
+    def mood_of_the_day(self) -> bool:
         """
-        Creates a mood and comment entry for the patient.
+        Manages the mood entry for the current day:
+        - Updates the existing entry if one exists.
+        - Creates a new mood entry if none exists.
         """
-        try:
-            self.database.cursor.execute(
-                "INSERT INTO JournalEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)",
-                (
-                    self.user_id,
-                    comment,
-                    datetime.now().strftime("%Y-%m-%d"),
-                    mood,
-                ),
+
+        def mood_input():
+            """
+            Get mood input from the patient using a number or color name.
+            """
+            print("\nMOOD TRACKER:\n")
+
+            # display mood options
+            for num, mood in MOODS.items():
+                mood_display = f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
+                print(mood_display)
+
+            valid_inputs = {num: mood for num, mood in MOODS.items()}
+            valid_inputs.update(
+                {mood["color"].lower(): mood for mood in MOODS.values()}
             )
-            self.database.connection.commit()
-            print("Mood entry added successfully.")
-            return True
+
+            while True:
+                mood_choice = input(
+                    "\nEnter your mood for today (number 6 to 1 or color name): "
+                ).lower()
+                if mood_choice in valid_inputs:
+                    selected_mood = valid_inputs[mood_choice]
+                    return f"{selected_mood['ansi']}{num}. {selected_mood['description']} [{selected_mood['color']}]\033[00m"
+                print(
+                    "Invalid input. Please enter a number from 6 to 1 or a valid color name."
+                )
+
+        def comment_input():
+            """
+            Ask the user to comment on their mood.
+            """
+            while True:
+                do_comment = input(
+                    "Would you like to add a comment? (y/n): "
+                ).lower()
+                if do_comment in ("yes", "y", "1"):
+                    return input("Enter your comment: ")
+                elif do_comment in ("no", "n", "2"):
+                    return "No comment provided."
+                print("Invalid input. Please enter y or n.")
+
+        mood = mood_input()
+        comment = comment_input()
+
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        query_check = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
+        query_update = "UPDATE MoodEntries SET text = ?, mood = ? WHERE user_id = ? AND DATE(date) = ?"
+        query_insert = "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)"
+
+        try:
+            # Check if an entry already exists for today
+            self.database.cursor.execute(
+                query_check, (self.user_id, today_date)
+            )
+            entry = self.database.cursor.fetchone()
+
+            if entry:
+                print(
+                    f"\nExisting entry found:\nMood: {entry['mood']}\nComment: {entry['text']}"
+                )
+                print("New Mood: ", mood)
+                print("New Comment: ", comment)
+
+                # Confirm update
+                consent = input(
+                    "Do you want to update the mood entry for today? (Yes/No): "
+                ).lower()
+                if consent in ("yes", "y", "1"):
+                    self.database.cursor.execute(
+                        query_update, (comment, mood, self.user_id, today_date)
+                    )
+                    self.database.connection.commit()
+                    print("Mood entry updated successfully.")
+                    return True
+                else:
+                    print("Mood entry was not updated.")
+                    return False
+            else:
+                # Insert new mood entry
+                self.database.cursor.execute(
+                    query_insert, (self.user_id, comment, today_date, mood)
+                )
+                self.database.connection.commit()
+                print("Mood entry added successfully.")
+                return True
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return False
         except Exception as e:
-            print(f"Error adding mood entry: {e}")
+            print(f"An unexpected error occurred: {e}")
             return False
 
-    def display_journal(self, date: Optional[str] = None) -> list[dict[str, str]]:
+    def display_journal(
+        self, date: Optional[str] = None
+    ) -> list[dict[str, str]]:
         """
         Displays patient's journal entries, optionally filtering by a specific date.
         """
@@ -200,7 +231,9 @@ class Patient(User):
             ]
 
             if entries:
-                print(f"\nJournal Entries for {date if date else 'all dates'}:\n")
+                print(
+                    f"\nJournal Entries for {date if date else 'all dates'}:\n"
+                )
                 for entry in entries:
                     print(f"Date: {entry['date']}")
                     print(f"Content: {entry['text']}\n")
@@ -223,7 +256,7 @@ class Patient(User):
                 (
                     self.user_id,
                     content,
-                    datetime.now().strftime("%Y-%m-%d"),
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 ),
             )
             self.database.connection.commit()
@@ -306,7 +339,9 @@ class Patient(User):
                 print("Appointment canceled successfully.")
                 return True
             else:
-                print("Appointment not found or you are not authorized to cancel it.")
+                print(
+                    "Appointment not found or you are not authorized to cancel it."
+                )
                 return False
         except sqlite3.OperationalError as e:
             print(f"Error canceling appointment: {e}")
@@ -372,13 +407,15 @@ class Patient(User):
                 "10. Log Out\n"
             )
             if choice == "1":
-                self.edit_medical_info()
+                self.edit_patient_info()
             elif choice == "2":
-                mood = mood_input()
-                comment = input("Enter any comments regarding your mood: ")
-                self.mood_of_the_day(mood, comment)
+                self.mood_of_the_day()
             elif choice == "3":
-                self.display_previous_moods()
+                date = input(
+                    "Enter a date in YYYY-MM-DD format or "
+                    + "leave blank to view all previous entries: "
+                )
+                self.display_previous_moods(date)
             elif choice == "4":
                 content = input("Enter new journal entry: ")
                 self.journal(content)
@@ -405,8 +442,10 @@ class Patient(User):
                 return True
             else:
                 print("Invalid choice. Please try again.")
-            print("---------------------------")  # Visual separator after action
-            next_step = input("Would you like to:\n1. Continue\n2. Log Out\n")
+            print(
+                "---------------------------"
+            )  # Visual separator after action
+            next_step = input("Would you like to:\n1. Continue\n2. Quit\n")
             if next_step.strip() != "1":
                 print("Goodbye!")
                 break
