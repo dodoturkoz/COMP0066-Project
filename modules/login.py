@@ -7,7 +7,12 @@ from modules.patient import Patient
 from modules.user import User
 from modules.utilities.display import display_choice, display_dict, clear_terminal
 from database.setup import Database, roles
-from modules.utilities.input import get_valid_email, get_valid_date
+from modules.utilities.input import (
+    get_valid_email,
+    get_valid_date,
+    get_valid_yes_or_no,
+    get_valid_string,
+)
 from modules.utilities.send_email import send_email
 
 
@@ -67,7 +72,7 @@ def registration_input(
 
     # Get a unique username
     while True:
-        username = input("Your username: ")
+        username = get_valid_string("Your username: ", max_len=25, min_len=3)
         if username in existing_usernames:
             print("Username already exists. Please try again.")
             continue
@@ -77,8 +82,10 @@ def registration_input(
 
     # Get a password and confirm it
     while True:
-        password = input("Your password: ")
-        password_confirm = input("Confirm your password: ")
+        password = get_valid_string("Your password: ", max_len=25, min_len=0)
+        password_confirm = get_valid_string(
+            "Confirm your password: ", max_len=25, min_len=0
+        )
         if password != password_confirm:
             print("Passwords do not match. Please try again.")
             continue
@@ -86,8 +93,12 @@ def registration_input(
             registration_info["password"] = password
             break
 
-    registration_info["first_name"] = input("Your first name: ")
-    registration_info["surname"] = input("Your surname: ")
+    registration_info["first_name"] = get_valid_string(
+        "Your first name: ", max_len=50, min_len=1
+    )
+    registration_info["surname"] = get_valid_string(
+        "Your surname: ", max_len=50, min_len=1
+    )
     # Get a valid email that is not already in the database
     registration_info["email"] = get_valid_email(
         prompt="Your email: ", existing_emails=existing_emails
@@ -106,10 +117,8 @@ def registration_input(
 
     print("\nThis is your registration information:")
     display_dict(registration_info)
-    cont_selection = display_choice(
-        "Is this information correct?", ["Yes, continue", "No, correct information"]
-    )
-    if cont_selection == 2:
+    register = get_valid_yes_or_no("Is this information correct? (Y/N): ")
+    if register:
         return registration_input(existing_usernames)
     else:
         return registration_info
