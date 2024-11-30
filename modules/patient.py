@@ -1,25 +1,79 @@
 import sqlite3
 from typing import Optional, Any
+from datetime import datetime
 
+from database.setup import Database
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
-from datetime import datetime
 
 
 class Patient(User):
-    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
+    MODIFIABLE_ATTRIBUTES = [
+        "username",
+        "email",
+        "password",
+        "first_name",
+        "surname",
+    ]
+
+    def __init__(
+        self,
+        database: Database,
+        user_id: int,
+        username: str,
+        first_name: str,
+        surname: str,
+        email: str,
+        is_active: bool,
+        clinician_id: int,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            database,
+            user_id,
+            username,
+            first_name,
+            surname,
+            email,
+            is_active,
+            *args,
+            **kwargs,
+        )
+
+        self.clinician_id = clinician_id
+        self.clinician = self.get_clinician()
+
+    def get_clinician(self) -> Optional[User]:
+        if self.clinician_id:
+            clinician_data = (
+                self.database.cursor.execute(
+                    """
+                    SELECT user_id, username, first_name, surname, email, is_active
+                    FROM Users
+                    WHERE user_id = ?
+                    """,
+                    (self.clinician_id,),
+                )
+                .fetchone()
+                .values()
+            )
+            if clinician_data:
+                return User(self.database, *clinician_data)
+        return None
 
     def edit_patient_info(self) -> bool:
         """
         Allows the patient to change their details.
         """
-        # should the user be able to change their name? yes
         options = {
             1: "username",
             2: "email",
             3: "password",
             4: "emergency_email",
             5: "date_of_birth",
+            6: "first_name",
+            7: "surname",
         }
 
         print("Select an attribute to edit:")
@@ -290,7 +344,6 @@ class Patient(User):
         Allows the patient to book an appointment by specifying date and description.
         """
         # need to add a check to make sure date is today or later
-        # what about the time of the appointment?
         try:
             # Check if the patient has an assigned clinician
             self.database.cursor.execute(
@@ -390,7 +443,14 @@ class Patient(User):
         """
         Displays the main patient menu and handles the selection of various options.
         """
-        print("Hello Patient")
+        if self.clinician:
+            print(
+                f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
+            )
+        else:
+            print(
+                f"Hello, {self.first_name} {self.surname}! You don't have an assigned clinician yet."
+            )
         while True:
             choice = input(
                 "Please select an option:\n"

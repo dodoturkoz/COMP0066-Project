@@ -5,7 +5,11 @@ from modules.admin import Admin
 from modules.clinician import Clinician
 from modules.patient import Patient
 from modules.user import User
-from modules.utilities.display import display_choice, display_dict, clear_terminal
+from modules.utilities.display import (
+    display_choice,
+    display_dict,
+    clear_terminal,
+)
 from database.setup import Database, roles
 from modules.utilities.input import (
     get_valid_email,
@@ -18,34 +22,56 @@ from modules.utilities.send_email import send_email
 
 def login(db: Database) -> Union[User, None]:
     """
-    Attemps to log in the user, by requesting a username and password and
+    Attempts to log in the user by requesting a username and password and
     checking if the combination exists in the database.
 
-    Prints if the login was successfull or not, and returns None (FOR NOW!!)
+    Returns a User object (Admin, Clinician, or Patient) if successful, or None if not.
     """
     clear_terminal()
     username = input("Your username: ")
     password = input("Your password: ")
 
+    # fetch basic user data
     user_data = db.cursor.execute(
         """
-        SELECT user_id, username, first_name, surname, email, role, is_active FROM Users
+        SELECT user_id, username, first_name, surname, email, role, is_active
+        FROM Users
         WHERE username = :username AND password = :password
         """,
         {"username": username, "password": password},
     ).fetchone()
 
     if user_data:
-        if user_data["role"] == "admin":
+        user_id = user_data["user_id"]
+        role = user_data["role"]
+
+        if role == "admin":
             return Admin(database=db, **user_data)
-        elif user_data["role"] == "clinician":
+        elif role == "clinician":
             return Clinician(database=db, **user_data)
-        elif user_data["role"] == "patient":
-            return Patient(database=db, **user_data)
+        elif role == "patient":
+            # fetch additional patient-specific data
+            patient_data = db.cursor.execute(
+                """
+                SELECT emergency_email, date_of_birth, diagnosis, clinician_id
+                FROM Patients
+                WHERE user_id = ?
+                """,
+                (user_id,),
+            ).fetchone()
+
+            if not patient_data:
+                raise Exception("Patient data not found for user ID.")
+
+            # merge the user and patient data
+            # old way: combined_data = {**user_data, **patient_data}
+            combined_data = user_data | patient_data
+            return Patient(database=db, **combined_data)
         else:
-            raise Exception("User type not defined in the system")
+            raise Exception("User role is not defined in the system.")
     else:
-        print("Invalid password or username entered.")
+        print("Invalid username or password.")
+        return None
 
 
 def registration_input(
@@ -132,8 +158,10 @@ def signup(db: Database) -> bool:
     If it is not successfull, prints a message to the user before quitting the app.
     """
 
-    # Get a list of registered unique usernams
-    existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
+    # Get a list of registered unique usernames
+    existing_usernames = db.cursor.execute(
+        "SELECT username FROM Users"
+    ).fetchall()
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
     user_info = registration_input(existing_usernames, existing_emails)
 
