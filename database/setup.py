@@ -2,6 +2,18 @@ import sqlite3
 from datetime import datetime
 
 roles = ("admin", "patient", "clinician")
+diagnoses = (
+    "Depression",
+    "Anxiety",
+    "Bipolar Disorder",
+    "Schizophrenia",
+    "PTSD",
+    "OCD",
+    "ADHD",
+    "Autism",
+    "Drug Induced Psychosis",
+    "Other",
+)
 
 
 def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
@@ -75,12 +87,12 @@ class Database:
 
         # Patient Information Table
         # Please keep in mind dates are stored as text in SQLite
-        self.cursor.execute("""
+        self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Patients (
                 user_id INTEGER PRIMARY KEY,
                 emergency_email TEXT,
                 date_of_birth DATETIME,
-                diagnosis TEXT,
+                diagnosis TEXT CHECK( diagnosis IN {diagnoses} ),
                 clinician_id INTEGER,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
                 FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
