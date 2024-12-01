@@ -25,4 +25,4 @@ jobs:
         python -m pip install ruff
     - name: Run Ruff
       run: |
-        ruff . --format=github
+        ruff check . --format=github
