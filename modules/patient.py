@@ -3,6 +3,7 @@ from typing import Optional, Any
 from datetime import datetime
 
 from database.setup import Database
+from modules.appointments import request_appointment
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
 
@@ -81,9 +82,7 @@ class Patient(User):
             print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
 
         try:
-            choice = int(
-                input("Enter the number corresponding to the attribute: ")
-            )
+            choice = int(input("Enter the number corresponding to the attribute: "))
             attribute = options.get(choice)
 
             if not attribute:
@@ -200,9 +199,7 @@ class Patient(User):
             Ask the user to comment on their mood.
             """
             while True:
-                do_comment = input(
-                    "Would you like to add a comment? (y/n): "
-                ).lower()
+                do_comment = input("Would you like to add a comment? (y/n): ").lower()
                 if do_comment in ("yes", "y", "1"):
                     return input("Enter your comment: ")
                 elif do_comment in ("no", "n", "2"):
@@ -213,15 +210,17 @@ class Patient(User):
         comment = comment_input()
 
         today_date = datetime.now().strftime("%Y-%m-%d")
-        query_check = "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
+        query_check = (
+            "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
+        )
         query_update = "UPDATE MoodEntries SET text = ?, mood = ? WHERE user_id = ? AND DATE(date) = ?"
-        query_insert = "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)"
+        query_insert = (
+            "INSERT INTO MoodEntries (user_id, text, date, mood) VALUES (?, ?, ?, ?)"
+        )
 
         try:
             # Check if an entry already exists for today
-            self.database.cursor.execute(
-                query_check, (self.user_id, today_date)
-            )
+            self.database.cursor.execute(query_check, (self.user_id, today_date))
             entry = self.database.cursor.fetchone()
 
             if entry:
@@ -261,9 +260,7 @@ class Patient(User):
             print(f"An unexpected error occurred: {e}")
             return False
 
-    def display_journal(
-        self, date: Optional[str] = None
-    ) -> list[dict[str, str]]:
+    def display_journal(self, date: Optional[str] = None) -> list[dict[str, str]]:
         """
         Displays patient's journal entries, optionally filtering by a specific date.
         """
@@ -284,9 +281,7 @@ class Patient(User):
             ]
 
             if entries:
-                print(
-                    f"\nJournal Entries for {date if date else 'all dates'}:\n"
-                )
+                print(f"\nJournal Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
                     print(f"Date: {entry['date']}")
                     print(f"Content: {entry['text']}\n")
@@ -339,41 +334,11 @@ class Patient(User):
             print(f"Audio File: {resource['audio_file']}")
             print(f"Transcript: {resource['transcript']}")
 
-    def book_appointment(self, appointment_date: str, description: str) -> bool:
+    def book_appointment(self):
         """
-        Allows the patient to book an appointment by specifying date and description.
+        Allows the patient to book an appointment.
         """
-        # need to add a check to make sure date is today or later
-        try:
-            # Check if the patient has an assigned clinician
-            self.database.cursor.execute(
-                "SELECT clinician_id FROM Patients WHERE user_id = ?",
-                (self.user_id,),
-            )
-            clinician_id = self.database.cursor.fetchone()
-
-            if not clinician_id:
-                print("No clinician assigned. Please contact the admin.")
-                return False
-
-            self.database.cursor.execute(
-                """
-                INSERT INTO Appointments (user_id, clinician_id, date, notes, is_complete)
-                VALUES (?, ?, ?, ?, 0)
-                """,
-                (
-                    self.user_id,
-                    clinician_id,
-                    appointment_date,
-                    description,
-                ),
-            )
-            self.database.connection.commit()
-            print("Appointment booked successfully.")
-            return True
-        except sqlite3.IntegrityError as e:
-            print(f"Failed to book appointment: {e}")
-            return False
+        return request_appointment(self.database, self.user_id, self.clinician_id)
 
     def cancel_appointment(self, appointment_id: int) -> bool:
         """
@@ -391,9 +356,7 @@ class Patient(User):
                 print("Appointment canceled successfully.")
                 return True
             else:
-                print(
-                    "Appointment not found or you are not authorized to cancel it."
-                )
+                print("Appointment not found or you are not authorized to cancel it.")
                 return False
         except sqlite3.OperationalError as e:
             print(f"Error canceling appointment: {e}")
@@ -488,9 +451,7 @@ class Patient(User):
                 keyword = input("Enter keyword to search for exercises: ")
                 self.search_exercises(keyword)
             elif choice == "7":
-                date = input("Enter appointment date (YYYY-MM-DD): ")
-                desc = input("Enter appointment description: ")
-                self.book_appointment(date, desc)
+                self.book_appointment()
             elif choice == "8":
                 self.view_appointments()
             elif choice == "9":
@@ -501,9 +462,7 @@ class Patient(User):
                 return True
             else:
                 print("Invalid choice. Please try again.")
-            print(
-                "---------------------------"
-            )  # Visual separator after action
+            print("---------------------------")  # Visual separator after action
             next_step = input("Would you like to:\n1. Continue\n2. Quit\n")
             if next_step.strip() != "1":
                 print("Goodbye!")
