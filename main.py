@@ -1,4 +1,3 @@
-import os
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
@@ -11,25 +10,22 @@ try:
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
     display_emergency_numbers()
     # Check if running in CI (non-interactive environment)
-    if os.getenv("CI") == "true":
-        print("Non-interactive environment detected. Skipping user input.")
-    else:
-        run = True
-        while run:
-            selection = display_choice(
-                "Please select an option to continue:", ["Log In", "Sign Up", "Quit"]
-            )
-            if selection == 3:
-                run = False
-                continue
-            if selection == 2:
-                signup(db)
-                continue
-            user = login(db)
-            if user:
-                run = user.flow()
-                # NOTE: if flow returns True -> login screen
-                # if flow returns False -> quits app
+    run = True
+    while run:
+        selection = display_choice(
+            "Please select an option to continue:", ["Log In", "Sign Up", "Quit"]
+        )
+        if selection == 3:
+            run = False
+            continue
+        if selection == 2:
+            signup(db)
+            continue
+        user = login(db)
+        if user:
+            run = user.flow()
+            # NOTE: if flow returns True -> login screen
+            # if flow returns False -> quits app
 
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
