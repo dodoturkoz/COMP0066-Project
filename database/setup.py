@@ -419,6 +419,34 @@ class Database:
                 "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
             )
 
+            #Check if there is previous entries of journal.
+            #Add entries if there is not.
+            #6 entries added per patient.
+            journal_entries = self.cursor.execute("SELECT user_id FROM JournalEntries")
+            if len(journal_entries.fetchall()) == 0:
+                journal_entries = [
+                    (1, 2, datetime(2024, 11, 20, hour=12, minute=0),"My dog died. I feel sad."),
+                    (2, 3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
+                    (3, 4, "emergency5@gmail.com", datetime(1982, 11, 3), "Depression", None),
+                    (4, 7, "emergency6@gmail.com", datetime(1983, 12, 4), "Schizophrenia", 5),
+                    (5, 8, "emergency7@gmail.com", datetime(2024, 11, 20, hour=12, minute=0),"Drug Induced Psychosis", 6,),
+                    (9, "emergency8@gmail.com", datetime(1985, 2, 6), "Bipolar Disorder", None,),
+                    (10, "emergency9@gmail.com", datetime(1986, 3, 7), "Autism", 5),
+                    (11, "emergency10@gmail.com", datetime(1987, 4, 8), "OCD", 6),
+                    (12, "emergency11@gmail.com", datetime(1988, 5, 9), "Depression", None),
+                    (13, "emergency12@gmail.com",datetime(1989, 6, 10),"Schizophrenia",5,),
+                    (14, "emergency13@gmail.com",datetime(1990, 7, 11),"Drug Induced Psychosis", 6,),
+                    (15, "emergency14@gmail.com",datetime(1991, 8, 12),"Bipolar Disorder", None,),
+                    (16, "emergency15@gmail.com", datetime(1992, 9, 13), "Autism", 5),
+                    (17, "emergency16@gmail.com", datetime(1993, 10, 14), "OCD", 6),
+                    (18, "emergency17@gmail.com", datetime(1994, 11, 15),"Depression", None,),
+                    (19, "emergency18@gmail.com", datetime(1995, 12, 16), "Schizophrenia", 5,),
+                    (20, "emergency19@gmail.com", datetime(1996, 1, 17), "Drug Induced Psychosis", 6),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO JournalEntries VALUES(?, ?, ?, ?)", journal_entries
+                )
+
             appointments = [
                 (
                     1,
