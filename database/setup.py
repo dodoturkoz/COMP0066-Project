@@ -136,7 +136,8 @@ class Database:
                 date DATETIME NOT NULL,
                 is_confirmed BOOLEAN DEFAULT 0,
                 is_complete BOOLEAN DEFAULT 0,
-                notes TEXT NOT NULL,
+                patient_notes TEXT,
+                clinician_notes TEXT,            
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
                 FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
             )
@@ -428,6 +429,7 @@ class Database:
                     False,
                     False,
                     "detailed notes",
+                    "This is what the clinician thinks"
                 ),
                 (
                     2,
@@ -436,11 +438,12 @@ class Database:
                     datetime(2024, 12, 11, hour=16, minute=0),
                     False,
                     False,
-                    "notes about condition"
+                    "notes about condition",
+                    None
                 )
             ]
             self.cursor.executemany(
-                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
+                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?, ?)", appointments
             )
 
             self.connection.commit()

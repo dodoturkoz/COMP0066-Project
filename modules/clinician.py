@@ -1,21 +1,9 @@
 from modules.user import User
 from modules.patient import Patient
 from modules.utilities.display import clear_terminal, display_choice, wait_terminal
+from datetime import datetime
 import sqlite3
-
-# This is already defined in setup - should we import from there?
-diagnoses = [
-    "Depression",
-    "Anxiety",
-    "Bipolar",
-    "Schizophrenia",
-    "PTSD",
-    "OCD",
-    "ADHD",
-    "Autism",
-    "Drug Induced Psychosis",
-    "Other",
-]
+from database.setup import diagnoses
 
 
 class Clinician(User):
@@ -23,30 +11,45 @@ class Clinician(User):
 
     def view_calendar(self):
         """
-        This allows the clinician to view all their past and 
+        This allows the clinician to view all their past and
         upcoming appointments.
         """
         # Importing here to avoid circular imports
-        from modules.appointments import get_appointments
+        from modules.appointments import (
+            get_appointments,
+            display_appointment_options,
+        )
 
-        # Option to approve/reject confirmed appointments?
         clear_terminal()
         appointments = get_appointments(self)
 
-        # view_options = ['All', 'Past', 'Upcoming']
-        # view = display_choice("Which appointments would you like to view?", view_options)
-
-        # if view == 1:
-
-        if appointments:
-            for appointment in appointments:
-                print(
-                    f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                    + f" - {appointment['first_name']} {appointment['surname']} - "
-                    + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
-                )
-        else:
+        if not appointments:
             print("You have no registered appointments.")
+        else:
+
+            view_options = ["All", "Past", "Upcoming"]
+            view = display_choice(
+                "Which appointments would you like to view?", view_options
+            )
+
+            # Show all appointments
+            if view == 1:
+                display_appointment_options(self, appointments)
+
+            # Show past appointments
+            elif view == 2:
+                display_appointment_options(
+                    self,
+                    list(filter(lambda app: app["date"] < datetime.now(), appointments)),
+                )
+
+            # Show upcoming appointments
+            elif view == 3:
+                display_appointment_options(
+                    self,
+                    list(filter(lambda app: app["date"] >= datetime.now(), appointments)),
+                )
+
         wait_terminal()
 
     def view_requested_appointments(self):
@@ -68,16 +71,9 @@ class Clinician(User):
             for appointment in appointments:
                 if not appointment["is_confirmed"]:
                     unconfirmed_appointments.append(appointment)
-                    patient_name = self.database.cursor.execute(
-                        """
-                    SELECT first_name, surname 
-                    FROM USERS 
-                    WHERE user_id = ?""",
-                        [appointment["user_id"]],
-                    ).fetchone()
                     choice_strings.append(
                         f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                        + f" - {patient_name['first_name']} {patient_name['surname']}"
+                        + f" - {appointment['first_name']} {appointment['surname']}"
                     )
             choice_strings.append("Exit")
 
@@ -90,7 +86,7 @@ class Clinician(User):
                 )
 
                 if confirm_choice == len(unconfirmed_appointments) + 1:
-                    break
+                    return False
                 else:
                     options = ["Confirm", "Reject", "Go Back"]
                     accept_or_reject = display_choice(

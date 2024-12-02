@@ -1,6 +1,6 @@
 from modules.clinician import Clinician
 from modules.patient import Patient
-from modules.utilities.display import display_choice
+from modules.utilities.display import display_choice, clear_terminal
 from datetime import datetime
 import sqlite3
 
@@ -32,13 +32,15 @@ def choose_date() -> datetime:
                 "You have entered an invalid date. Please enter in the format DD/MM/YY."
             )
 
+
 def get_appointments(clinician: Clinician) -> list:
     """Find all appointments registered for a specific clinician, including unconfirmed ones"""
     try:
         appointments = clinician.database.cursor.execute(
             """
                 SELECT appointment_id, a.user_id, clinician_id, date, 
-                is_confirmed, is_complete, notes, u.first_name, u.surname 
+                is_confirmed, is_complete, patient_notes, clinician_notes,
+                u.first_name, u.surname 
                 FROM Appointments AS a, Users AS u 
                 WHERE clinician_id = ?
                 AND a.user_id = u.user_id
@@ -49,6 +51,58 @@ def get_appointments(clinician: Clinician) -> list:
     except Exception as e:
         print(f"Error: {e}")
 
+
+def print_appointment(appointment: dict) -> None:
+    print(
+        f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+        + f" - {appointment['first_name']} {appointment['surname']} - "
+        + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
+    )
+
+def display_appointment_options(clinician: Clinician, appointments: list):
+
+    appointment_strings = []
+
+    for appointment in appointments:
+        print_appointment(appointment)
+        appointment_strings.append(
+            f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+            + f" - {appointment['first_name']} {appointment['surname']} - "
+            + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}"
+        )
+
+    options = [
+        "View appointment notes",
+        "Confirm/Reject Appointments",
+        "Return to Main Menu",
+    ]
+    next = display_choice("What would you like to do now?", options)
+
+    # View appointment notes
+    if next == 1:
+
+        if len(appointments) > 1:
+            clear_terminal()
+            selected = display_choice(
+                "Please choose an appointment to view", appointment_strings
+            )
+            selected_appointment = appointments[selected - 1]
+        else:
+            selected_appointment = appointments[0]
+
+        if selected_appointment["clinician_notes"]:
+            print("\nYour notes:")
+            print(selected_appointment["clinician_notes"])
+        if selected_appointment["patient_notes"]:
+            print("\nPatient notes:")
+            print(selected_appointment["patient_notes"] + "\n")
+
+    # Confirm/Reject appointments
+    elif next == 2:
+        clinician.view_requested_appointments()
+    # Exit
+    elif next == 3:
+        return False
 
 def get_available_slots(clinician: Clinician, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
@@ -122,7 +176,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         try:
             clinician.database.cursor.execute(
                 """
-                    INSERT INTO Appointments (user_id, clinician_id, date, notes)
+                    INSERT INTO Appointments (user_id, clinician_id, date, patient_notes)
                     VALUES (?, ?, ?, ?)
                     """,
                 (
