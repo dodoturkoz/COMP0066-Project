@@ -1,7 +1,7 @@
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
-from modules.utilities.display import display_choice, clear_terminal
+from modules.utilities.display_utils import display_choice, clear_terminal
 
 db = Database()
 
@@ -9,7 +9,6 @@ try:
     clear_terminal()
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
     display_emergency_numbers()
-    # Check if running in CI (non-interactive environment)
     run = True
     while run:
         selection = display_choice(
