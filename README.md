@@ -1,14 +1,14 @@
 # COMP0066-Project: Breeze - Mental Health Management Tool
 
 ## Overview
-This project is a mental health management system designed to support administrators, practitioners, and patients in managing appointments, tracking well-being, and facilitating communication. It is built using Python and SQLite and provides a command-line interface for streamlined mental health management.
+Breeze is a mental health management system designed to support administrators, practitioners, and patients in managing appointments, tracking well-being, and facilitating communication. It is built using Python and SQLite and provides a command-line interface for streamlined mental health management.
 
 ## Features/Video
 
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.10 or higher
 - SQLite (built-in with Python)
 - Pandas 2.2.2 or higher
 

@@ -7,6 +7,7 @@ from database.setup import Database
 from modules.utilities.input_utils import (
     get_valid_string,
     get_valid_email,
+    get_valid_date,
 )
 from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import request_appointment
@@ -430,17 +431,25 @@ class Patient(User):
                 case 2:
                     self.mood_of_the_day()
                 case 3:
-                    date = input(
-                        "Enter a date in YYYY-MM-DD format or leave blank to view all entries: "
-                    )
+                    date = get_valid_date(
+                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                        min_date=datetime(1900, 1, 1),
+                        max_date=datetime.now(),
+                        min_date_message="Date must be after 1900-01-01.",
+                        max_date_message="Date cannot be in the future.",
+                    ).strftime("%Y-%m-%d")
                     self.display_previous_moods(date)
                 case 4:
                     content = get_valid_string("Enter new journal entry: ")
                     self.journal(content)
                 case 5:
-                    date = input(
-                        "Enter a date in YYYY-MM-DD format or leave blank to view all entries: "
-                    )
+                    date = get_valid_date(
+                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                        min_date=datetime(1900, 1, 1),
+                        max_date=datetime.now(),
+                        min_date_message="Date must be after 1900-01-01.",
+                        max_date_message="Date cannot be in the future.",
+                    ).strftime("%Y-%m-%d")
                     self.display_journal(date)
                 case 6:
                     keyword = input("Enter keyword to search for exercises: ")
