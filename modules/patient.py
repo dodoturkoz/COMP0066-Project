@@ -6,6 +6,7 @@ from datetime import datetime
 from database.setup import Database
 from modules.utilities.input_utils import (
     get_valid_string,
+    get_valid_email,
 )
 from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import request_appointment
@@ -72,57 +73,42 @@ class Patient(User):
         """
         Allows the patient to change their details.
         """
-        options = {
-            1: "username",
-            2: "email",
-            3: "password",
-            4: "emergency_email",
-            5: "date_of_birth",
-            6: "first_name",
-            7: "surname",
-        }
-
-        print("Select an attribute to edit:")
-        for number, attribute in options.items():
-            print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
+        clear_terminal()
+        options = [
+            "Username",
+            "Email",
+            "Password",
+            "First Name",
+            "Surname",
+            "Emergency Email",
+        ]
 
         try:
-            choice = int(input("Enter the number corresponding to the attribute: "))
-            attribute = options.get(choice)
+            # Display editable attributes
+            choice = display_choice("Select an attribute to edit:", options)
+            attribute = options[choice - 1].lower().replace(" ", "_")
 
-            if not attribute:
-                print("Invalid choice. Please select a valid option.")
-                return False
-
-            value = get_valid_string(
-                f"Enter the new value for {attribute.replace('_', ' ').capitalize()}: "
-            )
-
-            # Update the Users table
-            if attribute in self.MODIFIABLE_ATTRIBUTES:
-                return self.edit_info(attribute, value)
-
-            # Update the Patients table
-            elif attribute in ["emergency_email", "date_of_birth"]:
-                self.database.cursor.execute(
-                    f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
-                    (value, self.user_id),
+            # Handle specific validation for emails
+            if attribute in ["email", "emergency_email"]:
+                value = get_valid_email(
+                    f"Enter the new value for {options[choice - 1]}: "
                 )
-                self.database.connection.commit()
-                print(
-                    f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+            else:
+                # General string validation for other attributes
+                # TODO for things like username/email we should check if it's unique
+                value = get_valid_string(
+                    f"Enter the new value for {options[choice - 1]}: "
                 )
+
+            # Use the parent class's edit_info method for all updates
+            success = self.edit_info(attribute, value)
+
+            if success:
                 return True
             else:
-                print(f"Invalid attribute: {attribute}.")
+                print(f"Failed to update {options[choice - 1]}. Please try again.")
                 return False
 
-        except ValueError:
-            print("Invalid input. Please enter a number.")
-            return False
-        except sqlite3.OperationalError as e:
-            print(f"Error: {e}")
-            return False
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return False
