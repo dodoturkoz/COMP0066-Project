@@ -428,6 +428,15 @@ class Database:
                     False,
                     False,
                     "detailed notes",
+                ),
+                (
+                    2,
+                    2,
+                    5,
+                    datetime(2024, 12, 11, hour=16, minute=0),
+                    False,
+                    False,
+                    "notes about condition"
                 )
             ]
             self.cursor.executemany(

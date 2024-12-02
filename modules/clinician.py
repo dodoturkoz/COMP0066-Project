@@ -3,7 +3,7 @@ from modules.patient import Patient
 from modules.utilities.display import clear_terminal, display_choice, wait_terminal
 import sqlite3
 
-
+# This is already defined in setup - should we import from there?
 diagnoses = [
     "Depression",
     "Anxiety",
@@ -23,8 +23,8 @@ class Clinician(User):
 
     def view_calendar(self):
         """
-        This allows the clinician to view all upcoming appointments,
-        showing whether they are confirmed or not.
+        This allows the clinician to view all their past and 
+        upcoming appointments.
         """
         # Importing here to avoid circular imports
         from modules.appointments import get_appointments
@@ -32,22 +32,21 @@ class Clinician(User):
         # Option to approve/reject confirmed appointments?
         clear_terminal()
         appointments = get_appointments(self)
+
+        # view_options = ['All', 'Past', 'Upcoming']
+        # view = display_choice("Which appointments would you like to view?", view_options)
+
+        # if view == 1:
+
         if appointments:
             for appointment in appointments:
-                patient_name = self.database.cursor.execute(
-                    """
-                SELECT first_name, surname 
-                FROM USERS 
-                WHERE user_id = ?""",
-                    [appointment["user_id"]],
-                ).fetchone()
                 print(
                     f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                    + f" - {patient_name['first_name']} {patient_name['surname']} - "
+                    + f" - {appointment['first_name']} {appointment['surname']} - "
                     + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
                 )
         else:
-            print("There are no appointments.")
+            print("You have no registered appointments.")
         wait_terminal()
 
     def view_requested_appointments(self):
@@ -137,6 +136,7 @@ class Clinician(User):
                             return True
 
                     # Delete the appointment
+                    # TO-DO: Change the table so that it isn't deleted in the system, set as cancelled
                     elif accept_or_reject == 2:
                         rejected_appointment = unconfirmed_appointments[
                             confirm_choice - 1
@@ -294,14 +294,11 @@ class Clinician(User):
         while True:
             clear_terminal()
             print(f"Hello, {self.first_name} {self.surname}!")
-            # Ben I have preserved number five as quit for now -> appreciate it
-            # looks a little odd.
 
             choices = [
                 "Calendar",
                 "Your Patient Dashboard",
                 "View Requested Appointments",
-                "-",
                 "Quit",
             ]
             selection = display_choice("What would you like to do?", choices)
@@ -313,8 +310,6 @@ class Clinician(User):
             if selection == 3:
                 self.view_requested_appointments()
             if selection == 4:
-                pass
-            if selection == 5:
                 clear_terminal()
                 print("Thanks for using Breeze!")
                 return False

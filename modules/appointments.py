@@ -32,15 +32,17 @@ def choose_date() -> datetime:
                 "You have entered an invalid date. Please enter in the format DD/MM/YY."
             )
 
-
 def get_appointments(clinician: Clinician) -> list:
     """Find all appointments registered for a specific clinician, including unconfirmed ones"""
     try:
         appointments = clinician.database.cursor.execute(
             """
-                SELECT * 
-                FROM Appointments 
-                WHERE clinician_id = ?""",
+                SELECT appointment_id, a.user_id, clinician_id, date, 
+                is_confirmed, is_complete, notes, u.first_name, u.surname 
+                FROM Appointments AS a, Users AS u 
+                WHERE clinician_id = ?
+                AND a.user_id = u.user_id
+            """,
             [clinician.user_id],
         ).fetchall()
         return appointments
