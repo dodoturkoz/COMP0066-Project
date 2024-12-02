@@ -2,7 +2,12 @@ import sqlite3
 from typing import Optional, Any
 from datetime import datetime
 
+
 from database.setup import Database
+from modules.utilities.input_utils import (
+    get_valid_string,
+)
+from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import request_appointment
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
@@ -89,7 +94,7 @@ class Patient(User):
                 print("Invalid choice. Please select a valid option.")
                 return False
 
-            value = input(
+            value = get_valid_string(
                 f"Enter the new value for {attribute.replace('_', ' ').capitalize()}: "
             )
 
@@ -406,64 +411,73 @@ class Patient(User):
         """
         Displays the main patient menu and handles the selection of various options.
         """
-        if self.clinician:
-            print(
-                f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
-            )
-        else:
-            print(
-                f"Hello, {self.first_name} {self.surname}! You don't have an assigned clinician yet."
-            )
+
         while True:
-            choice = input(
-                "Please select an option:\n"
-                "1. Edit Personal Info\n"
-                "2. Record Mood of the Day\n"
-                "3. Display Previous Moods\n"
-                "4. Add Journal Entry \n"
-                "5. Read Journal Entries \n"
-                "6. Search Exercises\n"
-                "7. Book Appointment\n"
-                "8. View Appointments\n"
-                "9. Cancel Appointment\n"
-                "10. Log Out\n"
+            clear_terminal()
+            greeting = (
+                f"Hello, {self.first_name} {self.surname}!"
+                if not self.clinician
+                else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
-            if choice == "1":
-                self.edit_patient_info()
-            elif choice == "2":
-                self.mood_of_the_day()
-            elif choice == "3":
-                date = input(
-                    "Enter a date in YYYY-MM-DD format or "
-                    + "leave blank to view all previous entries: "
-                )
-                self.display_previous_moods(date)
-            elif choice == "4":
-                content = input("Enter new journal entry: ")
-                self.journal(content)
-            elif choice == "5":
-                date = input(
-                    "Enter a date in YYYY-MM-DD format or "
-                    + "leave blank to view all previous entries: "
-                )
-                self.display_journal(date)
-            elif choice == "6":
-                keyword = input("Enter keyword to search for exercises: ")
-                self.search_exercises(keyword)
-            elif choice == "7":
-                self.book_appointment()
-            elif choice == "8":
-                self.view_appointments()
-            elif choice == "9":
-                self.view_appointments()
-                appointment_id = int(input("Enter appointment ID to cancel: "))
-                self.cancel_appointment(appointment_id)
-            elif choice == "10":
-                return True
-            else:
-                print("Invalid choice. Please try again.")
-            print("---------------------------")  # Visual separator after action
-            next_step = input("Would you like to:\n1. Continue\n2. Quit\n")
-            if next_step.strip() != "1":
+            print(greeting)
+
+            options = [
+                "Edit Personal Info",
+                "Record Mood of the Day",
+                "Display Previous Moods",
+                "Add Journal Entry",
+                "Read Journal Entries",
+                "Search Exercises",
+                "Book Appointment",
+                "View Appointments",
+                "Cancel Appointment",
+                "Log Out",
+            ]
+
+            choice = display_choice("Please select an option:", options)
+
+            # requires python version >= 3.10
+            # using pattern matching to handle the choices
+            match choice:
+                case 1:
+                    self.edit_patient_info()
+                case 2:
+                    self.mood_of_the_day()
+                case 3:
+                    date = input(
+                        "Enter a date in YYYY-MM-DD format or leave blank to view all entries: "
+                    )
+                    self.display_previous_moods(date)
+                case 4:
+                    content = get_valid_string("Enter new journal entry: ")
+                    self.journal(content)
+                case 5:
+                    date = input(
+                        "Enter a date in YYYY-MM-DD format or leave blank to view all entries: "
+                    )
+                    self.display_journal(date)
+                case 6:
+                    keyword = input("Enter keyword to search for exercises: ")
+                    self.search_exercises(keyword)
+                case 7:
+                    self.book_appointment()
+                case 8:
+                    self.view_appointments()
+                case 9:
+                    self.view_appointments()
+                    appointment_id = int(input("Enter appointment ID to cancel: "))
+                    self.cancel_appointment(appointment_id)
+                case 10:
+                    clear_terminal()
+                    print("Thanks for using Breeze! Goodbye!")
+                    return False
+
+            next_step = display_choice(
+                "Would you like to:",
+                ["Continue", "Quit"],
+                choice_str="Your selection: ",
+            )
+            if next_step == 2:
+                clear_terminal()
                 print("Goodbye!")
-                break
+                return False
