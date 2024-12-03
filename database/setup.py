@@ -1,5 +1,34 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
+
+
+def old_date(days_ago):
+    return (
+        datetime.now()
+        - timedelta(
+            days=days_ago,
+            hours=random.randint(0, 12),
+            minutes=random.randint(0, 60),
+            seconds=random.randint(0, 60),
+        )
+    ).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def old_day(days_ago):
+    return (datetime.now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+
+
+def old_appointment_day(days_ago):
+    return (
+        datetime.now()
+        - timedelta(
+            days=days_ago,
+            hours=random.randint(0, 12),
+            minutes=random.randint(0, 60),
+        )
+    ).strftime("%Y-%m-%d %H:%M")
+
 
 roles = ("admin", "patient", "clinician")
 diagnoses = (
@@ -432,91 +461,91 @@ class Database:
                     (
                         1,
                         2,
-                        "2024-11-20 13:27:49",
+                        old_date(5),
                         "Hey, I got a first for my degree. Feel on top of the world.",
                     ),
                     (
                         2,
                         2,
-                        "2024-11-21 09:08:12",
+                        old_date(4),
                         "I have felt so great in the past few weeks. Everything is amazing.",
                     ),
                     (
                         3,
                         2,
-                        "2024-11-22 18:03:11",
+                        old_date(3),
                         "I have spent hundreds of pounds on a new clothes. I feel great.",
                     ),
                     (
                         4,
                         2,
-                        "2024-11-23 14:34:34",
+                        old_date(2),
                         "I don't feel well. I woke up late but still feel tired.",
                     ),
                     (
                         5,
                         2,
-                        "2024-11-24 16:27:40",
+                        old_date(1),
                         "I don't feel like meeting or talking with anyone but my journal.",
                     ),
                     (
                         6,
                         3,
-                        "2024-11-20 11:07:51",
+                        old_date(5),
                         "I am worried about my financial issues.",
                     ),
                     (
                         7,
                         3,
-                        "2024-11-21 23:08:34",
+                        old_date(4),
                         "I am watching tv but I still feel sad.",
                     ),
                     (
                         8,
                         3,
-                        "2024-11-22 09:03:55",
+                        old_date(3),
                         "I tried to read a book but that is not helpful.",
                     ),
                     (
                         9,
                         3,
-                        "2024-11-23 21:34:19",
+                        old_date(2),
                         "I feel scared about my future.",
                     ),
                     (
                         10,
                         3,
-                        "2024-11-24 22:27:56",
+                        old_date(1),
                         "I tried meditation and it made me feel better.",
                     ),
                     (
                         11,
                         4,
-                        "2024-11-20 08:27:23",
+                        old_date(5),
                         "My dog died. I don't feel well. I miss Rex.",
                     ),
                     (
                         12,
                         4,
-                        "2024-11-21 03:08:09",
+                        old_date(4),
                         "I am still thinking about Rex and how we used to play together.",
                     ),
                     (
                         13,
                         4,
-                        "2024-11-22 11:03:03",
+                        old_date(3),
                         "My family is angry with me and think I overeacted with Rex's death.",
                     ),
                     (
                         14,
                         4,
-                        "2024-11-23 17:34:10",
+                        old_date(2),
                         "I hate my family. They threw out Rex's stuff from house.",
                     ),
                     (
                         15,
                         4,
-                        "2024-11-24 01:27:45",
+                        old_date(1),
                         "I am feeling sick.",
                     ),
                 ]
@@ -530,44 +559,46 @@ class Database:
             MoodEntries = self.cursor.execute("SELECT user_id FROM MoodEntries")
             if len(MoodEntries.fetchall()) == 0:
                 MoodEntries = [
-                    (1, 2, "2024-11-20", 6, "Happy about university grades."),
-                    (2, 2, "2024-11-21", 6, "Been watching tv."),
-                    (3, 2, "2024-11-22", 6, "Shopping spree time."),
-                    (4, 2, "2024-11-23", 3, "Feel sick."),
-                    (5, 2, "2024-11-24", 1, "No comment provided."),
-                    (6, 3, "2024-11-20", 1, "Council tax arrears."),
-                    (7, 3, "2024-11-21", 2, "No comment provided."),
-                    (8, 3, "2024-11-22", 1, "I hate books."),
+                    (1, 2, old_day(5), 6, "Happy about university grades."),
+                    (2, 2, old_day(4), 6, "Been watching tv."),
+                    (3, 2, old_day(3), 6, "Shopping spree time."),
+                    (4, 2, old_day(2), 3, "Feel sick."),
+                    (5, 2, old_day(1), 1, "No comment provided."),
+                    (6, 3, old_day(5), 1, "Council tax arrears."),
+                    (7, 3, old_day(4), 2, "No comment provided."),
+                    (8, 3, old_day(3), 1, "I hate books."),
                     (
                         9,
                         3,
-                        "2024-11-23",
+                        old_day(2),
                         1,
                         "I don't think everything will get alright.",
                     ),
-                    (10, 3, "2024-11-24", 3, "Meditation and yoga helped."),
-                    (11, 4, "2024-11-20", 3, "I loved my dog."),
-                    (12, 4, "2024-11-21", 1, "I cannot stop thinking on my dog."),
+                    (10, 3, old_day(1), 3, "Meditation and yoga helped."),
+                    (11, 4, old_day(5), 3, "I loved my dog."),
+                    (12, 4, old_day(4), 1, "I cannot stop thinking on my dog."),
                     (
                         13,
                         4,
-                        "2024-11-22",
+                        old_day(3),
                         1,
                         "Having fights theoughtout the day with my family.",
                     ),
-                    (14, 4, "2024-11-23", 2, "No comment provided."),
-                    (15, 4, "2024-11-24", 1, "Been vomiting and have fever."),
+                    (14, 4, old_day(2), 2, "No comment provided."),
+                    (15, 4, old_day(1), 1, "Been vomiting and have fever."),
                 ]
                 self.cursor.executemany(
                     "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
                 )
 
+            # First appointment was datetime(2024, 11, 20, hour=12, minute=0).
+            # Second appointment was datetime(2024, 12, 11, hour=16, minute=0).
             appointments = [
                 (
                     1,
                     2,
                     5,
-                    datetime(2024, 11, 20, hour=12, minute=0),
+                    old_appointment_day(1),
                     "Completed",
                     "detailed notes",
                     "This is what the clinician thinks",
@@ -576,7 +607,7 @@ class Database:
                     2,
                     2,
                     5,
-                    datetime(2024, 12, 11, hour=16, minute=0),
+                    old_appointment_day(-1),
                     "Pending",
                     "notes about condition",
                     None,
