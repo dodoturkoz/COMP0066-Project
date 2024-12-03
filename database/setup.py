@@ -421,25 +421,29 @@ class Database:
 
             #Check if there is previous entries of journal.
             #Add entries if there is not.
-            #5 entries added per patient, 1 for each day. Can change to random per day since not mood of day.
+            #5 entries added per patient, 1 for each day. 
+            #Can change to random per day since not mood of day.
+            #Patient 2, 3 and 4 only added for now. 
+            #Diagnosis - None, none, depression
+            #24, 34, 42
             journal_entries = self.cursor.execute("SELECT user_id FROM JournalEntries")
             if len(journal_entries.fetchall()) == 0:
                 journal_entries = [
-                    (1, 2, datetime(2024, 11, 20, hour=12, minute=0), "I am worried about my financial issues. None"),
-                    (2, 2, datetime(2024, 11, 21, hour=12, minute=0), "I am watching tv but I still feel sad. None"),
-                    (3, 2, datetime(2024, 11, 22, hour=12, minute=0), "I tried to read a book but that is not helpful. None"),
-                    (4, 2, datetime(2024, 11, 23, hour=12, minute=0), "I feel scared about my future. None"),
-                    (5, 2, datetime(2024, 11, 24, hour=12, minute=0), "I tried meditation and it made me feel better. None"),
-                    (6, 3, datetime(2024, 11, 20, hour=12, minute=0), "I got great assessment week grades and I am proud of myself. None"),
-                    (7, 3, datetime(2024, 11, 21, hour=12, minute=0), "I got a detention for forgetting my planner. I cannot find my planner and I don't know what to do. None"),
-                    (8, 3, datetime(2024, 11, 22, hour=12, minute=0), "I hate mathematics. I am stuck on my homework. None"),
-                    (9, 3, datetime(2024, 11, 23, hour=12, minute=0), "I hate studying gcse computer science. We only get to rewrite the textbook. None"),
-                    (10, 3, datetime(2024, 11, 24, hour=12, minute=0), "Teacher just mentioned year 10 work experience. I feel excited about it. None"),
-                    (11, 4, datetime(2024, 11, 20, hour=12, minute=0), "My dog died. I don't feel well. I miss Rex. Depression"),
-                    (12, 4, datetime(2024, 11, 21, hour=12, minute=0), "I am still thinking about Rex and how we used to play together. Depression"),
-                    (13, 4, datetime(2024, 11, 22, hour=12, minute=0), "I think my parents are angry with me. They think I am overreacting with Rex's death. Depression"),
-                    (14, 4, datetime(2024, 11, 23, hour=12, minute=0), "My parents just don't understand me. They want throw away Rex's stuff from house. Depression"),
-                    (15, 4, datetime(2024, 11, 24, hour=12, minute=0), "I am thinking of moving out of house. I just don't know how to tell my family. Depression"),
+                    (1, 2, datetime(2024, 11, 20, hour=12, minute=0), "Hey, I got a first for my degree. Feel on top of the world."),
+                    (2, 2, datetime(2024, 11, 21, hour=12, minute=0), "I have felt so great in the past few weeks. Everything is working well for me."),
+                    (3, 2, datetime(2024, 11, 22, hour=12, minute=0), "I have spent thousands of pounds on a new pair of shoes. I feel I deserve it."),
+                    (4, 2, datetime(2024, 11, 23, hour=12, minute=0), "I don't feel well. I woke up late but still feel tired."),
+                    (5, 2, datetime(2024, 11, 24, hour=12, minute=0), "I don't feel like meeting or talking with anyone but my journal."),
+                    (6, 3, datetime(2024, 11, 20, hour=12, minute=0), "I am worried about my financial issues."),
+                    (7, 3, datetime(2024, 11, 21, hour=12, minute=0), "I am watching tv but I still feel sad."),
+                    (8, 3, datetime(2024, 11, 22, hour=12, minute=0), "I tried to read a book but that is not helpful."),
+                    (9, 3, datetime(2024, 11, 23, hour=12, minute=0), "I feel scared about my future."),
+                    (10, 3, datetime(2024, 11, 24, hour=12, minute=0), "I tried meditation and it made me feel better."),
+                    (11, 4, datetime(2024, 11, 20, hour=12, minute=0), "My dog died. I don't feel well. I miss Rex."),
+                    (12, 4, datetime(2024, 11, 21, hour=12, minute=0), "I am still thinking about Rex and how we used to play together."),
+                    (13, 4, datetime(2024, 11, 22, hour=12, minute=0), "I think my family is angry with me. They think I am overreacting with Rex's death."),
+                    (14, 4, datetime(2024, 11, 23, hour=12, minute=0), "My family just don't understand me. They want throw away Rex's stuff from house."),
+                    (15, 4, datetime(2024, 11, 24, hour=12, minute=0), "I am feeling sick."),
                     (16, 7, datetime(2024, 11, 20, hour=12, minute=0), "I don't feel like spending time with my relatives but they are not leaving me. Schizophrenia"),
                     (17, 7, datetime(2024, 11, 21, hour=12, minute=0), "I can see my dead mother across the road but my friends cannot. Schizophrenia"),
                     (18, 7, datetime(2024, 11, 22, hour=12, minute=0), "I keep seeing and hearing my mother. She is telling me that she is actually here but my relatives said she is not here. Schizophrenia"),
@@ -521,21 +525,21 @@ class Database:
             MoodEntries = self.cursor.execute("SELECT user_id FROM MoodEntries")
             if len(MoodEntries.fetchall()) == 0:
                 MoodEntries = [
-                    (1, 2, datetime(2024, 11, 20), "\U0001f7e8 4. yellow Content \U0001f610", "No comment provided."),
-                    (2, 2, datetime(2024, 11, 21), "\033[33m 3. Neutral \U0001f641 [Orange] \033[00m", "No comment provided."),
-                    (3, 2, datetime(2024, 11, 22), "Mood", "No comment provided."),
-                    (4, 2, datetime(2024, 11, 23), "Mood", "No comment provided."),
+                    (1, 2, datetime(2024, 11, 20), "\U0001f7e8 4. yellow Content \U0001f610", "Happy about degree class."),
+                    (2, 2, datetime(2024, 11, 21), "\033[33m 3. Neutral \U0001f641 [Orange] \033[00m", "Been watching tv."),
+                    (3, 2, datetime(2024, 11, 22), "Mood", "Shopping spree time."),
+                    (4, 2, datetime(2024, 11, 23), "Mood", "Feel sick."),
                     (5, 2, datetime(2024, 11, 24), "Mood", "No comment provided."),
-                    (6, 3, datetime(2024, 11, 20), "Mood", "No comment provided."),
+                    (6, 3, datetime(2024, 11, 20), "Mood", "Council tax arrears."),
                     (7, 3, datetime(2024, 11, 21), "Mood", "No comment provided."),
-                    (8, 3, datetime(2024, 11, 22), "Mood", "No comment provided."),
-                    (9, 3, datetime(2024, 11, 23), "Mood", "No comment provided."),
-                    (10, 3, datetime(2024, 11, 24), "Mood", "No comment provided."),
-                    (11, 4, datetime(2024, 11, 20), "Mood", "No comment provided."),
-                    (12, 4, datetime(2024, 11, 21), "Mood", "No comment provided."),
-                    (13, 4, datetime(2024, 11, 22), "Mood", "No comment provided."),
+                    (8, 3, datetime(2024, 11, 22), "Mood", "I hate books."),
+                    (9, 3, datetime(2024, 11, 23), "Mood", "I don't think everything will get alright."),
+                    (10, 3, datetime(2024, 11, 24), "Mood", "Meditation and yoga helped."),
+                    (11, 4, datetime(2024, 11, 20), "Mood", "I loved my dog."),
+                    (12, 4, datetime(2024, 11, 21), "Mood", "I cannot stop thinking on my dog."),
+                    (13, 4, datetime(2024, 11, 22), "Mood", "Having fights theoughtout the day with my family."),
                     (14, 4, datetime(2024, 11, 23), "Mood", "No comment provided."),
-                    (15, 4, datetime(2024, 11, 24), "Mood", "No comment provided."),
+                    (15, 4, datetime(2024, 11, 24), "Mood", "Been vomiting and have fever."),
                     (16, 7, datetime(2024, 11, 20), "Mood", "No comment provided."),
                     (17, 7, datetime(2024, 11, 21), "Mood", "No comment provided."),
                     (18, 7, datetime(2024, 11, 22), "Mood", "No comment provided."),
