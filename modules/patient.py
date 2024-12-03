@@ -11,7 +11,10 @@ from modules.utilities.input_utils import (
     get_valid_yes_or_no,
 )
 from modules.utilities.display_utils import display_choice, clear_terminal
-from modules.appointments import request_appointment
+from modules.appointments import (
+    request_appointment,
+    cancel_appointment,
+)
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
 
@@ -326,34 +329,6 @@ class Patient(User):
             print(f"Audio File: {resource['audio_file']}")
             print(f"Transcript: {resource['transcript']}")
 
-    def book_appointment(self):
-        """
-        Allows the patient to book an appointment.
-        """
-        return request_appointment(self.database, self.user_id, self.clinician_id)
-
-    def cancel_appointment(self, appointment_id: int) -> bool:
-        """
-        Cancels an appointment by removing it from the database.
-        """
-        try:
-            self.database.cursor.execute(
-                """
-                DELETE FROM Appointments WHERE appointment_id = ? AND user_id = ?
-                """,
-                (appointment_id, self.user_id),
-            )
-            if self.database.cursor.rowcount > 0:
-                self.database.connection.commit()
-                print("Appointment canceled successfully.")
-                return True
-            else:
-                print("Appointment not found or you are not authorized to cancel it.")
-                return False
-        except sqlite3.OperationalError as e:
-            print(f"Error canceling appointment: {e}")
-            return False
-
     def view_appointments(self) -> list[dict[str, Any]]:
         """
         Views all appointments for the patient.
@@ -463,13 +438,13 @@ class Patient(User):
                     keyword = input("Enter keyword to search for exercises: ")
                     self.search_exercises(keyword)
                 case 7:
-                    self.book_appointment()
+                    request_appointment(self.database, self.user_id, self.clinician_id)
                 case 8:
                     self.view_appointments()
                 case 9:
                     self.view_appointments()
                     appointment_id = int(input("Enter appointment ID to cancel: "))
-                    self.cancel_appointment(appointment_id)
+                    cancel_appointment(self.database, appointment_id)
                 case 10:
                     clear_terminal()
                     return True

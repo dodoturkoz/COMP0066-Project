@@ -137,3 +137,26 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         except sqlite3.IntegrityError as e:
             print(f"Failed to book appointment: {e}")
             return False
+
+
+def cancel_appointment(database, appointment_id: int) -> bool:
+    """
+    Cancels an appointment by removing it from the database.
+    """
+    try:
+        database.cursor.execute(
+            """
+            DELETE FROM Appointments WHERE appointment_id = ?
+            """,
+            (appointment_id,),
+        )
+        if database.cursor.rowcount > 0:
+            database.connection.commit()
+            print("Appointment canceled successfully.")
+            return True
+        else:
+            print("Appointment not found or you are not authorized to cancel it.")
+            return False
+    except sqlite3.OperationalError as e:
+        print(f"Error canceling appointment: {e}")
+        return False
