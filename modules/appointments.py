@@ -1,8 +1,7 @@
-from modules.clinician import Clinician
-from modules.patient import Patient
-from modules.utilities.display import display_choice, clear_terminal
-from datetime import datetime
 import sqlite3
+from datetime import datetime
+
+from modules.utilities.display_utils import display_choice
 
 
 def choose_date() -> datetime:
@@ -33,10 +32,10 @@ def choose_date() -> datetime:
             )
 
 
-def get_appointments(clinician: Clinician) -> list:
+def get_appointments(database, clinician_id: int) -> list:
     """Find all appointments registered for a specific clinician, including unconfirmed ones"""
     try:
-        appointments = clinician.database.cursor.execute(
+        appointments = database.cursor.execute(
             """
                 SELECT appointment_id, a.user_id, clinician_id, date, 
                 status, patient_notes, clinician_notes,
@@ -45,11 +44,12 @@ def get_appointments(clinician: Clinician) -> list:
                 WHERE clinician_id = ?
                 AND a.user_id = u.user_id
             """,
-            [clinician.user_id],
+            [clinician_id],
         ).fetchall()
         return appointments
     except Exception as e:
         print(f"Error: {e}")
+        return []
 
 
 def print_appointment(appointment: dict) -> None:
@@ -104,9 +104,9 @@ def display_appointment_options(clinician: Clinician, appointments: list):
     elif next == 3:
         return False
 
-def get_available_slots(clinician: Clinician, day: datetime) -> list:
+def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
-    appointments = get_appointments(clinician)
+    appointments = get_appointments(database, clinician_id)
     possible_hours = [9, 10, 11, 12, 14, 15, 16]
     available_slots = []
 
@@ -123,16 +123,15 @@ def get_available_slots(clinician: Clinician, day: datetime) -> list:
     return available_slots
 
 
-def request_appointment(patient: Patient, clinician: Clinician) -> bool:
+def request_appointment(database, patient_id: int, clinician_id: int) -> bool:
     """Allows a patient to request an appointment with their clinician"""
 
     # Check that the patient is registered with this clinician
-    clinician.database.cursor.execute(
-        "SELECT clinician_id FROM Patients WHERE user_id = ?", [patient.user_id]
-    )
-    clinician_id = clinician.database.cursor.fetchone()
+    result = database.cursor.execute(
+        "SELECT clinician_id FROM Patients WHERE user_id = ?", [patient_id]
+    ).fetchone()
 
-    if clinician_id != clinician.user_id:
+    if not result or result != clinician_id:
         print("You are not registered with this clinician. Please contact the admin.")
         return False
 
@@ -146,18 +145,18 @@ def request_appointment(patient: Patient, clinician: Clinician) -> bool:
         requested_date = choose_date()
 
         # Get available slots on that day
-        slots = get_available_slots(clinician, requested_date)
+        slots = get_available_slots(database, clinician_id, requested_date)
 
         if not slots:
             choose_again = input(
                 "Sorry, your clinician has no availability on that day - would you like to choose another day? (Y/N) "
             )
-            if choose_again == "N":
+            if choose_again.upper() == "N":
                 return False
             else:
                 continue
 
-        time_slot_strings = [{slot.strftime("%H:%M")} for slot in slots]
+        time_slot_strings = [slot.strftime("%H:%M") for slot in slots]
         time_slot_strings.append("Select a different day")
 
         # Offer time slots to the user
@@ -174,19 +173,19 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
             chosen_time = slots[chosen_slot - 1]
 
         try:
-            clinician.database.cursor.execute(
+            database.cursor.execute(
                 """
                     INSERT INTO Appointments (user_id, clinician_id, date, patient_notes)
                     VALUES (?, ?, ?, ?)
                     """,
                 (
-                    patient.user_id,
-                    clinician.user_id,
+                    patient_id,
+                    clinician_id,
                     chosen_time,
                     description,
                 ),
             )
-            clinician.database.connection.commit()
+            database.connection.commit()
             print(
                 "\nYour appointment has been requested. You'll receive an email once your clinician has confirmed it."
             )
@@ -194,3 +193,26 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         except sqlite3.IntegrityError as e:
             print(f"Failed to book appointment: {e}")
             return False
+
+
+def cancel_appointment(database, appointment_id: int) -> bool:
+    """
+    Cancels an appointment by removing it from the database.
+    """
+    try:
+        database.cursor.execute(
+            """
+            DELETE FROM Appointments WHERE appointment_id = ?
+            """,
+            (appointment_id,),
+        )
+        if database.cursor.rowcount > 0:
+            database.connection.commit()
+            print("Appointment canceled successfully.")
+            return True
+        else:
+            print("Appointment not found or you are not authorized to cancel it.")
+            return False
+    except sqlite3.OperationalError as e:
+        print(f"Error canceling appointment: {e}")
+        return False

@@ -1,6 +1,10 @@
 from modules.user import User
 from modules.patient import Patient
-from modules.utilities.display import clear_terminal, display_choice, wait_terminal
+from modules.utilities.display_utils import (
+    clear_terminal,
+    display_choice,
+    wait_terminal,
+)
 from modules.utilities.send_email import send_email
 from datetime import datetime
 import sqlite3
