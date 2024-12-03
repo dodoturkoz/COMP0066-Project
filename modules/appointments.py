@@ -59,51 +59,6 @@ def print_appointment(appointment: dict) -> None:
         + f"{appointment['status']}\n"
     )
 
-def display_appointment_options(clinician: Clinician, appointments: list):
-
-    appointment_strings = []
-
-    for appointment in appointments:
-        print_appointment(appointment)
-        appointment_strings.append(
-            f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-            + f" - {appointment['first_name']} {appointment['surname']} - "
-            + f"{appointment['status']}"
-        )
-
-    options = [
-        "View appointment notes",
-        "Confirm/Reject Appointments",
-        "Return to Main Menu",
-    ]
-    next = display_choice("What would you like to do now?", options)
-
-    # View appointment notes
-    if next == 1:
-
-        if len(appointments) > 1:
-            clear_terminal()
-            selected = display_choice(
-                "Please choose an appointment to view", appointment_strings
-            )
-            selected_appointment = appointments[selected - 1]
-        else:
-            selected_appointment = appointments[0]
-
-        if selected_appointment["clinician_notes"]:
-            print("\nYour notes:")
-            print(selected_appointment["clinician_notes"])
-        if selected_appointment["patient_notes"]:
-            print("\nPatient notes:")
-            print(selected_appointment["patient_notes"] + "\n")
-
-    # Confirm/Reject appointments
-    elif next == 2:
-        clinician.view_requested_appointments()
-    # Exit
-    elif next == 3:
-        return False
-
 def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
     appointments = get_appointments(database, clinician_id)

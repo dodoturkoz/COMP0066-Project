@@ -6,6 +6,7 @@ from modules.utilities.display_utils import (
     wait_terminal,
 )
 from modules.utilities.send_email import send_email
+from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
 import sqlite3
 from database.setup import diagnoses
@@ -14,16 +15,54 @@ from database.setup import diagnoses
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
+    def display_appointment_options(self, appointments: list):
+        appointment_strings = []
+
+        for appointment in appointments:
+            print_appointment(appointment)
+            appointment_strings.append(
+                f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+                + f" - {appointment['first_name']} {appointment['surname']} - "
+                + f"{appointment['status']}"
+            )
+
+        options = [
+            "View appointment notes",
+            "Confirm/Reject Appointments",
+            "Return to Main Menu",
+        ]
+        next = display_choice("What would you like to do now?", options)
+
+        # View appointment notes
+        if next == 1:
+            if len(appointments) > 1:
+                clear_terminal()
+                selected = display_choice(
+                    "Please choose an appointment to view", appointment_strings
+                )
+                selected_appointment = appointments[selected - 1]
+            else:
+                selected_appointment = appointments[0]
+
+            if selected_appointment["clinician_notes"]:
+                print("\nYour notes:")
+                print(selected_appointment["clinician_notes"])
+            if selected_appointment["patient_notes"]:
+                print("\nPatient notes:")
+                print(selected_appointment["patient_notes"] + "\n")
+
+        # Confirm/Reject appointments
+        elif next == 2:
+            self.view_requested_appointments()
+        # Exit
+        elif next == 3:
+            return False
+
     def view_calendar(self):
         """
         This allows the clinician to view all their past and
         upcoming appointments.
         """
-        # Importing here to avoid circular imports
-        from modules.appointments import (
-            get_appointments,
-            display_appointment_options,
-        )
 
         clear_terminal()
         appointments = get_appointments(self)
@@ -38,12 +77,11 @@ class Clinician(User):
 
             # Show all appointments
             if view == 1:
-                display_appointment_options(self, appointments)
+                self.display_appointment_options(appointments)
 
             # Show past appointments
             elif view == 2:
-                display_appointment_options(
-                    self,
+                self.display_appointment_options(
                     list(
                         filter(lambda app: app["date"] < datetime.now(), appointments)
                     ),
@@ -51,8 +89,7 @@ class Clinician(User):
 
             # Show upcoming appointments
             elif view == 3:
-                display_appointment_options(
-                    self,
+                self.display_appointment_options(
                     list(
                         filter(lambda app: app["date"] >= datetime.now(), appointments)
                     ),
@@ -129,7 +166,7 @@ class Clinician(User):
                             # Send emails to the client and the clinician
                             clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
                             patient_confirmation = f"Your appointment with {self.first_name} {self.surname} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
-                            
+
                             # Email the clinician
                             send_email(
                                 self.email,
@@ -181,7 +218,6 @@ class Clinician(User):
                             # Send emails to the client and the clinician
                             clinician_rejection = f"You have rejected {appointment["first_name"]} {appointment["surname"]}'s request for an appointment on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
                             patient_rejection = f"Your request for an appointment with {self.first_name} {self.surname} on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')} has been rejected. Please use the online booking system to choose a different time."
-                            
 
                             # Email the clinician
                             send_email(
