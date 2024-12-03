@@ -1,7 +1,7 @@
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
-from modules.utilities.display_utils import display_choice, clear_terminal
+from modules.utilities.display import display_choice, clear_terminal, wait_terminal
 
 db = Database()
 
@@ -22,7 +22,14 @@ try:
             continue
         user = login(db)
         if user:
-            run = user.flow()
+            if user.is_active:
+                run = user.flow()
+            else:
+                print(
+                    "Your account is currently inactive. Please contact an administrator."
+                )
+                wait_terminal("Press enter to log out.")
+
             # NOTE: if flow returns True -> login screen
             # if flow returns False -> quits app
 
