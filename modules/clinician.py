@@ -279,29 +279,50 @@ class Clinician(User):
         except Exception as e:
             print(f"Error: {e}")
 
-    def edit_patient_info(self, patient: Patient):
-        """Edit patient information
-
-        WORK IN PROGRESS! -> User obj has no MODIFIABLE ATTRIBUTES
-        """
+    def edit_patient_info(self, patient: Patient) -> bool:
+        """Edit patient information"""
+        attribute: str
+        value: str
+        patient.MODIFIABLE_ATTRIBUTES.append("diagnosis")
 
         while True:
             edit_choice = display_choice(
                 "What would you like to edit?",
-                ["First Name", "Surname", "Diagnosis", "Exit"],
+                ["Diagnosis", "Exit"],
                 "Please choose from the above options: ",
             )
             if edit_choice == 1:
-                new_first_name = input("Please enter the new first name: ")
-                patient.edit_info("first_name", new_first_name)
+                attribute = "diagnosis"
+                value = diagnoses[
+                    display_choice("Please choose a diagnosis: ", diagnoses) - 1
+                ]
+                break
             if edit_choice == 2:
-                new_surname = input("Please enter the new surname: ")
-                patient.edit_info("surname", new_surname)
-            if edit_choice == 3:
-                new_diagnosis = input("Please enter the new diagnosis: ")
-                patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 4:
                 return False
+
+        try:
+            # First update on the database
+            print(f"Updating {attribute} to {value}...")
+            self.database.cursor.execute(
+                f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
+                (value, self.user_id),
+            )
+            self.database.connection.commit()
+
+            # Then in the object if that particular attribute is stored here
+            if hasattr(self, attribute):
+                setattr(self, attribute, value)
+
+            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+            wait_terminal()
+
+        # If there is an error with the query
+        except sqlite3.OperationalError as e:
+            print(
+                f"{e} Error updating, likely the selected attribute does not exist for Users"
+            )
+            wait_terminal()
+            return False
 
     def view_dashboard(self):
         """View the dashboard.
@@ -326,18 +347,27 @@ class Clinician(User):
             )
             if decision == "Y":
                 patient_id = int(input("Please enter the patient's ID: "))
-                patient_details = self.database.cursor.execute(
-                    """
+                try:
+                    patient_details = self.database.cursor.execute(
+                        """
                     SELECT * 
                     FROM Patients
                     INNER JOIN Users ON Patients.user_id = Users.user_id
                     WHERE Patients.user_id = ?""",
-                    [patient_id],
-                ).fetchone()
-                patient = Patient(self.database, *patient_details)
-                self.edit_patient_info(patient)
-                clear_terminal()
-                return False
+                        [patient_id],
+                    ).fetchone()
+                    patient = Patient(self.database, **patient_details)
+                    self.edit_patient_info(patient)
+                    clear_terminal()
+
+                except TypeError as e:
+                    print(f"{e} Patient with ID {patient_id} not found.")
+                    wait_terminal()
+
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                    wait_terminal()
+
             if decision == "N":
                 wait_terminal()
 
