@@ -16,6 +16,8 @@ class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def display_appointment_options(self, appointments: list):
+        """This function presents options to the clinician based on the 
+            list of appointments passed into it."""
         appointment_strings = []
 
         for appointment in appointments:
@@ -65,7 +67,7 @@ class Clinician(User):
         """
 
         clear_terminal()
-        appointments = get_appointments(self)
+        appointments = get_appointments(self.database, self.user_id)
 
         if not appointments:
             print("You have no registered appointments.")
@@ -101,11 +103,9 @@ class Clinician(User):
         """This allows the clinician to view all appointments that have been
         requested but not confirmed yet, and gives the option to confirm or
         reject them"""
-        # Importing here to avoid circular imports
-        from modules.appointments import get_appointments
 
         clear_terminal()
-        appointments = get_appointments(self)
+        appointments = get_appointments(self.database, self.user_id)
         unconfirmed_appointments = []
         choice_strings = []
 
