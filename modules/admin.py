@@ -37,7 +37,8 @@ class Admin(User):
         database: Database,
         user_id: int,
         username: str,
-        name: str,
+        first_name: str,
+        surname: str,
         email: str,
         is_active: bool,
         *args,
@@ -48,7 +49,8 @@ class Admin(User):
             database,
             user_id,
             username,
-            name,
+            first_name,
+            surname,
             email,
             is_active,
         )
@@ -65,7 +67,8 @@ class Admin(User):
                 username,
                 password,
                 email,
-                name,
+                first_name,
+                surname,
                 is_active,
                 role,
                 emergency_email,
@@ -93,6 +96,7 @@ class Admin(User):
                 items=["username", "email", "name", "is_active"]
             )
             print(patient_df)
+            #return patient_df.index
         elif table_name == "Clinicians":
             clinician_df = self.df.query(('role == "clinician"'))
             clinician_df = clinician_df.filter(
@@ -240,6 +244,8 @@ class Admin(User):
                 if table_choice == "1":
                     print("")
                     self.view_table("Patients")
+                    #patient_index = self.view_table("Patients")
+                    # user_id = get_user_input_with_limited_choice("Enter the user ID to edit: ", patient_index)
                     user_id = int(input("\nEnter the user ID to edit: "))
                     attribute = input(
                         "Enter the attribute to edit (e.g., email, name): "
