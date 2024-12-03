@@ -302,10 +302,10 @@ class Clinician(User):
 
         try:
             # First update on the database
-            print(f"Updating {attribute} to {value}...")
+            print(f"Updating {attribute} to {value} for user {patient.user_id}")
             self.database.cursor.execute(
                 f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
-                (value, self.user_id),
+                (value, patient.user_id),
             )
             self.database.connection.commit()
 
