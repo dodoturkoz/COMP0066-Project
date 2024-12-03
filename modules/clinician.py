@@ -16,8 +16,8 @@ class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def display_appointment_options(self, appointments: list):
-        """This function presents options to the clinician based on the 
-            list of appointments passed into it."""
+        """This function presents options to the clinician based on the
+        list of appointments passed into it."""
         appointment_strings = []
 
         for appointment in appointments:
@@ -280,10 +280,8 @@ class Clinician(User):
             print(f"Error: {e}")
 
     def edit_patient_info(self, patient: Patient):
-        """Edit patient information
-
-        WORK IN PROGRESS! -> User obj has no MODIFIABLE ATTRIBUTES
-        """
+        """Edit patient information"""
+        patient.MODIFIABLE_ATTRIBUTES = ["diagnosis"]
 
         while True:
             edit_choice = display_choice(
@@ -334,7 +332,7 @@ class Clinician(User):
                     WHERE Patients.user_id = ?""",
                     [patient_id],
                 ).fetchone()
-                patient = Patient(self.database, *patient_details)
+                patient = Patient(self.database, **patient_details)
                 self.edit_patient_info(patient)
                 clear_terminal()
                 return False
