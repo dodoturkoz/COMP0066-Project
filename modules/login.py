@@ -41,8 +41,6 @@ def login(db: Database) -> Union[User, None]:
             raise Exception("User type not defined in the system")
     else:
         print("Invalid password or username entered.")
-    # TODO: We also need to forbid a user from logging in if is_active is set to
-    # 0 (and craft a corresponding error message).
 
 
 def registration_input(
