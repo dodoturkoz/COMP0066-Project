@@ -5,84 +5,122 @@ from modules.utilities.display_utils import (
     display_choice,
     wait_terminal,
 )
+from modules.utilities.send_email import send_email
+from modules.appointments import get_appointments, print_appointment
+from datetime import datetime
 import sqlite3
-
-
-diagnoses = [
-    "Depression",
-    "Anxiety",
-    "Bipolar",
-    "Schizophrenia",
-    "PTSD",
-    "OCD",
-    "ADHD",
-    "Autism",
-    "Drug Induced Psychosis",
-    "Other",
-]
+from database.setup import diagnoses
 
 
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
+    def display_appointment_options(self, appointments: list):
+        """This function presents options to the clinician based on the 
+            list of appointments passed into it."""
+        appointment_strings = []
+
+        for appointment in appointments:
+            print_appointment(appointment)
+            appointment_strings.append(
+                f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+                + f" - {appointment['first_name']} {appointment['surname']} - "
+                + f"{appointment['status']}"
+            )
+
+        options = [
+            "View appointment notes",
+            "Confirm/Reject Appointments",
+            "Return to Main Menu",
+        ]
+        next = display_choice("What would you like to do now?", options)
+
+        # View appointment notes
+        if next == 1:
+            if len(appointments) > 1:
+                clear_terminal()
+                selected = display_choice(
+                    "Please choose an appointment to view", appointment_strings
+                )
+                selected_appointment = appointments[selected - 1]
+            else:
+                selected_appointment = appointments[0]
+
+            if selected_appointment["clinician_notes"]:
+                print("\nYour notes:")
+                print(selected_appointment["clinician_notes"])
+            if selected_appointment["patient_notes"]:
+                print("\nPatient notes:")
+                print(selected_appointment["patient_notes"] + "\n")
+
+        # Confirm/Reject appointments
+        elif next == 2:
+            self.view_requested_appointments()
+        # Exit
+        elif next == 3:
+            return False
+
     def view_calendar(self):
         """
-        This allows the clinician to view all upcoming appointments,
-        showing whether they are confirmed or not.
+        This allows the clinician to view all their past and
+        upcoming appointments.
         """
-        # Importing here to avoid circular imports
-        from modules.appointments import get_appointments
 
-        # Option to approve/reject confirmed appointments?
         clear_terminal()
-        appointments = get_appointments(self)
-        if appointments:
-            for appointment in appointments:
-                patient_name = self.database.cursor.execute(
-                    """
-                SELECT first_name, surname 
-                FROM USERS 
-                WHERE user_id = ?""",
-                    [appointment["user_id"]],
-                ).fetchone()
-                print(
-                    f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                    + f" - {patient_name['first_name']} {patient_name['surname']} - "
-                    + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
-                )
+        appointments = get_appointments(self.database, self.user_id)
+
+        if not appointments:
+            print("You have no registered appointments.")
         else:
-            print("There are no appointments.")
+            view_options = ["All", "Past", "Upcoming"]
+            view = display_choice(
+                "Which appointments would you like to view?", view_options
+            )
+
+            # Show all appointments
+            if view == 1:
+                self.display_appointment_options(appointments)
+
+            # Show past appointments
+            elif view == 2:
+                self.display_appointment_options(
+                    list(
+                        filter(lambda app: app["date"] < datetime.now(), appointments)
+                    ),
+                )
+
+            # Show upcoming appointments
+            elif view == 3:
+                self.display_appointment_options(
+                    list(
+                        filter(lambda app: app["date"] >= datetime.now(), appointments)
+                    ),
+                )
+
         wait_terminal()
 
     def view_requested_appointments(self):
         """This allows the clinician to view all appointments that have been
         requested but not confirmed yet, and gives the option to confirm or
         reject them"""
-        # Importing here to avoid circular imports
-        from modules.appointments import get_appointments
 
         clear_terminal()
-        appointments = get_appointments(self)
+        appointments = get_appointments(self.database, self.user_id)
         unconfirmed_appointments = []
         choice_strings = []
 
         # Find any unconfirmed appointments and store them in the array
         # Add a string for each appointment to the choice_strings array
-        # Q: Should this display past appointments that were unconfirmed? Should those exist at all?
         if appointments:
             for appointment in appointments:
-                if not appointment["is_confirmed"]:
+                if (
+                    appointment["status"] == "Pending"
+                    and appointment["date"] >= datetime.now()
+                ):
                     unconfirmed_appointments.append(appointment)
-                    patient_name = self.database.cursor.execute(
-                        """
-                    SELECT first_name, surname 
-                    FROM USERS 
-                    WHERE user_id = ?""",
-                        [appointment["user_id"]],
-                    ).fetchone()
                     choice_strings.append(
                         f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
-                        + f" - {patient_name['first_name']} {patient_name['surname']}"
+                        + f" - {appointment['first_name']} {appointment['surname']}"
                     )
             choice_strings.append("Exit")
 
@@ -95,7 +133,7 @@ class Clinician(User):
                 )
 
                 if confirm_choice == len(unconfirmed_appointments) + 1:
-                    break
+                    return False
                 else:
                     options = ["Confirm", "Reject", "Go Back"]
                     accept_or_reject = display_choice(
@@ -113,7 +151,7 @@ class Clinician(User):
                             self.database.cursor.execute(
                                 """
                                 UPDATE Appointments
-                                SET is_confirmed = 1
+                                SET status = "Confirmed"
                                 WHERE appointment_id = ?""",
                                 [accepted_appointment["appointment_id"]],
                             )
@@ -125,7 +163,23 @@ class Clinician(User):
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(accepted_appointment)
 
-                            # Need to implement email
+                            # Send emails to the client and the clinician
+                            clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+                            patient_confirmation = f"Your appointment with {self.first_name} {self.surname} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+
+                            # Email the clinician
+                            send_email(
+                                self.email,
+                                "Appointment confirmed",
+                                clinician_confirmation,
+                            )
+
+                            # Email the client
+                            send_email(
+                                appointment["patient_email"],
+                                "Appointment confirmed",
+                                patient_confirmation,
+                            )
 
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
@@ -140,7 +194,7 @@ class Clinician(User):
                         else:
                             return True
 
-                    # Delete the appointment
+                    # Reject the appointment
                     elif accept_or_reject == 2:
                         rejected_appointment = unconfirmed_appointments[
                             confirm_choice - 1
@@ -148,19 +202,36 @@ class Clinician(User):
                         try:
                             self.database.cursor.execute(
                                 """
-                                DELETE FROM Appointments
+                                UPDATE Appointments
+                                SET status = "Rejected"
                                 WHERE appointment_id = ?""",
                                 [rejected_appointment["appointment_id"]],
                             )
                             self.database.connection.commit()
                             print(
-                                "The appointment has been rejected. A confirmation email will be sent to you and the patient."
+                                "The appointment has been rejected. A notification email will be sent to you and the patient."
                             )
 
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(rejected_appointment)
 
-                            # Need to implement email
+                            # Send emails to the client and the clinician
+                            clinician_rejection = f"You have rejected {appointment["first_name"]} {appointment["surname"]}'s request for an appointment on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+                            patient_rejection = f"Your request for an appointment with {self.first_name} {self.surname} on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')} has been rejected. Please use the online booking system to choose a different time."
+
+                            # Email the clinician
+                            send_email(
+                                self.email,
+                                "Appointment confirmed",
+                                clinician_rejection,
+                            )
+
+                            # Email the client
+                            send_email(
+                                appointment["patient_email"],
+                                "Appointment confirmed",
+                                patient_rejection,
+                            )
 
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
@@ -298,14 +369,11 @@ class Clinician(User):
         while True:
             clear_terminal()
             print(f"Hello, {self.first_name} {self.surname}!")
-            # Ben I have preserved number five as quit for now -> appreciate it
-            # looks a little odd.
 
             choices = [
                 "Calendar",
                 "Your Patient Dashboard",
                 "View Requested Appointments",
-                "-",
                 "Quit",
             ]
             selection = display_choice("What would you like to do?", choices)
@@ -317,8 +385,6 @@ class Clinician(User):
             if selection == 3:
                 self.view_requested_appointments()
             if selection == 4:
-                pass
-            if selection == 5:
                 clear_terminal()
                 print("Thanks for using Breeze!")
                 return False
