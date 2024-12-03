@@ -30,7 +30,10 @@ PATIENT:
 
 
 class Admin(User):
-    df: pd.DataFrame
+    user_df: pd.DataFrame
+    appointments_df: pd.DataFrame
+    patient_moods_df: pd.DataFrame
+    patient_journals_df: pd.DataFrame
 
     def __init__(
         self,
@@ -52,14 +55,17 @@ class Admin(User):
             email,
             is_active,
         )
-        self.refresh()
+        self.refresh_user_df()
+        self.refresh_user_appointments_df()
+        self.refresh_patient_journals_df()
+        self.refresh_patient_moods()
 
-    def refresh(self):
+    def refresh_user_df(self):
         """
-        Retrieves an updated version of the whole database from SQL and
+        Retrieves an updated version of the user database from SQL and
         presents it in Pandas
         """
-        complete_query = self.database.cursor.execute("""                 
+        user_query = self.database.cursor.execute("""                 
         SELECT
                 u.user_id,
                 username,
@@ -74,13 +80,68 @@ class Admin(User):
                 clinician_id
         FROM Users u
         LEFT JOIN Patients p ON u.user_id = p.user_id;""")
-        # For later: don't want to mix aggregation functions in just yet
-        # LEFT JOIN JournalEntries j ON u.user_id = j.user_id
-        # LEFT JOIN MoodEntries m ON u.user_id = m.user_id
-        # LEFT JOIN Appointment a ON u.use_id = a.user_id
-        data = complete_query.fetchall()
-        self.df = pd.DataFrame(data)
-        self.df.set_index("user_id", inplace=True)
+
+        user_data = user_query.fetchall()
+        self.user_df = pd.DataFrame(user_data)
+        self.user_df.set_index("user_id", inplace=True)
+
+    def refresh_user_appointments_df(self):
+        """
+        Retrieves an updated version of the appointments table from SQL and
+        presents it in Pandas
+        """
+        # TODO: figure out whether I keep the joins here or apply them to the
+        # database process later.
+        appointments_query = self.database.cursor.execute("""
+        SELECT
+            a.user_id AS patient_id,
+            p.name AS patient_name,
+            a.clinician_id,
+            c.name AS clinician_name,
+            date,
+            is_confirmed, 
+            is_complete
+        FROM Appointments a
+        LEFT JOIN Users p on p.user_id = a.user_id                                                                                                                                                                                               
+        LEFT JOIN Users c on c.user_id = a.clinician_id;""")
+
+        appointments_data = appointments_query.fetchall()
+        self.appointments_df = pd.DataFrame(appointments_data)
+        self.appointments_df.set_index("patient_id", inplace=True)
+        # It might be worth rewriting this query, cutting out the joins and
+        # assuming that I'm just going to connect it with the user_df
+
+    def refresh_patient_journals_df(self):
+        """
+        Retrieves an updated version of the patients journal table from SQL
+        and presents it in Pandas
+        """
+
+        journals_query = self.database.cursor.execute("""
+        SELECT *
+        FROM JournalEntries;""")
+
+        journal_data = journals_query.fetchall()
+        self.patient_journals_df = pd.DataFrame(journal_data)
+        # self.patient_information_df.set_index("user_id", inplace=True)
+
+        # Load patient journal information into memory. When manipulating it, I
+        # will likely group by date, then join with the big users table to show
+        # to the user
+
+    def refresh_patient_moods(self):
+        """
+        Retrieves an updated version of the patient moods table from SQL and
+        presents it in Pandas
+        """
+
+        moods_query = self.database.cursor.execute("""
+        SELECT * 
+        FROM MoodEntries;""")
+
+        moods_data = moods_query.fetchall()
+        self.patient_moods_df = pd.DataFrame(moods_data)
+        # self.patient_information_df.set_index("user_id", inplace=True)
 
     def view_table(self, table_name: str):
         """
@@ -88,31 +149,37 @@ class Admin(User):
         defined by the table_name input.
         """
         if table_name == "Patients":
-            patient_df = self.df.query(('role == "patient"'))
+            patient_df = self.user_df.query(('role == "patient"'))
             patient_df = patient_df.filter(
                 items=["username", "email", "name", "is_active"]
             )
             print(patient_df)
         elif table_name == "Clinicians":
-            clinician_df = self.df.query(('role == "clinician"'))
+            clinician_df = self.user_df.query(('role == "clinician"'))
             clinician_df = clinician_df.filter(
                 items=["username", "email", "name", "is_active"]
             )
             print(clinician_df)
         elif table_name == "Unregistered Patients":
-            unregistered_patient_df = self.df.query(
+            unregistered_patient_df = self.user_df.query(
                 ('role == "patient" and clinician_id != clinician_id')
             )
             unregistered_patient_df = unregistered_patient_df.filter(
                 items=["username", "email", "name", "is_active", "clinician_id"]
             )
             print(unregistered_patient_df)
-        elif table_name == "Unregistered Clinicians":
+        elif table_name == "Patients per Clinician":
             pass
         elif table_name == "":
             pass
         else:
             pass
+
+    def view_user(self, user_id: int, attribute: str, value: any):
+        # This is a working assumption, but I think whenever an admin wants to
+        # view or edit an individual row, they should use a function from that
+        # class
+        pass
 
     def alter_user(self, user_id: int, attribute: str, value: any):
         """
@@ -120,7 +187,7 @@ class Admin(User):
         """
         # Selecting the relevant attributes of the relevant row of the
         # dataframe
-        user_info = self.df.loc[
+        user_info = self.user_df.loc[
             user_id,
             ["username", "name", "email", "is_active", "role"],
         ]
@@ -186,7 +253,7 @@ class Admin(User):
     # Admin FLow
     def flow(self) -> bool:
         while True:
-            self.refresh()
+            self.refresh_user_df()
 
             # Display the Admin menu
             print("\nHello Admin!")
@@ -210,7 +277,7 @@ class Admin(User):
                 new_patient_id = input("Choose a user_id to assign: ")
 
                 print("\nClinicians List:\n")
-                self.view_table("Unregistered Clinicians")
+                self.view_table("Patients per Clinician")
                 new_clinician_id = input("Choose a user_id to assign: ")
 
                 self.alter_user(new_patient_id, "clinician_id", new_clinician_id)
@@ -218,13 +285,13 @@ class Admin(User):
             # View all user info
             elif choice == "2":
                 print("\nAll Users:")
-                print(self.df)
+                print(self.user_df)
 
             # View speicifc users - not sure if this is needed
             elif choice == "3":
                 try:
                     user_id = int(input("Enter the user ID to view: "))
-                    user_data = self.df[self.df["user_id"] == user_id]
+                    user_data = self.user_df[self.user_df["user_id"] == user_id]
                     if not user_data.empty:
                         print("\nUser Information:")
                         print(user_data)
@@ -263,21 +330,6 @@ class Admin(User):
                         print(f"Error: {e}")
                 else:
                     continue
-            # Would be nice to have a
-
-            # # try:
-            #     user_id = int(input("Enter the user ID to edit: "))
-            #     user_data = self.df[self.df["user_id"] == user_id]
-            #     if not user_data.empty:
-            #         print("\nEditable User Information:")
-            #         print(user_data)
-            #         attribute = input("Enter the attribute to edit (e.g., email, name): ").strip()
-            #         value = input("Enter the new value: ").strip()
-            #         self.edit_table_info("Users", user_data.index[0], attribute, value)
-            #     else:
-            #         print("User not found.")
-            # except Exception as e:
-            #     print(f"Error: {e}")
 
             # Disable someone
             elif choice == "5":
