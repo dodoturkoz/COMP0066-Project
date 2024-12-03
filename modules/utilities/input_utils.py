@@ -26,7 +26,7 @@ def get_valid_date(
     min_date_message: Union[str, None] = None,
     max_date_message: Union[str, None] = None,
     allow_blank: bool = False,
-) -> datetime:
+) -> Union[datetime, None]:
     """
     Get a valid date from the user and return it
     """
