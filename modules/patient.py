@@ -437,8 +437,12 @@ class Patient(User):
                         max_date=datetime.now(),
                         min_date_message="Date must be after 1900-01-01.",
                         max_date_message="Date cannot be in the future.",
-                    ).strftime("%Y-%m-%d")
-                    self.display_previous_moods(date)
+                        allow_blank=True,
+                    )
+                    if date is None:
+                        self.display_previous_moods("")
+                    else:
+                        self.display_previous_moods(date.strftime("%Y-%m-%d"))
                 case 4:
                     content = get_valid_string("Enter new journal entry: ")
                     self.journal(content)
@@ -449,8 +453,12 @@ class Patient(User):
                         max_date=datetime.now(),
                         min_date_message="Date must be after 1900-01-01.",
                         max_date_message="Date cannot be in the future.",
-                    ).strftime("%Y-%m-%d")
-                    self.display_journal(date)
+                        allow_blank=True,
+                    )
+                    if date is None:
+                        self.display_journal("")
+                    else:
+                        self.display_journal(date.strftime("%Y-%m-%d"))
                 case 6:
                     keyword = input("Enter keyword to search for exercises: ")
                     self.search_exercises(keyword)
