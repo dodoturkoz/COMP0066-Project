@@ -26,7 +26,6 @@ class Clinician(User):
         if not appointments:
             print("You have no registered appointments.")
         else:
-
             view_options = ["All", "Past", "Upcoming"]
             view = display_choice(
                 "Which appointments would you like to view?", view_options
@@ -40,14 +39,18 @@ class Clinician(User):
             elif view == 2:
                 display_appointment_options(
                     self,
-                    list(filter(lambda app: app["date"] < datetime.now(), appointments)),
+                    list(
+                        filter(lambda app: app["date"] < datetime.now(), appointments)
+                    ),
                 )
 
             # Show upcoming appointments
             elif view == 3:
                 display_appointment_options(
                     self,
-                    list(filter(lambda app: app["date"] >= datetime.now(), appointments)),
+                    list(
+                        filter(lambda app: app["date"] >= datetime.now(), appointments)
+                    ),
                 )
 
         wait_terminal()
@@ -66,10 +69,9 @@ class Clinician(User):
 
         # Find any unconfirmed appointments and store them in the array
         # Add a string for each appointment to the choice_strings array
-        # Q: Should this display past appointments that were unconfirmed? Should those exist at all?
         if appointments:
             for appointment in appointments:
-                if not appointment["is_confirmed"]:
+                if appointment["status"] == "Pending" and appointment["date"] >= datetime.now():
                     unconfirmed_appointments.append(appointment)
                     choice_strings.append(
                         f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
@@ -104,7 +106,7 @@ class Clinician(User):
                             self.database.cursor.execute(
                                 """
                                 UPDATE Appointments
-                                SET is_confirmed = 1
+                                SET status = "Confirmed"
                                 WHERE appointment_id = ?""",
                                 [accepted_appointment["appointment_id"]],
                             )
@@ -132,7 +134,6 @@ class Clinician(User):
                             return True
 
                     # Delete the appointment
-                    # TO-DO: Change the table so that it isn't deleted in the system, set as cancelled
                     elif accept_or_reject == 2:
                         rejected_appointment = unconfirmed_appointments[
                             confirm_choice - 1
@@ -140,7 +141,8 @@ class Clinician(User):
                         try:
                             self.database.cursor.execute(
                                 """
-                                DELETE FROM Appointments
+                                UPDATE Appointments
+                                SET status = "Rejected"
                                 WHERE appointment_id = ?""",
                                 [rejected_appointment["appointment_id"]],
                             )

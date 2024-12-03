@@ -39,7 +39,7 @@ def get_appointments(clinician: Clinician) -> list:
         appointments = clinician.database.cursor.execute(
             """
                 SELECT appointment_id, a.user_id, clinician_id, date, 
-                is_confirmed, is_complete, patient_notes, clinician_notes,
+                status, patient_notes, clinician_notes,
                 u.first_name, u.surname 
                 FROM Appointments AS a, Users AS u 
                 WHERE clinician_id = ?
@@ -56,7 +56,7 @@ def print_appointment(appointment: dict) -> None:
     print(
         f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
         + f" - {appointment['first_name']} {appointment['surname']} - "
-        + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}\n"
+        + f"{appointment['status']}\n"
     )
 
 def display_appointment_options(clinician: Clinician, appointments: list):
@@ -68,7 +68,7 @@ def display_appointment_options(clinician: Clinician, appointments: list):
         appointment_strings.append(
             f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
             + f" - {appointment['first_name']} {appointment['surname']} - "
-            + f"{'Confirmed' if appointment['is_confirmed'] else 'Not Confirmed'}"
+            + f"{appointment['status']}"
         )
 
     options = [

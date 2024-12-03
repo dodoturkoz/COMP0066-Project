@@ -14,6 +14,7 @@ diagnoses = (
     "Drug Induced Psychosis",
     "Other",
 )
+statuses = ("Pending", "Confirmed", "Rejected", "Completed", "Patient Did Not Attend")
 
 
 def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
@@ -125,17 +126,15 @@ class Database:
         """)
 
         # Appointments Table
-        # We can use is_completed to mark if the user actually attended the appointment
-        # If the clinician is deleted the appoitment still remains so we dont lose the
+        # If the clinician is deleted the appointment still remains so we dont lose the
         # notes for the user, but we can change this to CASCADE
-        self.cursor.execute("""
+        self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Appointments (
                 appointment_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 clinician_id INTEGER,
                 date DATETIME NOT NULL,
-                is_confirmed BOOLEAN DEFAULT 0,
-                is_complete BOOLEAN DEFAULT 0,
+                status TEXT NOT NULL CHECK( status IN {statuses} ),
                 patient_notes TEXT,
                 clinician_notes TEXT,            
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
@@ -426,24 +425,22 @@ class Database:
                     2,
                     5,
                     datetime(2024, 11, 20, hour=12, minute=0),
-                    False,
-                    False,
+                    "Completed",
                     "detailed notes",
-                    "This is what the clinician thinks"
+                    "This is what the clinician thinks",
                 ),
                 (
                     2,
                     2,
                     5,
                     datetime(2024, 12, 11, hour=16, minute=0),
-                    False,
-                    False,
+                    "Pending",
                     "notes about condition",
-                    None
-                )
+                    None,
+                ),
             ]
             self.cursor.executemany(
-                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?, ?)", appointments
+                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
             )
 
             self.connection.commit()
