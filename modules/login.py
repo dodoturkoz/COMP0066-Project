@@ -5,13 +5,13 @@ from modules.admin import Admin
 from modules.clinician import Clinician
 from modules.patient import Patient
 from modules.user import User
-from modules.utilities.display import (
+from modules.utilities.display_utils import (
     display_choice,
     display_dict,
     clear_terminal,
 )
 from database.setup import Database, roles
-from modules.utilities.input import (
+from modules.utilities.input_utils import (
     get_valid_email,
     get_valid_date,
     get_valid_yes_or_no,
@@ -159,9 +159,7 @@ def signup(db: Database) -> bool:
     """
 
     # Get a list of registered unique usernames
-    existing_usernames = db.cursor.execute(
-        "SELECT username FROM Users"
-    ).fetchall()
+    existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
     user_info = registration_input(existing_usernames, existing_emails)
 

@@ -56,7 +56,7 @@ def get_valid_date(
 
 def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
     """
-    Get a valid yes or no value from the user and return it
+    Get a valid yes or no value from the user and return the corresponding boolean value.
     """
     while True:
         value = input(prompt).strip().lower()

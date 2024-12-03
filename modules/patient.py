@@ -2,7 +2,14 @@ import sqlite3
 from typing import Optional, Any
 from datetime import datetime
 
+
 from database.setup import Database
+from modules.utilities.input_utils import (
+    get_valid_string,
+    get_valid_email,
+    get_valid_date,
+)
+from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import request_appointment
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
@@ -67,57 +74,42 @@ class Patient(User):
         """
         Allows the patient to change their details.
         """
-        options = {
-            1: "username",
-            2: "email",
-            3: "password",
-            4: "emergency_email",
-            5: "date_of_birth",
-            6: "first_name",
-            7: "surname",
-        }
-
-        print("Select an attribute to edit:")
-        for number, attribute in options.items():
-            print(f"{number}. {attribute.replace('_', ' ').capitalize()}")
+        clear_terminal()
+        options = [
+            "Username",
+            "Email",
+            "Password",
+            "First Name",
+            "Surname",
+            "Emergency Email",
+        ]
 
         try:
-            choice = int(input("Enter the number corresponding to the attribute: "))
-            attribute = options.get(choice)
+            # Display editable attributes
+            choice = display_choice("Select an attribute to edit:", options)
+            attribute = options[choice - 1].lower().replace(" ", "_")
 
-            if not attribute:
-                print("Invalid choice. Please select a valid option.")
-                return False
-
-            value = input(
-                f"Enter the new value for {attribute.replace('_', ' ').capitalize()}: "
-            )
-
-            # Update the Users table
-            if attribute in self.MODIFIABLE_ATTRIBUTES:
-                return self.edit_info(attribute, value)
-
-            # Update the Patients table
-            elif attribute in ["emergency_email", "date_of_birth"]:
-                self.database.cursor.execute(
-                    f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
-                    (value, self.user_id),
+            # Handle specific validation for emails
+            if attribute in ["email", "emergency_email"]:
+                value = get_valid_email(
+                    f"Enter the new value for {options[choice - 1]}: "
                 )
-                self.database.connection.commit()
-                print(
-                    f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+            else:
+                # General string validation for other attributes
+                # TODO for things like username/email we should check if it's unique
+                value = get_valid_string(
+                    f"Enter the new value for {options[choice - 1]}: "
                 )
+
+            # Use the parent class's edit_info method for all updates
+            success = self.edit_info(attribute, value)
+
+            if success:
                 return True
             else:
-                print(f"Invalid attribute: {attribute}.")
+                print(f"Failed to update {options[choice - 1]}. Please try again.")
                 return False
 
-        except ValueError:
-            print("Invalid input. Please enter a number.")
-            return False
-        except sqlite3.OperationalError as e:
-            print(f"Error: {e}")
-            return False
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return False
@@ -406,64 +398,81 @@ class Patient(User):
         """
         Displays the main patient menu and handles the selection of various options.
         """
-        if self.clinician:
-            print(
-                f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
-            )
-        else:
-            print(
-                f"Hello, {self.first_name} {self.surname}! You don't have an assigned clinician yet."
-            )
+
         while True:
-            choice = input(
-                "Please select an option:\n"
-                "1. Edit Personal Info\n"
-                "2. Record Mood of the Day\n"
-                "3. Display Previous Moods\n"
-                "4. Add Journal Entry \n"
-                "5. Read Journal Entries \n"
-                "6. Search Exercises\n"
-                "7. Book Appointment\n"
-                "8. View Appointments\n"
-                "9. Cancel Appointment\n"
-                "10. Log Out\n"
+            clear_terminal()
+            greeting = (
+                f"Hello, {self.first_name} {self.surname}!"
+                if not self.clinician
+                else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
-            if choice == "1":
-                self.edit_patient_info()
-            elif choice == "2":
-                self.mood_of_the_day()
-            elif choice == "3":
-                date = input(
-                    "Enter a date in YYYY-MM-DD format or "
-                    + "leave blank to view all previous entries: "
-                )
-                self.display_previous_moods(date)
-            elif choice == "4":
-                content = input("Enter new journal entry: ")
-                self.journal(content)
-            elif choice == "5":
-                date = input(
-                    "Enter a date in YYYY-MM-DD format or "
-                    + "leave blank to view all previous entries: "
-                )
-                self.display_journal(date)
-            elif choice == "6":
-                keyword = input("Enter keyword to search for exercises: ")
-                self.search_exercises(keyword)
-            elif choice == "7":
-                self.book_appointment()
-            elif choice == "8":
-                self.view_appointments()
-            elif choice == "9":
-                self.view_appointments()
-                appointment_id = int(input("Enter appointment ID to cancel: "))
-                self.cancel_appointment(appointment_id)
-            elif choice == "10":
-                return True
-            else:
-                print("Invalid choice. Please try again.")
-            print("---------------------------")  # Visual separator after action
-            next_step = input("Would you like to:\n1. Continue\n2. Quit\n")
-            if next_step.strip() != "1":
+            print(greeting)
+
+            options = [
+                "Edit Personal Info",
+                "Record Mood of the Day",
+                "Display Previous Moods",
+                "Add Journal Entry",
+                "Read Journal Entries",
+                "Search Exercises",
+                "Book Appointment",
+                "View Appointments",
+                "Cancel Appointment",
+                "Log Out",
+            ]
+
+            choice = display_choice("Please select an option:", options)
+
+            # requires python version >= 3.10
+            # using pattern matching to handle the choices
+            match choice:
+                case 1:
+                    self.edit_patient_info()
+                case 2:
+                    self.mood_of_the_day()
+                case 3:
+                    date = get_valid_date(
+                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                        min_date=datetime(1900, 1, 1),
+                        max_date=datetime.now(),
+                        min_date_message="Date must be after 1900-01-01.",
+                        max_date_message="Date cannot be in the future.",
+                    ).strftime("%Y-%m-%d")
+                    self.display_previous_moods(date)
+                case 4:
+                    content = get_valid_string("Enter new journal entry: ")
+                    self.journal(content)
+                case 5:
+                    date = get_valid_date(
+                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                        min_date=datetime(1900, 1, 1),
+                        max_date=datetime.now(),
+                        min_date_message="Date must be after 1900-01-01.",
+                        max_date_message="Date cannot be in the future.",
+                    ).strftime("%Y-%m-%d")
+                    self.display_journal(date)
+                case 6:
+                    keyword = input("Enter keyword to search for exercises: ")
+                    self.search_exercises(keyword)
+                case 7:
+                    self.book_appointment()
+                case 8:
+                    self.view_appointments()
+                case 9:
+                    self.view_appointments()
+                    appointment_id = int(input("Enter appointment ID to cancel: "))
+                    self.cancel_appointment(appointment_id)
+                case 10:
+                    clear_terminal()
+                    print("Thanks for using Breeze! Goodbye!")
+                    return False
+
+            next_step = display_choice(
+                "Would you like to:",
+                ["Continue", "Quit"],
+                choice_str="Your selection: ",
+            )
+            if next_step == 2:
+                clear_terminal()
                 print("Goodbye!")
-                break
+                return False

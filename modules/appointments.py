@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 
-from modules.utilities.display import display_choice
+from modules.utilities.display_utils import display_choice
 
 
 def choose_date() -> datetime:
