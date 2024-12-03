@@ -8,6 +8,7 @@ from modules.utilities.input_utils import (
     get_valid_string,
     get_valid_email,
     get_valid_date,
+    get_valid_yes_or_no,
 )
 from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import request_appointment
@@ -167,21 +168,22 @@ class Patient(User):
 
             # display mood options
             for num, mood in MOODS.items():
-                mood_display = f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
-                print(mood_display)
+                print(
+                    f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
+                )
 
-            valid_inputs = {num: mood for num, mood in MOODS.items()}
+            valid_inputs = {str(num): mood for num, mood in MOODS.items()}
             valid_inputs.update(
                 {mood["color"].lower(): mood for mood in MOODS.values()}
             )
 
             while True:
-                mood_choice = input(
+                mood_choice = get_valid_string(
                     "\nEnter your mood for today (number 6 to 1 or color name): "
                 ).lower()
                 if mood_choice in valid_inputs:
                     selected_mood = valid_inputs[mood_choice]
-                    return f"{selected_mood['ansi']}{num}. {selected_mood['description']} [{selected_mood['color']}]\033[00m"
+                    return selected_mood["description"]
                 print(
                     "Invalid input. Please enter a number from 6 to 1 or a valid color name."
                 )
@@ -190,13 +192,9 @@ class Patient(User):
             """
             Ask the user to comment on their mood.
             """
-            while True:
-                do_comment = input("Would you like to add a comment? (y/n): ").lower()
-                if do_comment in ("yes", "y", "1"):
-                    return input("Enter your comment: ")
-                elif do_comment in ("no", "n", "2"):
-                    return "No comment provided."
-                print("Invalid input. Please enter y or n.")
+            if get_valid_yes_or_no(prompt="Would you like to add a comment? (Y/N): "):
+                return get_valid_string("Enter your comment: ", max_len=250)
+            return "No comment provided."
 
         mood = mood_input()
         comment = comment_input()
@@ -223,10 +221,9 @@ class Patient(User):
                 print("New Comment: ", comment)
 
                 # Confirm update
-                consent = input(
-                    "Do you want to update the mood entry for today? (Yes/No): "
-                ).lower()
-                if consent in ("yes", "y", "1"):
+                if get_valid_yes_or_no(
+                    "Do you want to update the mood entry for today? (Y/N): "
+                ):
                     self.database.cursor.execute(
                         query_update, (comment, mood, self.user_id, today_date)
                     )
@@ -320,6 +317,9 @@ class Patient(User):
             ]
         else:
             filtered_resources = RELAXATION_RESOURCES
+
+        if not filtered_resources:
+            print("No resources found matching the search criteria.")
 
         for resource in filtered_resources:
             print(f"Title: {resource['title']}")
@@ -464,15 +464,22 @@ class Patient(User):
                     self.cancel_appointment(appointment_id)
                 case 10:
                     clear_terminal()
-                    print("Thanks for using Breeze! Goodbye!")
-                    return False
+                    return True
 
-            next_step = display_choice(
-                "Would you like to:",
-                ["Continue", "Quit"],
-                choice_str="Your selection: ",
-            )
-            if next_step == 2:
-                clear_terminal()
-                print("Goodbye!")
-                return False
+        next_step = display_choice(
+            "Would you like to:",
+            [
+                "Retry the same action",
+                "Go back to the main menu",
+                "Quit",
+            ],
+            choice_str="Your selection: ",
+        )
+
+        # TODO implement the retry option
+        if next_step == 1:
+            pass
+        elif next_step == 3:
+            clear_terminal()
+            print("Thanks for using Breeze! Goodbye!")
+            return False
