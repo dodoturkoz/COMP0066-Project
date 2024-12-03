@@ -143,8 +143,10 @@ class Patient(User):
             if entries:
                 print(f"\nMood Entries for {date if date else 'all dates'}:\n")
                 for entry in entries:
+                    old_mood = MOODS[str(entry["mood"])]
+                    show_moods = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
                     print(f"Date: {str(entry['date']).split()[0]}")
-                    print("Mood: " + str(entry["mood"]))
+                    print("Mood: " + show_moods)
                     print(f"Content: {entry['text']}\n")
 
             else:
@@ -186,7 +188,7 @@ class Patient(User):
                 ).lower()
                 if mood_choice in valid_inputs:
                     selected_mood = valid_inputs[mood_choice]
-                    return selected_mood["description"]
+                    return selected_mood["int"]
                 print(
                     "Invalid input. Please enter a number from 6 to 1 or a valid color name."
                 )
@@ -217,12 +219,15 @@ class Patient(User):
             entry = self.database.cursor.fetchone()
 
             if entry:
+                old_mood = MOODS[str(entry["mood"])]
+                show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
                 print(
-                    f"\nExisting entry found:\nMood: {entry['mood']}\nComment: {entry['text']}"
+                    f"\nExisting entry found:\nMood: {show_mood}\nComment: {entry['text']}"
                 )
-                print("New Mood: ", mood)
+                new_mood = MOODS[str(mood)]
+                show_new_mood = f"{new_mood['ansi']} {new_mood['description']}\033[00m"
+                print("New Mood: ", show_new_mood)
                 print("New Comment: ", comment)
-
                 # Confirm update
                 if get_valid_yes_or_no(
                     "Do you want to update the mood entry for today? (Y/N): "
