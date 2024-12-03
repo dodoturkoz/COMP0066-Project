@@ -5,9 +5,9 @@ from email.message import EmailMessage
 
 def send_email(recipient: str, subject: str, body: str) -> bool:
     """
-    Sends an email with a simple (and usecure) SMTP connection.
+    Sends an email with a simple (and unsecure) SMTP connection.
 
-    Returns a boolean representing wether the email sent correctly.
+    Returns a boolean representing whether the email sent correctly.
     """
 
     sender = "Breeze <uclauctionsite2024g27@gmail.com>"  # uses an existing account

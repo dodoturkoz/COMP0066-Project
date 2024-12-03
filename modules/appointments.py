@@ -40,7 +40,7 @@ def get_appointments(clinician: Clinician) -> list:
             """
                 SELECT appointment_id, a.user_id, clinician_id, date, 
                 status, patient_notes, clinician_notes,
-                u.first_name, u.surname 
+                u.first_name, u.surname, u.email AS patient_email
                 FROM Appointments AS a, Users AS u 
                 WHERE clinician_id = ?
                 AND a.user_id = u.user_id

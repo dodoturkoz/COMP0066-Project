@@ -1,6 +1,7 @@
 from modules.user import User
 from modules.patient import Patient
 from modules.utilities.display import clear_terminal, display_choice, wait_terminal
+from modules.utilities.send_email import send_email
 from datetime import datetime
 import sqlite3
 from database.setup import diagnoses
@@ -71,7 +72,10 @@ class Clinician(User):
         # Add a string for each appointment to the choice_strings array
         if appointments:
             for appointment in appointments:
-                if appointment["status"] == "Pending" and appointment["date"] >= datetime.now():
+                if (
+                    appointment["status"] == "Pending"
+                    and appointment["date"] >= datetime.now()
+                ):
                     unconfirmed_appointments.append(appointment)
                     choice_strings.append(
                         f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
@@ -118,7 +122,23 @@ class Clinician(User):
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(accepted_appointment)
 
-                            # Need to implement email
+                            # Send emails to the client and the clinician
+                            clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+                            patient_confirmation = f"Your appointment with {self.first_name} {self.surname} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+                            
+                            # Email the clinician
+                            send_email(
+                                self.email,
+                                "Appointment confirmed",
+                                clinician_confirmation,
+                            )
+
+                            # Email the client
+                            send_email(
+                                appointment["patient_email"],
+                                "Appointment confirmed",
+                                patient_confirmation,
+                            )
 
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
@@ -133,7 +153,7 @@ class Clinician(User):
                         else:
                             return True
 
-                    # Delete the appointment
+                    # Reject the appointment
                     elif accept_or_reject == 2:
                         rejected_appointment = unconfirmed_appointments[
                             confirm_choice - 1
@@ -148,13 +168,30 @@ class Clinician(User):
                             )
                             self.database.connection.commit()
                             print(
-                                "The appointment has been rejected. A confirmation email will be sent to you and the patient."
+                                "The appointment has been rejected. A notification email will be sent to you and the patient."
                             )
 
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(rejected_appointment)
 
-                            # Need to implement email
+                            # Send emails to the client and the clinician
+                            clinician_rejection = f"You have rejected {appointment["first_name"]} {appointment["surname"]}'s request for an appointment on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
+                            patient_rejection = f"Your request for an appointment with {self.first_name} {self.surname} on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')} has been rejected. Please use the online booking system to choose a different time."
+                            
+
+                            # Email the clinician
+                            send_email(
+                                self.email,
+                                "Appointment confirmed",
+                                clinician_rejection,
+                            )
+
+                            # Email the client
+                            send_email(
+                                appointment["patient_email"],
+                                "Appointment confirmed",
+                                patient_rejection,
+                            )
 
                         except sqlite3.IntegrityError as e:
                             print(f"Failed to confirm appointment: {e}")
