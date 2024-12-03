@@ -456,7 +456,7 @@ class Database:
             if len(MoodEntries.fetchall()) == 0:
                 MoodEntries = [
                     (1, 2, datetime(2024, 11, 20), "\U0001f7e8 4. yellow Content \U0001f610", "Happy about degree class."),
-                    (2, 2, datetime(2024, 11, 21), "\033[33m 3. Neutral \U0001f641 [Orange] \033[00m", "Been watching tv."),
+                    (2, 2, datetime(2024, 11, 21), "\033[33m3. Neutral \U0001f641 [Orange] \033[00m", "Been watching tv."),
                     (3, 2, datetime(2024, 11, 22), "Mood", "Shopping spree time."),
                     (4, 2, datetime(2024, 11, 23), "Mood", "Feel sick."),
                     (5, 2, datetime(2024, 11, 24), "Mood", "No comment provided."),
@@ -469,7 +469,7 @@ class Database:
                     (12, 4, datetime(2024, 11, 21), "Mood", "I cannot stop thinking on my dog."),
                     (13, 4, datetime(2024, 11, 22), "Mood", "Having fights theoughtout the day with my family."),
                     (14, 4, datetime(2024, 11, 23), "Mood", "No comment provided."),
-                    (15, 4, datetime(2024, 11, 24), "Mood", "Been vomiting and have fever."),
+                    (15, 4, datetime(2024, 11, 24), "Mood", "Been vomiting and have fever.")
                 ]
                 self.cursor.executemany(
                     "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
