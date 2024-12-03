@@ -2,6 +2,19 @@ import sqlite3
 from datetime import datetime
 
 roles = ("admin", "patient", "clinician")
+diagnoses = (
+    "Depression",
+    "Anxiety",
+    "Bipolar Disorder",
+    "Schizophrenia",
+    "PTSD",
+    "OCD",
+    "ADHD",
+    "Autism",
+    "Drug Induced Psychosis",
+    "Other",
+)
+statuses = ("Pending", "Confirmed", "Rejected", "Completed", "Patient Did Not Attend")
 
 
 def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
@@ -65,7 +78,8 @@ class Database:
                 user_id INTEGER PRIMARY KEY,
                 username TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
-                name TEXT,
+                first_name TEXT,
+                surname TEXT,
                 email TEXT NOT NULL UNIQUE,
                 role TEXT CHECK( role IN {roles} ),
                 is_active BOOLEAN NOT NULL
@@ -74,12 +88,12 @@ class Database:
 
         # Patient Information Table
         # Please keep in mind dates are stored as text in SQLite
-        self.cursor.execute("""
+        self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Patients (
                 user_id INTEGER PRIMARY KEY,
                 emergency_email TEXT,
                 date_of_birth DATETIME,
-                diagnosis TEXT,
+                diagnosis TEXT CHECK( diagnosis IN {diagnoses} ),
                 clinician_id INTEGER,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
                 FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
@@ -105,25 +119,24 @@ class Database:
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 date DATETIME NOT NULL,
-                mood TEXT,
+                mood INTEGER NOT NULL,
                 text TEXT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
             )
         """)
 
         # Appointments Table
-        # We can use is_completed to mark if the user actually attended the appointment
-        # If the clinician is deleted the appoitment still remains so we dont lose the
+        # If the clinician is deleted the appointment still remains so we dont lose the
         # notes for the user, but we can change this to CASCADE
-        self.cursor.execute("""
+        self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Appointments (
                 appointment_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 clinician_id INTEGER,
                 date DATETIME NOT NULL,
-                is_confirmed BOOLEAN DEFAULT 0,
-                is_complete BOOLEAN DEFAULT 0,
-                notes TEXT NOT NULL,
+                status TEXT NOT NULL CHECK( status IN {statuses} ),
+                patient_notes TEXT,
+                clinician_notes TEXT,            
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
                 FOREIGN KEY (clinician_id) REFERENCES Users(user_id) ON DELETE SET NULL
             )
@@ -136,12 +149,13 @@ class Database:
         users = self.cursor.execute("SELECT username FROM Users")
         if len(users.fetchall()) == 0:
             users = [
-                (1, "admin1", "", "Admin", "admin1@email.com", "admin", True),
+                (1, "admin1", "", "Admin", "Admin", "admin1@email.com", "admin", True),
                 (
                     2,
                     "patient1",
                     "",
-                    "Patient One",
+                    "Patient",
+                    "One",
                     "patient1@email.com",
                     "patient",
                     True,
@@ -150,7 +164,8 @@ class Database:
                     3,
                     "patient2",
                     "",
-                    "Patient Two",
+                    "Patient",
+                    "Two",
                     "patient2@email.com",
                     "patient",
                     True,
@@ -159,7 +174,8 @@ class Database:
                     4,
                     "patient3",
                     "",
-                    "Patient Three",
+                    "Patient",
+                    "Three",
                     "patient3@email.com",
                     "patient",
                     True,
@@ -168,7 +184,8 @@ class Database:
                     5,
                     "mhwp1",
                     "",
-                    "Clinician One",
+                    "Clinician",
+                    "One",
                     "mhwp1@email.com",
                     "clinician",
                     True,
@@ -177,7 +194,8 @@ class Database:
                     6,
                     "mhwp2",
                     "",
-                    "Clinician Two",
+                    "Clinician",
+                    "Two",
                     "mhwp2@email.com",
                     "clinician",
                     True,
@@ -186,7 +204,8 @@ class Database:
                     7,
                     "mikebrown",
                     "",
-                    "Mike Brown",
+                    "Mike",
+                    "Brown",
                     "mikebrown@email.com",
                     "patient",
                     True,
@@ -195,7 +214,8 @@ class Database:
                     8,
                     "emilyjones",
                     "",
-                    "Emily Jones",
+                    "Emily",
+                    "Jones",
                     "emilyjones@email.com",
                     "patient",
                     False,
@@ -204,7 +224,8 @@ class Database:
                     9,
                     "davidwilson",
                     "",
-                    "David Wilson",
+                    "David",
+                    "Wilson",
                     "davidwilson@email.com",
                     "patient",
                     True,
@@ -213,7 +234,8 @@ class Database:
                     10,
                     "lindataylor",
                     "",
-                    "Linda Taylor",
+                    "Linda",
+                    "Taylor",
                     "lindataylor@email.com",
                     "patient",
                     True,
@@ -222,7 +244,8 @@ class Database:
                     11,
                     "robertanderson",
                     "",
-                    "Robert Anderson",
+                    "Robert",
+                    "Anderson",
                     "robertanderson@email.com",
                     "patient",
                     False,
@@ -231,7 +254,8 @@ class Database:
                     12,
                     "patriciathomas",
                     "",
-                    "Patricia Thomas",
+                    "Patricia",
+                    "Thomas",
                     "patriciathomas@email.com",
                     "patient",
                     True,
@@ -240,7 +264,8 @@ class Database:
                     13,
                     "charlesjackson",
                     "",
-                    "Charles Jackson",
+                    "Charles",
+                    "Jackson",
                     "charlesjackson@email.com",
                     "patient",
                     True,
@@ -249,7 +274,8 @@ class Database:
                     14,
                     "barbarawhite",
                     "",
-                    "Barbara White",
+                    "Barbara",
+                    "White",
                     "barbarawhite@email.com",
                     "patient",
                     False,
@@ -258,7 +284,8 @@ class Database:
                     15,
                     "jamesharris",
                     "",
-                    "James Harris",
+                    "James",
+                    "Harris",
                     "jamesharris@email.com",
                     "patient",
                     True,
@@ -267,7 +294,8 @@ class Database:
                     16,
                     "marymartin",
                     "",
-                    "Mary Martin",
+                    "Mary",
+                    "Martin",
                     "marymartin@email.com",
                     "patient",
                     True,
@@ -276,7 +304,8 @@ class Database:
                     17,
                     "williamlee",
                     "",
-                    "William Lee",
+                    "William",
+                    "Lee",
                     "williamlee@email.com",
                     "patient",
                     True,
@@ -285,7 +314,8 @@ class Database:
                     18,
                     "elizabethwalker",
                     "",
-                    "Elizabeth Walker",
+                    "Elizabeth",
+                    "Walker",
                     "elizabethwalker@email.com",
                     "patient",
                     False,
@@ -294,7 +324,8 @@ class Database:
                     19,
                     "richardhall",
                     "",
-                    "Richard Hall",
+                    "Richard",
+                    "Hall",
                     "richardhall@email.com",
                     "patient",
                     True,
@@ -303,14 +334,15 @@ class Database:
                     20,
                     "susanallen",
                     "",
-                    "Susan Allen",
+                    "Susan",
+                    "Allen",
                     "susanallen@email.com",
                     "patient",
                     True,
                 ),
             ]
             self.cursor.executemany(
-                "INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?)", users
+                "INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?, ?)", users
             )
 
             # NOTE: We need to define the default state we want for the app
@@ -319,9 +351,7 @@ class Database:
             patients = [
                 (2, "emergency1@gmail.com", datetime(2000, 1, 1), None, 5),
                 (3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
-                (4, "emergency3@gmail.com", datetime(1980, 9, 1), None, None),
-                (5, "emergency4@gmail.com", datetime(1981, 10, 2), "OCD", 6),
-                (6, "emergency5@gmail.com", datetime(1982, 11, 3), "Depression", None),
+                (4, "emergency5@gmail.com", datetime(1982, 11, 3), "Depression", None),
                 (7, "emergency6@gmail.com", datetime(1983, 12, 4), "Schizophrenia", 5),
                 (
                     8,
@@ -389,16 +419,168 @@ class Database:
                 "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
             )
 
+            # Check if previous entries of journal.
+            # Add entries if there is not.
+            # 5 entries added per patient, 1 for each day.
+            # Can change to random per day since not mood of day.
+            # Patient 2, 3 and 4 only added for now.
+            # Diagnosis - None, none, depression
+            # 24, 34, 42
+            journal_entries = self.cursor.execute("SELECT user_id FROM JournalEntries")
+            if len(journal_entries.fetchall()) == 0:
+                journal_entries = [
+                    (
+                        1,
+                        2,
+                        "2024-11-20 13:27:49",
+                        "Hey, I got a first for my degree. Feel on top of the world.",
+                    ),
+                    (
+                        2,
+                        2,
+                        "2024-11-21 09:08:12",
+                        "I have felt so great in the past few weeks. Everything is amazing.",
+                    ),
+                    (
+                        3,
+                        2,
+                        "2024-11-22 18:03:11",
+                        "I have spent hundreds of pounds on a new clothes. I feel great.",
+                    ),
+                    (
+                        4,
+                        2,
+                        "2024-11-23 14:34:34",
+                        "I don't feel well. I woke up late but still feel tired.",
+                    ),
+                    (
+                        5,
+                        2,
+                        "2024-11-24 16:27:40",
+                        "I don't feel like meeting or talking with anyone but my journal.",
+                    ),
+                    (
+                        6,
+                        3,
+                        "2024-11-20 11:07:51",
+                        "I am worried about my financial issues.",
+                    ),
+                    (
+                        7,
+                        3,
+                        "2024-11-21 23:08:34",
+                        "I am watching tv but I still feel sad.",
+                    ),
+                    (
+                        8,
+                        3,
+                        "2024-11-22 09:03:55",
+                        "I tried to read a book but that is not helpful.",
+                    ),
+                    (
+                        9,
+                        3,
+                        "2024-11-23 21:34:19",
+                        "I feel scared about my future.",
+                    ),
+                    (
+                        10,
+                        3,
+                        "2024-11-24 22:27:56",
+                        "I tried meditation and it made me feel better.",
+                    ),
+                    (
+                        11,
+                        4,
+                        "2024-11-20 08:27:23",
+                        "My dog died. I don't feel well. I miss Rex.",
+                    ),
+                    (
+                        12,
+                        4,
+                        "2024-11-21 03:08:09",
+                        "I am still thinking about Rex and how we used to play together.",
+                    ),
+                    (
+                        13,
+                        4,
+                        "2024-11-22 11:03:03",
+                        "My family is angry with me and think I overeacted with Rex's death.",
+                    ),
+                    (
+                        14,
+                        4,
+                        "2024-11-23 17:34:10",
+                        "I hate my family. They threw out Rex's stuff from house.",
+                    ),
+                    (
+                        15,
+                        4,
+                        "2024-11-24 01:27:45",
+                        "I am feeling sick.",
+                    ),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO JournalEntries VALUES(?, ?, ?, ?)", journal_entries
+                )
+
+            # Check if there is previous entries of mood.
+            # Add entries if there is not.
+            # 5 entries added for patient 1,2,3. Can add or remove entries.
+            MoodEntries = self.cursor.execute("SELECT user_id FROM MoodEntries")
+            if len(MoodEntries.fetchall()) == 0:
+                MoodEntries = [
+                    (1, 2, "2024-11-20", 6, "Happy about university grades."),
+                    (2, 2, "2024-11-21", 6, "Been watching tv."),
+                    (3, 2, "2024-11-22", 6, "Shopping spree time."),
+                    (4, 2, "2024-11-23", 3, "Feel sick."),
+                    (5, 2, "2024-11-24", 1, "No comment provided."),
+                    (6, 3, "2024-11-20", 1, "Council tax arrears."),
+                    (7, 3, "2024-11-21", 2, "No comment provided."),
+                    (8, 3, "2024-11-22", 1, "I hate books."),
+                    (
+                        9,
+                        3,
+                        "2024-11-23",
+                        1,
+                        "I don't think everything will get alright.",
+                    ),
+                    (10, 3, "2024-11-24", 3, "Meditation and yoga helped."),
+                    (11, 4, "2024-11-20", 3, "I loved my dog."),
+                    (12, 4, "2024-11-21", 1, "I cannot stop thinking on my dog."),
+                    (
+                        13,
+                        4,
+                        "2024-11-22",
+                        1,
+                        "Having fights theoughtout the day with my family.",
+                    ),
+                    (14, 4, "2024-11-23", 2, "No comment provided."),
+                    (15, 4, "2024-11-24", 1, "Been vomiting and have fever."),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
+                )
+
             appointments = [
                 (
                     1,
                     2,
                     5,
                     datetime(2024, 11, 20, hour=12, minute=0),
-                    False,
-                    False,
+                    "Completed",
                     "detailed notes",
-                )
+                    "This is what the clinician thinks",
+                ),
+                (
+                    2,
+                    2,
+                    5,
+                    datetime(2024, 12, 11, hour=16, minute=0),
+                    "Pending",
+                    "notes about condition",
+                    None,
+                ),
             ]
             self.cursor.executemany(
                 "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments

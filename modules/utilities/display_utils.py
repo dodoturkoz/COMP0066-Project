@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 
 # I have added the option to change the input string given when the choice is offered
@@ -8,6 +9,7 @@ def display_choice(
     """
     Displays a list of options to the user and returns their choice.
     """
+
     print(header)
     for i, option in enumerate(options):
         print(f"[{i + 1}] {option}")
@@ -24,7 +26,10 @@ def display_dict(dict: dict[str, any]) -> None:
     Displays a dictionary in a clean way.
     """
     for key, value in dict.items():
-        print(f"{key}: {value}")
+        print(
+            f"{key.replace('_', ' ').capitalize()}: "
+            + f"{value.date() if isinstance(value, datetime) else value}"
+        )
 
 
 def clear_terminal():
@@ -33,3 +38,12 @@ def clear_terminal():
         os.system("cls")
     else:
         os.system("clear")
+
+
+def wait_terminal():
+    """We can use this function to wait for the user to press enter
+    before continuing, such as after displaying a message or data."""
+    while True:
+        if input("Press enter to return to the dashboard") == "":
+            clear_terminal()
+            return False
