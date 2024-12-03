@@ -466,20 +466,20 @@ class Patient(User):
                     clear_terminal()
                     return True
 
-        next_step = display_choice(
-            "Would you like to:",
-            [
-                "Retry the same action",
-                "Go back to the main menu",
-                "Quit",
-            ],
-            choice_str="Your selection: ",
-        )
+            next_step = display_choice(
+                "Would you like to:",
+                [
+                    "Retry the same action",
+                    "Go back to the main menu",
+                    "Quit",
+                ],
+                choice_str="Your selection: ",
+            )
 
-        # TODO implement the retry option
-        if next_step == 1:
-            pass
-        elif next_step == 3:
-            clear_terminal()
-            print("Thanks for using Breeze! Goodbye!")
-            return False
+            # TODO implement the retry option
+            if next_step == 1:
+                pass
+            elif next_step == 3:
+                clear_terminal()
+                print("Thanks for using Breeze! Goodbye!")
+                return False
