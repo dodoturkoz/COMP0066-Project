@@ -37,9 +37,13 @@ def get_appointments(database, clinician_id: int) -> list:
     try:
         appointments = database.cursor.execute(
             """
-                SELECT * 
-                FROM Appointments 
-                WHERE clinician_id = ?""",
+                SELECT appointment_id, a.user_id, clinician_id, date, 
+                status, patient_notes, clinician_notes,
+                u.first_name, u.surname, u.email AS patient_email
+                FROM Appointments AS a, Users AS u 
+                WHERE clinician_id = ?
+                AND a.user_id = u.user_id
+            """,
             [clinician_id],
         ).fetchall()
         return appointments
@@ -47,6 +51,13 @@ def get_appointments(database, clinician_id: int) -> list:
         print(f"Error: {e}")
         return []
 
+
+def print_appointment(appointment: dict) -> None:
+    print(
+        f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
+        + f" - {appointment['first_name']} {appointment['surname']} - "
+        + f"{appointment['status']}\n"
+    )
 
 def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
@@ -119,7 +130,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         try:
             database.cursor.execute(
                 """
-                    INSERT INTO Appointments (user_id, clinician_id, date, notes)
+                    INSERT INTO Appointments (user_id, clinician_id, date, patient_notes)
                     VALUES (?, ?, ?, ?)
                     """,
                 (
