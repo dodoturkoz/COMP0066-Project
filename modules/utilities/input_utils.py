@@ -25,12 +25,16 @@ def get_valid_date(
     max_date: datetime,
     min_date_message: Union[str, None] = None,
     max_date_message: Union[str, None] = None,
-) -> datetime:
+    allow_blank: bool = False,
+) -> Union[datetime, None]:
     """
     Get a valid date from the user and return it
     """
     while True:
-        date = input(prompt)
+        date = input(prompt).strip()
+        # check for blank input
+        if allow_blank and not date:
+            return None
         try:
             valid_date = datetime.strptime(date, "%Y-%m-%d")
             if valid_date > max_date:
@@ -56,7 +60,7 @@ def get_valid_date(
 
 def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
     """
-    Get a valid yes or no value from the user and return it
+    Get a valid yes or no value from the user and return the corresponding boolean value.
     """
     while True:
         value = input(prompt).strip().lower()

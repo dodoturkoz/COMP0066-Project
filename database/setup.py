@@ -118,7 +118,7 @@ class Database:
                 entry_id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 date DATETIME NOT NULL,
-                mood TEXT,
+                mood INTEGER NOT NULL,
                 text TEXT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
             )
@@ -418,6 +418,149 @@ class Database:
             self.cursor.executemany(
                 "INSERT INTO Patients VALUES(?, ?, ?, ?, ?)", patients
             )
+
+            # Check if previous entries of journal.
+            # Add entries if there is not.
+            # 5 entries added per patient, 1 for each day.
+            # Can change to random per day since not mood of day.
+            # Patient 2, 3 and 4 only added for now.
+            # Diagnosis - None, none, depression
+            # 24, 34, 42
+            journal_entries = self.cursor.execute("SELECT user_id FROM JournalEntries")
+            if len(journal_entries.fetchall()) == 0:
+                journal_entries = [
+                    (
+                        1,
+                        2,
+                        "2024-11-20 13:27:49",
+                        "Hey, I got a first for my degree. Feel on top of the world.",
+                    ),
+                    (
+                        2,
+                        2,
+                        "2024-11-21 09:08:12",
+                        "I have felt so great in the past few weeks. Everything is amazing.",
+                    ),
+                    (
+                        3,
+                        2,
+                        "2024-11-22 18:03:11",
+                        "I have spent hundreds of pounds on a new clothes. I feel great.",
+                    ),
+                    (
+                        4,
+                        2,
+                        "2024-11-23 14:34:34",
+                        "I don't feel well. I woke up late but still feel tired.",
+                    ),
+                    (
+                        5,
+                        2,
+                        "2024-11-24 16:27:40",
+                        "I don't feel like meeting or talking with anyone but my journal.",
+                    ),
+                    (
+                        6,
+                        3,
+                        "2024-11-20 11:07:51",
+                        "I am worried about my financial issues.",
+                    ),
+                    (
+                        7,
+                        3,
+                        "2024-11-21 23:08:34",
+                        "I am watching tv but I still feel sad.",
+                    ),
+                    (
+                        8,
+                        3,
+                        "2024-11-22 09:03:55",
+                        "I tried to read a book but that is not helpful.",
+                    ),
+                    (
+                        9,
+                        3,
+                        "2024-11-23 21:34:19",
+                        "I feel scared about my future.",
+                    ),
+                    (
+                        10,
+                        3,
+                        "2024-11-24 22:27:56",
+                        "I tried meditation and it made me feel better.",
+                    ),
+                    (
+                        11,
+                        4,
+                        "2024-11-20 08:27:23",
+                        "My dog died. I don't feel well. I miss Rex.",
+                    ),
+                    (
+                        12,
+                        4,
+                        "2024-11-21 03:08:09",
+                        "I am still thinking about Rex and how we used to play together.",
+                    ),
+                    (
+                        13,
+                        4,
+                        "2024-11-22 11:03:03",
+                        "My family is angry with me and think I overeacted with Rex's death.",
+                    ),
+                    (
+                        14,
+                        4,
+                        "2024-11-23 17:34:10",
+                        "I hate my family. They threw out Rex's stuff from house.",
+                    ),
+                    (
+                        15,
+                        4,
+                        "2024-11-24 01:27:45",
+                        "I am feeling sick.",
+                    ),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO JournalEntries VALUES(?, ?, ?, ?)", journal_entries
+                )
+
+            # Check if there is previous entries of mood.
+            # Add entries if there is not.
+            # 5 entries added for patient 1,2,3. Can add or remove entries.
+            MoodEntries = self.cursor.execute("SELECT user_id FROM MoodEntries")
+            if len(MoodEntries.fetchall()) == 0:
+                MoodEntries = [
+                    (1, 2, "2024-11-20", 6, "Happy about university grades."),
+                    (2, 2, "2024-11-21", 6, "Been watching tv."),
+                    (3, 2, "2024-11-22", 6, "Shopping spree time."),
+                    (4, 2, "2024-11-23", 3, "Feel sick."),
+                    (5, 2, "2024-11-24", 1, "No comment provided."),
+                    (6, 3, "2024-11-20", 1, "Council tax arrears."),
+                    (7, 3, "2024-11-21", 2, "No comment provided."),
+                    (8, 3, "2024-11-22", 1, "I hate books."),
+                    (
+                        9,
+                        3,
+                        "2024-11-23",
+                        1,
+                        "I don't think everything will get alright.",
+                    ),
+                    (10, 3, "2024-11-24", 3, "Meditation and yoga helped."),
+                    (11, 4, "2024-11-20", 3, "I loved my dog."),
+                    (12, 4, "2024-11-21", 1, "I cannot stop thinking on my dog."),
+                    (
+                        13,
+                        4,
+                        "2024-11-22",
+                        1,
+                        "Having fights theoughtout the day with my family.",
+                    ),
+                    (14, 4, "2024-11-23", 2, "No comment provided."),
+                    (15, 4, "2024-11-24", 1, "Been vomiting and have fever."),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
+                )
 
             appointments = [
                 (
