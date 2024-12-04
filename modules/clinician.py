@@ -27,9 +27,10 @@ class Clinician(User):
 
     def add_notes(self, appointment: dict):
         """Used to add clinician notes for a given appointment"""
+        clear_terminal()
         if appointment["clinician_notes"]:
             if get_valid_yes_or_no(
-                "There are already notes stored for this appointment. Would you like to edit them? (Y/N)"
+                "There are already notes stored for this appointment. Would you like to edit them? (Y/N) "
             ):
                 self.edit_notes(appointment)
         else:
@@ -46,32 +47,35 @@ class Clinician(User):
                     [note, appointment["appointment_id"]],
                 )
                 self.database.connection.commit()
+                print(f"Your notes were stored as:\n{note}")
+
             except sqlite3.IntegrityError as e:
                 print(f"Failed to add note: {e}")
 
     def edit_notes(self, appointment: dict):
         """Used to edit clinician notes for a given appointment"""
+        clear_terminal()
         current_notes = appointment["clinician_notes"]
         print("Here are your previously saved notes for the appointment:")
         print(current_notes)
 
-        if get_valid_yes_or_no("Would you like to add additional notes? (Y/N)"):
-            updated_notes = current_notes + (
-                get_valid_string("Please enter your notes for this appointment:")
-                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
-            )
+        updated_notes = current_notes + '\n' + (
+            get_valid_string("Please enter your new notes for this appointment: ")
+            + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+        )
 
-            try:
-                self.database.cursor.execute(
-                    """
-                    UPDATE Appointments
-                    SET clinician_notes = ?
-                    WHERE appointment_id = ?""",
-                    [updated_notes, appointment["appointment_id"]],
-                )
-                self.database.connection.commit()
-            except sqlite3.IntegrityError as e:
-                print(f"Failed to add note: {e}")
+        try:
+            self.database.cursor.execute(
+                """
+                UPDATE Appointments
+                SET clinician_notes = ?
+                WHERE appointment_id = ?""",
+                [updated_notes, appointment["appointment_id"]],
+            )
+            self.database.connection.commit()
+            print(f"Your notes were stored as:\n{updated_notes}")
+        except sqlite3.IntegrityError as e:
+            print(f"Failed to add note: {e}")
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
@@ -88,6 +92,7 @@ class Clinician(User):
 
         options = [
             "View appointment notes",
+            "Add notes to an appointment",
             "Confirm/Reject Appointments",
             "Return to Main Menu",
         ]
@@ -106,11 +111,30 @@ class Clinician(User):
 
             self.view_notes(selected_appointment)
 
-        # Confirm/Reject appointments
+            if selected_appointment["clinician_notes"]:
+                if get_valid_yes_or_no("Would you like to edit your notes for this appointment? (Y/N) "):
+                    self.edit_notes(selected_appointment)
+            elif get_valid_yes_or_no("Would you like to add notes to this appointment? (Y/N) "):
+                    self.add_notes(selected_appointment)
+
+        # Add notes
         elif next == 2:
+            if len(appointments) > 1:
+                clear_terminal()
+                selected = display_choice(
+                    "Please choose an appointment to add notes to", appointment_strings
+                )
+                selected_appointment = appointments[selected - 1]
+            else:
+                selected_appointment = appointments[0]
+
+            self.add_notes(selected_appointment)
+
+        # Confirm/Reject appointments
+        elif next == 3:
             self.view_requested_appointments()
         # Exit
-        elif next == 3:
+        elif next == 4:
             return False
 
     def view_calendar(self):
