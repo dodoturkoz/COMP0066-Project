@@ -1,6 +1,9 @@
 import sqlite3
+from typing import Any
 from database.setup import Database
 from modules.user import User
+from modules.patient import Patient
+from modules.clinician import Clinician
 from modules.utilities.display_utils import (
     clear_terminal,
     display_choice,
@@ -8,7 +11,8 @@ from modules.utilities.display_utils import (
 )
 from modules.utilities.input_utils import (
     get_user_input_with_limited_choice,
-    get_valid_yes_or_no,get_valid_email
+    get_valid_yes_or_no,
+    get_valid_email,
 )
 
 import pandas as pd
@@ -153,7 +157,7 @@ class Admin(User):
             pass
         pass
 
-    def view_table(self, user_type: str, sub_type: str):
+    def view_table(self, user_type: str, sub_type: str) -> tuple[pd.Index, pd.Index]:
         """
         Selects the relevant portion of the Pandas dataframe for the user, as
         defined by the inputs.
@@ -163,14 +167,19 @@ class Admin(User):
             patient_df = patient_df.filter(
                 items=["username", "email", "name", "is_active"]
             )
+            print("\nBreeze Patients:")
             print(patient_df)
-            # return (patient_df.index, patient_df.columns)
+            return (patient_df.index, patient_df.columns)
+
         elif user_type == "clinicians" and sub_type == "none":
             clinician_df = self.user_df.query(('role == "clinician"'))
             clinician_df = clinician_df.filter(
                 items=["username", "email", "name", "is_active"]
             )
+            print("\nBreeze Clinicians:")
             print(clinician_df)
+            return clinician_df.index, clinician_df.columns
+
         elif user_type == "patients" and sub_type == "registration":
             unregistered_patient_df = self.user_df.query(
                 ('role == "patient" and clinician_id != clinician_id')
@@ -178,7 +187,10 @@ class Admin(User):
             unregistered_patient_df = unregistered_patient_df.filter(
                 items=["username", "email", "name", "is_active", "clinician_id"]
             )
+            print("\nPatientes without a clinician assinged:")
             print(unregistered_patient_df)
+            return unregistered_patient_df.index, unregistered_patient_df.columns
+
         elif user_type == "clinicians" and sub_type == "registration":
             clinician_df = self.user_df.query(('role == "clinician"'))[
                 ["first_name", "surname", "email"]
@@ -194,21 +206,21 @@ class Admin(User):
             registration_df = pd.merge(
                 clinician_df, patient_df, left_index=True, right_on="clinician_id"
             )
+            print("\nBreeze Clinicians:")
             print(registration_df)
-
-        elif user_type == "":
-            pass
+            return registration_df.index, registration_df.columns
 
         else:
-            pass
+            print("\nInvalid selection")
+            return pd.Index([]), pd.Index([])
 
-    def view_user(self, user_id: int, attribute: str, value: any):
+    def view_user(self, user_id: int, attribute: str, value: Any):
         # This is a working assumption, but I think whenever an admin wants to
         # view or edit an individual row, they should use a function from that
         # class
         pass
 
-    def alter_user(self, user_id: int, attribute: str, value: any):
+    def alter_user(self, user_id: int, attribute: str, value: Any) -> bool:
         """
         Executes the query to update the relevant entry in the database
         """
@@ -222,18 +234,25 @@ class Admin(User):
         # Unpacking the attributes and instantiating a user object to edit
         # itself in the database.
         user, first_name, surname, email, is_active, role = user_info
-        altered_user = User(
-            self.database,
-            user_id=int(user_id),
-            username=str(user),
-            first_name=str(first_name),
-            surname=str(surname),
-            email=str(email),
-            is_active=bool(is_active),
-            role=str(role),
-        )
+        altered_user_data = {
+            "user_id": user_id,
+            "username": user,
+            "first_name": first_name,
+            "surname": surname,
+            "email": email,
+            "is_active": is_active,
+            "role": role,
+        }
+        if role == "patient":
+            altered_user = Patient(self.database, **altered_user_data)
+        elif role == "clinician":
+            altered_user = Clinician(self.database, **altered_user_data)
+        else:
+            altered_user = User(self.database, **altered_user_data)
 
-        altered_user.edit_info(attribute, value)
+        result = altered_user.edit_info(attribute, value)
+        self.refresh_user_df()
+        return result
 
         # LONGER TERM CONSIDERATIONS:
         # df.iloc[] takes the data in order of memory, so we can use this to impliment
@@ -259,24 +278,53 @@ class Admin(User):
 
         # TODO: Add checks that these methods can only be applied to patients and practitioners
 
-    def function_logic(self, function_name):
-        # DRAFT: This might be a way to reduce logic overhead
-        pass
+    def assing_patient(self) -> bool:
+        """
+        Assigns a patient to a clinician, returns bool with the result
+        of the update
+        """
 
-        # if function_name == "update":
-        #     self.update_information()
-        # elif function_name == "delete":
-        #     self.delete_user()
+        clear_terminal()
+        print("\nAssign Patient to Clinician \n")
 
-    def table_logic(self, user_type, function_name):
-        # DRAFT: This might be a way to reduce logic overhead
-        pass
+        # show the unregistered patients
+        patient_ids, _ = self.view_table("patients", "registration")
 
-        # if table_name == "Patients":
-        #     return self.function_logic(self, function_name)
+        if patient_ids.empty:
+            print("No unassigned patients found.")
+            wait_terminal()
+            return False
 
-    # REMINDER: When I finish with my changes, I'll have to commit them using
-    # the following function: self.datbaase.commit()
+        # chose patient
+        patient_id = get_user_input_with_limited_choice(
+            "Enter the patient ID to assign: ",
+            patient_ids,
+            invalid_options_text="Invalid Patient ID, please chose from the list",
+        )
+
+        # show the clinicians
+        clinician_ids, _ = self.view_table("clinicians", "registration")
+
+        if clinician_ids.empty:
+            print("No clinicians found.")
+            return wait_terminal()
+
+        # chose a clinician
+        clinician_id = get_user_input_with_limited_choice(
+            "Enter the clinician ID to assign:",
+            clinician_ids,
+            invalid_options_text="Invalid Clinician ID, please chose from list.",
+        )
+
+        result = self.alter_user(patient_id, "clinician_id", clinician_id)
+        if result:
+            print(
+                f"Patient {patient_id} successfully assigned to Clinician {clinician_id}."
+            )
+            return wait_terminal(return_value=True)
+        else:
+            print("Error assigning patient to clinician.")
+            return wait_terminal()
 
     # Admin FLow
     def flow(self) -> bool:
@@ -302,33 +350,7 @@ class Admin(User):
             # Assign a patient to clinician
 
             if selection == 1:
-                print("\nAssign Patient to Clinician \n")
-                # show the unregistered patients
-                patient_ids = self.view_table("patients", "registration")
-                if not patient_ids:
-                    print("No unregistered patients found.")
-                    wait_terminal()
-                    continue
-                # chose patient
-                patient_id = get_user_input_with_limited_choice(
-                    "Enter the patient ID to assign:", patient_ids, invalid_options_text= "Invalid Patient ID, please chose from the list"
-                )
-                # show the clinicians
-                clinician_ids, _ = self.view_table("clinicians", "registration")
-                if not clinician_ids:
-                    print("No clinicians found.")
-                    wait_terminal()
-                    continue
-                # chose a clinician
-                clinician_id = get_user_input_with_limited_choice(
-                    "Enter the clinician ID to assign:", clinician_ids, invalid_options_text= "Invalid Clinician ID, please chose from list."
-                )
-                #call the function 
-                #self.assign_patient_to_clinician(patient_id, clinician_id)
-                #cant find the assign/register function? will just placehold for now 
-                print(f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}.")
-                wait_terminal 
-
+                self.assing_patient()
 
             # View all user info
             elif selection == 2:
@@ -341,9 +363,9 @@ class Admin(User):
                 print("\nView a Specific User\n")
 
                 user_ids, _ = self.view_table("users")
-                if not user_ids:
+                if user_ids.empty:
                     print("No users found.")
-                    wait_terminal() 
+                    wait_terminal()
                     continue
                 # select the specific person
                 user_id = get_user_input_with_limited_choice(
@@ -352,61 +374,77 @@ class Admin(User):
                 user_data = self.df.loc[user_id]
                 print("\nUser infromation\n")
                 print(user_data)
-                #wait_terminal()
-                
+                # wait_terminal()
 
             # Edit info
             elif selection == 4:
                 print("\nEdit User Information")
                 user_type_choice = get_user_input_with_limited_choice(
-                    "Do you want to edit a Patient or a Clinician?:",["Patient","Clinician"], invalid_options_text= "Invalid choice. Please enter Patient or Clinician" 
+                    "Do you want to edit a Patient or a Clinician?:",
+                    ["Patient", "Clinician"],
+                    invalid_options_text="Invalid choice. Please enter Patient or Clinician",
                 )
-                # Need input check 
-                table_name = "Patients" if user_type_choice == "Patient" else "Clinicians"
+                # Need input check
+                table_name = (
+                    "Patients" if user_type_choice == "Patient" else "Clinicians"
+                )
 
                 user_ids, columns = self.view_table(table_name.lower(), "none")
-                if not user_ids: 
+                if user_ids.empty:
                     print(f" No {table_name.lower()} found.")
                     wait_terminal()
-                    continue 
+                    continue
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to edit:", user_ids, invalid_options_text= "Invalid User ID, please try again."
+                    "Enter the user ID to edit:",
+                    user_ids,
+                    invalid_options_text="Invalid User ID, please try again.",
                 )
                 attribute = get_user_input_with_limited_choice(
-                    "Enter the attribute to edit:",columns, invalid_options_text= "Invalid attribute. Please select a valid option"
-                    )
-                
-                #Input Handling could be change to display where they can only see valid attribute options. Need to do this. 
+                    "Enter the attribute to edit:",
+                    columns,
+                    invalid_options_text="Invalid attribute. Please select a valid option",
+                )
+
+                # Input Handling could be change to display where they can only see valid attribute options. Need to do this.
                 value = input(f"Enter the new value for {attribute}:").strip()
                 self.alter_user(user_id, attribute, value)
-                print(f"\n Successfully updated {attribute} for User {user_id} to {value}.")
+                print(
+                    f"\n Successfully updated {attribute} for User {user_id} to {value}."
+                )
                 wait_terminal()
-
 
             # Disable someone
             elif selection == 5:
                 print("\nDisable User\n")
-                action =  get_user_input_with_limited_choice(
-                    "Would you like to disable or re-enable a user?", ["disable","re-enable"], invalid_options_text= "Invalid choice. Please select 'disable' or 're-enable'"
+                action = get_user_input_with_limited_choice(
+                    "Would you like to disable or re-enable a user?",
+                    ["disable", "re-enable"],
+                    invalid_options_text="Invalid choice. Please select 'disable' or 're-enable'",
                 )
-                # Change to display with two options - which handles input. 
+                # Change to display with two options - which handles input.
                 user_ids, _ = self.view_table("Users")
                 if user_ids.empty:
                     print(f"No users available to {action.lower()}.")
                     wait_terminal()
                     continue
 
-                #chose someone 
+                # chose someone
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to {action.lower()}:", user_ids, invalid_options_text= "Invalid User ID, please try again."
+                    "Enter the user ID to {action.lower()}:",
+                    user_ids,
+                    invalid_options_text="Invalid User ID, please try again.",
                 )
 
-                #confirm 
-                confirm = get_valid_yes_or_no(f"Are you sure you want to disable User {user_id}? (Y/N):")
-                if confirm: 
-                    new_status = False if action == "disable" else True 
-                    self.alter_user(user_id, "is_active", new_status )
-                    print(f"\n User {user_id} has been sucessfully {"disabled" if not new_status else "re-enabled"}.")
+                # confirm
+                confirm = get_valid_yes_or_no(
+                    f"Are you sure you want to disable User {user_id}? (Y/N):"
+                )
+                if confirm:
+                    new_status = False if action == "disable" else True
+                    self.alter_user(user_id, "is_active", new_status)
+                    print(
+                        f"\n User {user_id} has been sucessfully {"disabled" if not new_status else "re-enabled"}."
+                    )
                 else:
                     print("\nCancelled.")
                 wait_terminal()
@@ -416,13 +454,15 @@ class Admin(User):
                 print("\nDelete a User\n")
                 # Get user IDs
                 user_ids, _ = self.view_table("users")
-                if not user_ids:
+                if user_ids.empty:
                     print("No user found")
-                    wait_terminal() 
-                    continue 
-                #chose someone 
+                    wait_terminal()
+                    continue
+                # chose someone
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the User ID to delete:", user_ids, invalid_options_text= "Invalid User ID, try again."
+                    "Enter the User ID to delete:",
+                    user_ids,
+                    invalid_options_text="Invalid User ID, try again.",
                 )
                 # confirm
                 confirm = get_valid_yes_or_no(

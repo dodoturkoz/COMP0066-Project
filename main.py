@@ -39,9 +39,9 @@ try:
 
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
-    # Note: at some point we need to review that this fails gracefully anywhere in the app
+    # Note: right now this is not falling gracefully, we should handle this better
     print(e)  # TODO: delete this when we finish development
-    print("Please make sure your input is a number.")
+    
 finally:
     # If we pass the execution loop, explicitly closes db connection
     db.close()

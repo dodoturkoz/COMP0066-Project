@@ -14,7 +14,6 @@ from modules.constants import MOODS
 
 
 class Clinician(User):
-    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
