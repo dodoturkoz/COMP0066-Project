@@ -3,6 +3,7 @@ from datetime import datetime
 
 roles = ("admin", "patient", "clinician")
 diagnoses = (
+    "Not Specified",
     "Depression",
     "Anxiety",
     "Bipolar Disorder",

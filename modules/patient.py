@@ -38,6 +38,7 @@ class Patient(User):
         email: str,
         is_active: bool,
         clinician_id: int,
+        diagnosis: str = "Not Specified",
         *args,
         **kwargs,
     ):
@@ -53,6 +54,7 @@ class Patient(User):
             **kwargs,
         )
 
+        self.diagnosis = diagnosis
         self.clinician_id = clinician_id
         self.clinician = self.get_clinician()
 
