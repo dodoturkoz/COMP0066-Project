@@ -5,6 +5,7 @@ from modules.utilities.display_utils import (
     display_choice,
     wait_terminal,
 )
+from modules.utilities.input_utils import get_valid_string
 from modules.utilities.send_email import send_email
 from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
@@ -23,6 +24,28 @@ class Clinician(User):
         if appointment["patient_notes"]:
             print("\nPatient notes:")
             print(appointment["patient_notes"] + "\n")
+
+    def add_notes(self, appointment: dict):
+        """Used to add clinician notes for a given appointment"""
+        if appointment["clinician_notes"]:
+            print(
+                "There are already notes stored for this appointment. Would you like to edit them?"
+            )
+            # add option to edit - Y/N choice?
+        else:
+            note = get_valid_string("Please enter your notes for this appointment:")
+
+            try:
+                self.database.cursor.execute(
+                    """
+                    UPDATE Appointments
+                    SET clinician_notes = ?
+                    WHERE appointment_id = ?""",
+                    [note, appointment["appointment_id"]],
+                )
+                self.database.connection.commit()
+            except sqlite3.IntegrityError as e:
+                print(f"Failed to add note: {e}")
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the

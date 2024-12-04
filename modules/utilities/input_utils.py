@@ -76,7 +76,7 @@ def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
 
 def get_valid_string(prompt: str, max_len: int = 250, min_len: int = 0) -> str:
     """
-    Get a valid string of more than 2 characters and less than 50
+    Get a valid string of more than 0 characters and less than 250
     from the user and return it
     """
     while True:
