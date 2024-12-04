@@ -65,8 +65,6 @@ class Clinician(User):
         This allows the clinician to view all their past and
         upcoming appointments.
         """
-        # Importing here to avoid circular imports
-        from modules.appointments import get_appointments
 
         clear_terminal()
         appointments = get_appointments(self.database, self.user_id)
@@ -213,9 +211,6 @@ class Clinician(User):
                             print(
                                 "The appointment has been rejected. A notification email will be sent to you and the patient."
                             )
-
-                            # Remove the appointment from the list so it is not displayed to the user again
-                            unconfirmed_appointments.remove(rejected_appointment)
 
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(rejected_appointment)
