@@ -338,10 +338,10 @@ class Patient(User):
 
     def view_appointments(self) -> list[dict[str, Any]]:
         """
-        Views all appointments for the patient.
+        Views all appointments for the patient, including their status.
         """
         query = (
-            "SELECT appointment_id, date, notes, is_complete "
+            "SELECT appointment_id, date, patient_notes, status "
             "FROM Appointments "
             "WHERE user_id = ?"
         )
@@ -352,8 +352,8 @@ class Patient(User):
                 {
                     "appointment_id": row["appointment_id"],
                     "date": row["date"],
-                    "notes": row["notes"],
-                    "is_complete": bool(row["is_complete"]),
+                    "patient_notes": row["patient_notes"],
+                    "status": row["status"],
                 }
                 for row in self.database.cursor.fetchall()
             ]
@@ -363,10 +363,9 @@ class Patient(User):
                 for appointment in appointments:
                     print(f"ID: {appointment['appointment_id']}")
                     print(f"Date: {appointment['date']}")
-                    print(f"Notes: {appointment['notes']}")
-                    print(
-                        f"Completed: {'Yes' if appointment['is_complete'] else 'No'}\n"
-                    )
+                    print(f"Your Notes: {appointment['patient_notes']}")
+                    print(f"Status: {appointment['status']}")
+                    print("-" * 40)
             else:
                 print("You don't have any appointments.")
 
