@@ -420,11 +420,13 @@ class Patient(User):
                     "Add Journal Entry",
                     "Read Journal Entries",
                     "Search Exercises",
-                    "View and manage Appointments",
-                    "Log Out",
                 ]
 
                 # Will make distinction between patients with clinician and no clinician tmrw morn.
+                if self.clinician_id:
+                    options.extend(["View and manage Appointments", "Log Out"])
+                else:
+                    options.append("Log Out")
 
                 choice = display_choice("Please select an option:", options)
 
@@ -467,37 +469,41 @@ class Patient(User):
                     case 6:
                         keyword = input("Enter keyword to search for exercises: ")
                         self.search_exercises(keyword)
+
                     case 7:
-                        appointment_options = [
-                            "Book Appointment",
-                            "View Appointments",
-                            "Cancel Appointment",
-                            "Exit appointment management",
-                        ]
+                        if self.clinician_id:
+                            appointment_options = [
+                                "Book Appointment",
+                                "View Appointments",
+                                "Cancel Appointment",
+                                "Exit appointment management",
+                            ]
 
-                        selected_choice = display_choice(
-                            "Please select an option:", appointment_options
-                        )
+                            selected_choice = display_choice(
+                                "Please select an option:", appointment_options
+                            )
 
-                        match selected_choice:
-                            case 1:
-                                # Book Appointment
-                                request_appointment(
-                                    self.database, self.user_id, self.clinician_id
-                                )
-                            case 2:
-                                # View Appointments
-                                self.view_appointments()
-                            case 3:
-                                # Cancel appointment
-                                self.view_appointments()
-                                appointment_id = int(
-                                    input("Enter appointment ID to cancel: ")
-                                )
-                                cancel_appointment(self.database, appointment_id)
+                            match selected_choice:
+                                case 1:
+                                    # Book Appointment
+                                    request_appointment(
+                                        self.database, self.user_id, self.clinician_id
+                                    )
+                                case 2:
+                                    # View Appointments
+                                    self.view_appointments()
+                                case 3:
+                                    # Cancel appointment
+                                    self.view_appointments()
+                                    appointment_id = int(
+                                        input("Enter appointment ID to cancel: ")
+                                    )
+                                    cancel_appointment(self.database, appointment_id)
 
-                            # Case 4 goes to Dogukan's next step.
-
+                                # Case 4 goes to Dogukan's next step.
+                        else:
+                            clear_terminal()
+                            return True
                     case 8:
                         clear_terminal()
                         return True
