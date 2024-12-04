@@ -154,13 +154,13 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
 
 def cancel_appointment(database, appointment_id: int) -> bool:
     """
-    Cancels an appointment by removing it from the database.
+    Cancels an appointment by changing its status to 'Cancelled By Patient'.
     """
     try:
         database.cursor.execute(
             """
             UPDATE Appointments
-            SET status = 'Cancelled by Patient'
+            SET status = 'Cancelled By Patient'
             WHERE appointment_id = ?;
             """,
             (appointment_id,),
