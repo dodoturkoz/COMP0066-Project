@@ -576,7 +576,7 @@ class Database:
                     2,
                     5,
                     datetime(2024, 11, 20, hour=12, minute=0),
-                    "Completed",
+                    "Attended",
                     "detailed notes",
                     "This is what the clinician thinks",
                 ),
