@@ -380,6 +380,7 @@ class Patient(User):
         """
 
         while True:
+            action = "Stay"
             clear_terminal()
             if not self.is_active:
                 while True:
@@ -464,9 +465,10 @@ class Patient(User):
                                 "Book Appointment",
                                 "View Appointments",
                                 "Cancel Appointment",
-                                "Exit appointment management",
+                                "Exit appointments",
                             ]
-
+                            # Put exit appointment management to go back to main menu,
+                            # Change next step below.
                             selected_choice = display_choice(
                                 "Please select an option:", appointment_options
                             )
@@ -487,8 +489,8 @@ class Patient(User):
                                         input("Enter appointment ID to cancel: ")
                                     )
                                     cancel_appointment(self.database, appointment_id)
-
-                                # Case 4 goes to Dogukan's next step.
+                                case 4:
+                                    action = "Exit"
                         else:
                             clear_terminal()
                             return True
@@ -496,20 +498,21 @@ class Patient(User):
                         clear_terminal()
                         return True
 
-                next_step = display_choice(
-                    "Would you like to:",
-                    [
-                        "Retry the same action",
-                        "Go back to the main menu",
-                        "Quit",
-                    ],
-                    choice_str="Your selection: ",
-                )
+                if action != "Exit":
+                    next_step = display_choice(
+                        "Would you like to:",
+                        [
+                            "Retry the same action",
+                            "Go back to the main menu",
+                            "Quit",
+                        ],
+                        choice_str="Your selection: ",
+                    )
 
-                # TODO implement the retry option
-                if next_step == 1:
-                    pass
-                elif next_step == 3:
-                    clear_terminal()
-                    print("Thanks for using Breeze! Goodbye!")
-                    return False
+                    # TODO implement the retry option
+                    if next_step == 1:
+                        pass
+                    elif next_step == 3:
+                        clear_terminal()
+                        print("Thanks for using Breeze! Goodbye!")
+                        return False
