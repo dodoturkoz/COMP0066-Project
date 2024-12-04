@@ -14,7 +14,15 @@ diagnoses = (
     "Drug Induced Psychosis",
     "Other",
 )
-statuses = ("Pending", "Confirmed", "Rejected", "Completed", "Patient Did Not Attend")
+statuses = (
+    "Pending",
+    "Confirmed",
+    "Rejected",
+    "Attended",
+    "Did Not Attend",
+    "Cancelled By Patient",
+    "Cancelled By Clinician",
+)
 
 
 def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
