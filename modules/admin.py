@@ -323,13 +323,12 @@ class Admin(User):
                 clinician_id = get_user_input_with_limited_choice(
                     "Enter the clinician ID to assign:", clinician_ids
                 )
-                # call the function
-                # self.assign_patient_to_clinician(patient_id, clinician_id)
-                # cant find the assign/register function?
-                print(
-                    f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}."
-                )
-                # wait_terminal
+                #call the function 
+                #self.assign_patient_to_clinician(patient_id, clinician_id)
+                #cant find the assign/register function? will just placehold for now 
+                print(f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}.")
+                #wait_terminal 
+
 
             # View all user info
             elif selection == 2:
@@ -345,7 +344,7 @@ class Admin(User):
                 user_ids, _ = self.view_table("users")
                 if not user_ids:
                     print("No users found.")
-                    wait_terminal
+                    wait_terminal() 
                     continue
                 # select the specific person
                 user_id = get_user_input_with_limited_choice(
@@ -354,7 +353,8 @@ class Admin(User):
                 user_data = self.df.loc[user_id]
                 print("\nUser infromation\n")
                 print(user_data)
-                # wait_terminal
+                #wait_terminal()
+                
 
             # Edit info
             elif selection == 4:
@@ -391,19 +391,17 @@ class Admin(User):
                 users_ids, _ = self.view_table("users")
                 if not user_ids:
                     print("No users found.")
-                    wait_terminal
-                    continue
-                # chose someone
+                    wait_terminal()
+                    continue 
+                #chose someone 
                 user_id = get_user_input_with_limited_choice(
                     "Enter the user ID to disable:", user_ids
                 )
 
-                # confirm
-                confirm = get_valid_yes_or_no(
-                    f"Are you sure you want to disbale User {user_id}? (Y/N):"
-                )
-                if confirm:
-                    self.alter_user(user_id, "is_active", False)
+                #confirm 
+                confirm = get_valid_yes_or_no(f"Are you sure you want to disable User {user_id}? (Y/N):")
+                if confirm: 
+                    self.alter_user(user_id, "is_active", False )
                     print(f"\n User {user_id} has been sucessfully disabled.")
                 else:
                     print("\nCancelled.")
@@ -416,9 +414,9 @@ class Admin(User):
                 user_ids, _ = self.view_table("users")
                 if not user_ids:
                     print("No user found")
-                    wait_terminal
-                    continue
-                # chose someone
+                    wait_terminal() 
+                    continue 
+                #chose someone 
                 user_id = get_user_input_with_limited_choice(
                     "Enter the User ID to delete:", user_ids
                 )
