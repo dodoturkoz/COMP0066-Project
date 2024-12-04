@@ -475,9 +475,7 @@ class Patient(User):
                                     appointment_id = int(
                                         input("Enter appointment ID to cancel: ")
                                     )
-                                    cancel_appointment(
-                                        self.database, appointment_id
-                                    )
+                                    cancel_appointment(self.database, appointment_id)
                                 case 4:
                                     action = "Exit"
                         # else:
