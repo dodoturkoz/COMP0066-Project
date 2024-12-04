@@ -389,10 +389,6 @@ class Clinician(User):
                     self.edit_patient_info(patient)
                     clear_terminal()
 
-                except TypeError as e:
-                    print(f"{e} Patient with ID {patient_id} not found.")
-                    wait_terminal()
-
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
                     wait_terminal()
