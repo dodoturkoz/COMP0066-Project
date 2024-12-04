@@ -10,6 +10,7 @@ from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
 import sqlite3
 from database.setup import diagnoses
+from modules.constants import MOODS
 
 
 class Clinician(User):
@@ -324,6 +325,8 @@ class Clinician(User):
             wait_terminal()
             return False
 
+    # This method is used to view the dashboard
+    # All other methods must be declared prior to this method
     def view_dashboard(self):
         """View the dashboard.
 
@@ -339,9 +342,36 @@ class Clinician(User):
             patients = self.get_all_patients()
             print("Here are all your patients:")
             for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
+                patient = Patient(self.database, **patient)
+                query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
+                params = [patient.user_id]
+
+                query += " ORDER BY date ASC"
+
+                try:
+                    self.database.cursor.execute(query, tuple(params))
+                    entries = [
+                        {"date": row["date"], "text": row["text"], "mood": row["mood"]}
+                        for row in self.database.cursor.fetchall()
+                    ]
+                    latest_entry = entries[-1] if entries else None
+
+                    if latest_entry:
+                        old_mood = MOODS[str(latest_entry["mood"])]
+                        show_moods = (
+                            f"{old_mood['ansi']} {old_mood['description']}\033[00m"
+                        )
+                        print(
+                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: {str(latest_entry['date']).split()[0]} - Mood: {show_moods}"""
+                        )
+
+                    else:
+                        print("No mood entries found for the specified date.")
+
+                except sqlite3.OperationalError as e:
+                    print(f"Database error occurred: {e}")
+                    return []
+
             decision = input(
                 "Would you like to edit any patient's information? (Y/N): "
             )
