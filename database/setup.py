@@ -478,7 +478,7 @@ class Database:
                         3,
                         2,
                         old_date(3),
-                        "I have spent hundreds of pounds on a new clothes. I feel great.",
+                        "I have spent hundreds of pounds on new clothes. I feel great.",
                     ),
                     (
                         4,
@@ -556,7 +556,7 @@ class Database:
                         16,
                         7,
                         old_date(5),
-                        "The voices were quieter today, but I know they are still lurking. I cannot escape them.",
+                        "The voices are quieter but I can still hear them. I cannot escape them.",
                     ),
                     (
                         17,
@@ -676,7 +676,7 @@ class Database:
                         36,
                         12,
                         old_date(5),
-                        "Waking up feels like a task. Everything is so gray. I just want to sleep and forget about today.",
+                        "Waking up feels like a task. I just want to sleep and forget about today.",
                     ),
                     (
                         37,
@@ -724,7 +724,7 @@ class Database:
                         44,
                         14,
                         old_date(5),
-                        "The colors around me are so bright, too bright. It is overwhelming.",
+                        "The colors around me are too bright. It is overwhelming.",
                     ),
                     (
                         45,
@@ -760,7 +760,7 @@ class Database:
                         50,
                         15,
                         old_date(3),
-                        "Today I woke up feeling heavy, like a weight was pressing on me. I want to crawl into bed and never leave.",
+                        "Today I woke up feeling heavy, like a weight was pressing on me.",
                     ),
                     (
                         51,
@@ -832,7 +832,7 @@ class Database:
                         62,
                         18,
                         old_date(3),
-                        "Today feels worse than yesterday. I can't get out of bed. It's like I'm trapped in this darkness.",
+                        "Today feels worse than yesterday. I can't get out of bed..",
                     ),
                     (
                         63,
@@ -921,7 +921,7 @@ class Database:
                         4,
                         old_day(3),
                         1,
-                        "Having fights theoughtout the day with my family.",
+                        "Having fights throughout the day with my family.",
                     ),
                     (14, 4, old_day(2), 2, "No comment provided."),
                     (15, 4, old_day(1), 1, "Been vomiting and have fever."),
