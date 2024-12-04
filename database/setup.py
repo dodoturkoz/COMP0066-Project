@@ -602,29 +602,31 @@ class Database:
 
             # First appointment was datetime(2024, 11, 20, hour=12, minute=0).
             # Second appointment was datetime(2024, 12, 11, hour=16, minute=0).
-            appointments = [
-                (
-                    1,
-                    2,
-                    5,
-                    old_appointment_day(1),
-                    "Attended",
-                    "detailed notes",
-                    "This is what the clinician thinks",
-                ),
-                (
-                    2,
-                    2,
-                    5,
-                    old_appointment_day(-1),
-                    "Pending",
-                    "notes about condition",
-                    None,
-                ),
-            ]
-            self.cursor.executemany(
-                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
-            )
+            appointments = self.cursor.execute("SELECT user_id FROM Appointments")
+            if len(appointments.fetchall()) == 0:
+                appointments = [
+                    (
+                        1,
+                        2,
+                        5,
+                        old_appointment_day(1),
+                        "Attended",
+                        "detailed notes",
+                        "This is what the clinician thinks",
+                    ),
+                    (
+                        2,
+                        2,
+                        5,
+                        old_appointment_day(-1),
+                        "Pending",
+                        "notes about condition",
+                        None,
+                    ),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
+                )
 
             self.connection.commit()
 
