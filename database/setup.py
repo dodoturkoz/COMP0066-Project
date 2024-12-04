@@ -459,11 +459,6 @@ class Database:
 
             # Check if previous entries of journal.
             # Add entries if there is not.
-            # 5 entries added per patient, 1 for each day.
-            # Can change to random per day since not mood of day.
-            # Patient 2, 3 and 4 only added for now.
-            # Diagnosis - None, none, depression
-            # 24, 34, 42
             journal_entries = self.cursor.execute("SELECT user_id FROM JournalEntries")
             if len(journal_entries.fetchall()) == 0:
                 journal_entries = [
@@ -900,7 +895,6 @@ class Database:
 
             # Check if there is previous entries of mood.
             # Add entries if there is not.
-            # 5 entries added for patient 1,2,3. Can add or remove entries.
             MoodEntries = self.cursor.execute("SELECT user_id FROM MoodEntries")
             if len(MoodEntries.fetchall()) == 0:
                 MoodEntries = [
