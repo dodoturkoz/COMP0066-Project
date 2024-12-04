@@ -60,7 +60,7 @@ class User:
         # If there is an error with the query
         except sqlite3.OperationalError as e:
             print(
-                f"{e} Error updating, likely the selected attribute does not exist for Users"
+                f"There was an error updating the {attribute.replace('_', ' ').capitalize()}.\n Error: {e}"
             )
             return False
     

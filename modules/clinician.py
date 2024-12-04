@@ -282,9 +282,6 @@ class Clinician(User):
 
     def edit_patient_info(self, patient: Patient) -> bool:
         """Edit patient information"""
-        attribute: str
-        value: str
-        patient.MODIFIABLE_ATTRIBUTES.append("diagnosis")
 
         while True:
             edit_choice = display_choice(

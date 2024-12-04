@@ -38,7 +38,7 @@ class Patient(User):
         email: str,
         is_active: bool,
         clinician_id: int,
-        diagnosis: str = "NULL",
+        diagnosis: str = "Not Specified",
         *args,
         **kwargs,
     ):
