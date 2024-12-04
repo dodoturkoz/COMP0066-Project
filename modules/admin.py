@@ -8,7 +8,7 @@ from modules.utilities.display_utils import (
 )
 from modules.utilities.input_utils import (
     get_user_input_with_limited_choice,
-    get_valid_yes_or_no,
+    get_valid_yes_or_no,get_valid_email
 )
 
 import pandas as pd
@@ -321,13 +321,13 @@ class Admin(User):
                     continue
                 # chose a clinician
                 clinician_id = get_user_input_with_limited_choice(
-                    "Enter the clinician ID to assign:", clinician_ids
+                    "Enter the clinician ID to assign:", clinician_ids, invalid_options_text= "Invalid Clinician ID, please chose from list."
                 )
                 #call the function 
                 #self.assign_patient_to_clinician(patient_id, clinician_id)
                 #cant find the assign/register function? will just placehold for now 
                 print(f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}.")
-                #wait_terminal 
+                wait_terminal 
 
 
             # View all user info
@@ -339,7 +339,6 @@ class Admin(User):
             # View speicifc users - not sure if this is needed
             elif selection == 3:
                 print("\nView a Specific User\n")
-                # Get all user IDs
 
                 user_ids, _ = self.view_table("users")
                 if not user_ids:
@@ -360,8 +359,9 @@ class Admin(User):
             elif selection == 4:
                 print("\nEdit User Information")
                 user_type_choice = get_user_input_with_limited_choice(
-                    "Do you want to edit a Patient or a Clinician?:",["Patient","Clinician"] 
+                    "Do you want to edit a Patient or a Clinician?:",["Patient","Clinician"], invalid_options_text= "Invalid choice. Please enter Patient or Clinician" 
                 )
+                # Need input check 
                 table_name = "Patients" if user_type_choice == "Patient" else "Clinicians"
 
                 user_ids, columns = self.view_table(table_name.lower(), "none")
@@ -370,32 +370,35 @@ class Admin(User):
                     wait_terminal()
                     continue 
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to edit:", user_ids
+                    "Enter the user ID to edit:", user_ids, invalid_options_text= "Invalid User ID, please try again."
                 )
                 attribute = get_user_input_with_limited_choice(
-                    "Enter the attribute to edit:",columns
+                    "Enter the attribute to edit:",columns, invalid_options_text= "Invalid attribute. Please select a valid option"
                     )
+                
+                #Input Handling could be change to display where they can only see valid attribute options. Need to do this. 
                 value = input(f"Enter the new value for {attribute}:").strip()
                 self.alter_user(user_id, attribute, value)
                 print(f"\n Successfully updated {attribute} for User {user_id} to {value}.")
-                #wait_terminal()
+                wait_terminal()
 
 
             # Disable someone
             elif selection == 5:
                 print("\nDisable User\n")
                 action =  get_user_input_with_limited_choice(
-                    "Would you like to disable or re-enable a user?", ["disable","re-enable"]
+                    "Would you like to disable or re-enable a user?", ["disable","re-enable"], invalid_options_text= "Invalid choice. Please select 'disable' or 're-enable'"
                 )
+                # Change to display with two options - which handles input. 
                 user_ids, _ = self.view_table("Users")
-                if not user_ids:
+                if user_ids.empty:
                     print(f"No users available to {action.lower()}.")
                     wait_terminal()
                     continue
 
                 #chose someone 
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to {action.lower()}:", user_ids
+                    "Enter the user ID to {action.lower()}:", user_ids, invalid_options_text= "Invalid User ID, please try again."
                 )
 
                 #confirm 
@@ -406,7 +409,7 @@ class Admin(User):
                     print(f"\n User {user_id} has been sucessfully {"disabled" if not new_status else "re-enabled"}.")
                 else:
                     print("\nCancelled.")
-                # wait_terminal
+                wait_terminal()
 
             # Deleting user
             elif selection == 6:
@@ -419,7 +422,7 @@ class Admin(User):
                     continue 
                 #chose someone 
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the User ID to delete:", user_ids
+                    "Enter the User ID to delete:", user_ids, invalid_options_text= "Invalid User ID, try again."
                 )
                 # confirm
                 confirm = get_valid_yes_or_no(
@@ -430,7 +433,7 @@ class Admin(User):
                     print(f"\nUser {user_id} has been successfully deleted.")
                 else:
                     print("\nCancelled.")
-                # wait_terminal
+                wait_terminal()
 
             # Exit
             elif selection == 7:
