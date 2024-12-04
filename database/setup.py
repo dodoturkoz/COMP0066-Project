@@ -32,6 +32,7 @@ def old_appointment_day(days_ago):
 
 roles = ("admin", "patient", "clinician")
 diagnoses = (
+    "Not Specified",
     "Depression",
     "Anxiety",
     "Bipolar Disorder",
@@ -43,7 +44,15 @@ diagnoses = (
     "Drug Induced Psychosis",
     "Other",
 )
-statuses = ("Pending", "Confirmed", "Rejected", "Completed", "Patient Did Not Attend")
+statuses = (
+    "Pending",
+    "Confirmed",
+    "Rejected",
+    "Attended",
+    "Did Not Attend",
+    "Cancelled By Patient",
+    "Cancelled By Clinician",
+)
 
 
 def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
@@ -599,7 +608,7 @@ class Database:
                     2,
                     5,
                     old_appointment_day(1),
-                    "Completed",
+                    "Attended",
                     "detailed notes",
                     "This is what the clinician thinks",
                 ),

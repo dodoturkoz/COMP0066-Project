@@ -10,14 +10,15 @@ from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
 import sqlite3
 from database.setup import diagnoses
+from modules.constants import MOODS
 
 
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def display_appointment_options(self, appointments: list):
-        """This function presents options to the clinician based on the 
-            list of appointments passed into it."""
+        """This function presents options to the clinician based on the
+        list of appointments passed into it."""
         appointment_strings = []
 
         for appointment in appointments:
@@ -279,30 +280,50 @@ class Clinician(User):
         except Exception as e:
             print(f"Error: {e}")
 
-    def edit_patient_info(self, patient: Patient):
-        """Edit patient information
-
-        WORK IN PROGRESS! -> User obj has no MODIFIABLE ATTRIBUTES
-        """
+    def edit_patient_info(self, patient: Patient) -> bool:
+        """Edit patient information"""
 
         while True:
             edit_choice = display_choice(
                 "What would you like to edit?",
-                ["First Name", "Surname", "Diagnosis", "Exit"],
+                ["Diagnosis", "Exit"],
                 "Please choose from the above options: ",
             )
             if edit_choice == 1:
-                new_first_name = input("Please enter the new first name: ")
-                patient.edit_info("first_name", new_first_name)
+                attribute = "diagnosis"
+                value = diagnoses[
+                    display_choice("Please choose a diagnosis: ", diagnoses) - 1
+                ]
+                break
             if edit_choice == 2:
-                new_surname = input("Please enter the new surname: ")
-                patient.edit_info("surname", new_surname)
-            if edit_choice == 3:
-                new_diagnosis = input("Please enter the new diagnosis: ")
-                patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 4:
                 return False
 
+        try:
+            # First update on the database
+            print(f"Updating {attribute} to {value} for user {patient.user_id}")
+            self.database.cursor.execute(
+                f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
+                (value, patient.user_id),
+            )
+            self.database.connection.commit()
+
+            # Then in the object if that particular attribute is stored here
+            if hasattr(self, attribute):
+                setattr(self, attribute, value)
+
+            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+            wait_terminal()
+
+        # If there is an error with the query
+        except sqlite3.OperationalError as e:
+            print(
+                f"{e} Error updating, likely the selected attribute does not exist for Users"
+            )
+            wait_terminal()
+            return False
+
+    # This method is used to view the dashboard
+    # All other methods must be declared prior to this method
     def view_dashboard(self):
         """View the dashboard.
 
@@ -318,26 +339,60 @@ class Clinician(User):
             patients = self.get_all_patients()
             print("Here are all your patients:")
             for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
+                patient = Patient(self.database, **patient)
+                query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
+                params = [patient.user_id]
+
+                query += " ORDER BY date ASC"
+
+                try:
+                    self.database.cursor.execute(query, tuple(params))
+                    entries = [
+                        {"date": row["date"], "text": row["text"], "mood": row["mood"]}
+                        for row in self.database.cursor.fetchall()
+                    ]
+                    latest_entry = entries[-1] if entries else None
+
+                    if latest_entry:
+                        old_mood = MOODS[str(latest_entry["mood"])]
+                        show_moods = (
+                            f"{old_mood['ansi']} {old_mood['description']}\033[00m"
+                        )
+                        print(
+                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: {str(latest_entry['date']).split()[0]} - Mood: {show_moods}"""
+                        )
+
+                    else:
+                        print(
+                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: No entries"""
+                        )
+
+                except sqlite3.OperationalError as e:
+                    print(f"Database error occurred: {e}")
+                    return []
+
             decision = input(
                 "Would you like to edit any patient's information? (Y/N): "
             )
             if decision == "Y":
                 patient_id = int(input("Please enter the patient's ID: "))
-                patient_details = self.database.cursor.execute(
-                    """
+                try:
+                    patient_details = self.database.cursor.execute(
+                        """
                     SELECT * 
                     FROM Patients
                     INNER JOIN Users ON Patients.user_id = Users.user_id
                     WHERE Patients.user_id = ?""",
-                    [patient_id],
-                ).fetchone()
-                patient = Patient(self.database, *patient_details)
-                self.edit_patient_info(patient)
-                clear_terminal()
-                return False
+                        [patient_id],
+                    ).fetchone()
+                    patient = Patient(self.database, **patient_details)
+                    self.edit_patient_info(patient)
+                    clear_terminal()
+
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                    wait_terminal()
+
             if decision == "N":
                 wait_terminal()
 
