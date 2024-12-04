@@ -15,14 +15,14 @@ from database.setup import diagnoses
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
-    def view_notes(appointment: dict):
+    def view_notes(self, appointment: dict):
         """Print out clinician and patient notes for a given appointment"""
         if appointment["clinician_notes"]:
-                print("\nYour notes:")
-                print(appointment["clinician_notes"])
+            print("\nYour notes:")
+            print(appointment["clinician_notes"])
         if appointment["patient_notes"]:
-                print("\nPatient notes:")
-                print(appointment["patient_notes"] + "\n")
+            print("\nPatient notes:")
+            print(appointment["patient_notes"] + "\n")
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
