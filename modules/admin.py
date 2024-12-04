@@ -387,16 +387,23 @@ class Admin(User):
                 action =  get_user_input_with_limited_choice(
                     "Would you like to disable or re-enable a user?", ["disable","re-enable"]
                 )
+                user_ids, _ = self.view_table("Users")
+                if not user_ids:
+                    print(f"No users available to {action.lower()}.")
+                    wait_terminal()
+                    continue
+
                 #chose someone 
                 user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to disable:", user_ids
+                    "Enter the user ID to {action.lower()}:", user_ids
                 )
 
                 #confirm 
                 confirm = get_valid_yes_or_no(f"Are you sure you want to disable User {user_id}? (Y/N):")
                 if confirm: 
-                    self.alter_user(user_id, "is_active", False )
-                    print(f"\n User {user_id} has been sucessfully disabled.")
+                    new_status = False if action == "disable" else True 
+                    self.alter_user(user_id, "is_active", new_status )
+                    print(f"\n User {user_id} has been sucessfully {"disabled" if not new_status else "re-enabled"}.")
                 else:
                     print("\nCancelled.")
                 # wait_terminal
@@ -427,5 +434,5 @@ class Admin(User):
 
             # Exit
             elif selection == 7:
-                print("Goodby Admin.")
+                print("Goodbye Admin.")
                 return False
