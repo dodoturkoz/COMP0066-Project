@@ -358,41 +358,35 @@ class Admin(User):
 
             # Edit info
             elif selection == 4:
-                print("\nDo you want to edit a patient or a clinician?")
-                table_choice = input("Press 1 for patient, press 2 for clinician: ")
-                if table_choice == "1":
-                    print("")
-                    self.view_table("patients", "none")
-                    # patient_ids, columns = self.view_table("Patients")
-                    # user_id = get_user_input_with_limited_choice("Enter the user ID to edit: ", patient_ids)
-                    # attribute = get_user_input_with_limited_choice("Enter the attribute to edit: ", columns)
-                    user_id = int(input("\nEnter the user ID to edit: "))
-                    attribute = input(
-                        "Enter the attribute to edit (e.g., email, first_name): "
-                    ).strip()
-                    value = input("Enter the new value: ").strip()
-                    self.alter_user(user_id, attribute, value)
-                    print("")
-                elif table_choice == "2":
-                    self.view_table("clinicians", "none")
-                    user_id = int(input("\nEnter the user ID to edit: "))
-                    attribute = input(
-                        "Enter the attribute to edit (e.g., email, first_name): "
-                    ).strip()
-                    value = input("Enter the new value: ").strip()
-                    self.alter_user(user_id, attribute, value)
-                else:
-                    continue
+                print("\nEdit User Information")
+                user_type_choice = get_user_input_with_limited_choice(
+                    "Do you want to edit a Patient or a Clinician?:",["Patient","Clinician"] 
+                )
+                table_name = "Patients" if user_type_choice == "Patient" else "Clinicians"
+
+                user_ids, columns = self.view_table(table_name.lower(), "none")
+                if not user_ids: 
+                    print(f" No {table_name.lower()} found.")
+                    wait_terminal()
+                    continue 
+                user_id = get_user_input_with_limited_choice(
+                    "Enter the user ID to edit:", user_ids
+                )
+                attribute = get_user_input_with_limited_choice(
+                    "Enter the attribute to edit:",columns
+                    )
+                value = input(f"Enter the new value for {attribute}:").strip()
+                self.alter_user(user_id, attribute, value)
+                print(f"\n Successfully updated {attribute} for User {user_id} to {value}.")
+                #wait_terminal()
+
 
             # Disable someone
             elif selection == 5:
                 print("\nDisable User\n")
-                # Get user IDs
-                users_ids, _ = self.view_table("users")
-                if not user_ids:
-                    print("No users found.")
-                    wait_terminal()
-                    continue 
+                action =  get_user_input_with_limited_choice(
+                    "Would you like to disable or re-enable a user?", ["disable","re-enable"]
+                )
                 #chose someone 
                 user_id = get_user_input_with_limited_choice(
                     "Enter the user ID to disable:", user_ids
