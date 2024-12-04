@@ -380,7 +380,6 @@ class Patient(User):
         """
 
         while True:
-            action = "Stay"
             clear_terminal()
             if not self.is_active:
                 while True:
@@ -413,104 +412,127 @@ class Patient(User):
                 ]
 
                 if self.clinician_id:
-                    options.extend(["Appointments", "Log Out"])
+                    options.extend(["Appointments", "Log Out", "Quit"])
                 else:
-                    options.append("Log Out")
+                    options.extend(["Log Out", "Quit"])
 
                 choice = display_choice("Please select an option:", options)
 
-                # requires python version >= 3.10
-                # using pattern matching to handle the choices
-                match choice:
-                    case 1:
-                        self.edit_patient_info()
-                    case 2:
-                        self.mood_of_the_day()
-                    case 3:
-                        date = get_valid_date(
-                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
-                            min_date=datetime(1900, 1, 1),
-                            max_date=datetime.now(),
-                            min_date_message="Date must be after 1900-01-01.",
-                            max_date_message="Date cannot be in the future.",
-                            allow_blank=True,
-                        )
-                        if date is None:
-                            self.display_previous_moods("")
-                        else:
-                            self.display_previous_moods(date.strftime("%Y-%m-%d"))
-                    case 4:
-                        content = get_valid_string("Enter new journal entry: ")
-                        self.journal(content)
-                    case 5:
-                        date = get_valid_date(
-                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
-                            min_date=datetime(1900, 1, 1),
-                            max_date=datetime.now(),
-                            min_date_message="Date must be after 1900-01-01.",
-                            max_date_message="Date cannot be in the future.",
-                            allow_blank=True,
-                        )
-                        if date is None:
-                            self.display_journal("")
-                        else:
-                            self.display_journal(date.strftime("%Y-%m-%d"))
-                    case 6:
-                        keyword = input("Enter keyword to search for exercises: ")
-                        self.search_exercises(keyword)
-
-                    case 7:
-                        if self.clinician_id:
-                            appointment_options = [
-                                "Book Appointment",
-                                "View Appointments",
-                                "Cancel Appointment",
-                                "Exit appointments",
-                            ]
-                            selected_choice = display_choice(
-                                "Please select an option:", appointment_options
+                def acting_on_choice(choice):
+                    # requires python version >= 3.10
+                    # using pattern matching to handle the choices
+                    action = "Stay"
+                    match choice:
+                        case 1:
+                            self.edit_patient_info()
+                        case 2:
+                            self.mood_of_the_day()
+                        case 3:
+                            date = get_valid_date(
+                                "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                                min_date=datetime(1900, 1, 1),
+                                max_date=datetime.now(),
+                                min_date_message="Date must be after 1900-01-01.",
+                                max_date_message="Date cannot be in the future.",
+                                allow_blank=True,
                             )
+                            if date is None:
+                                self.display_previous_moods("")
+                            else:
+                                self.display_previous_moods(date.strftime("%Y-%m-%d"))
+                        case 4:
+                            content = get_valid_string("Enter new journal entry: ")
+                            self.journal(content)
+                        case 5:
+                            date = get_valid_date(
+                                "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                                min_date=datetime(1900, 1, 1),
+                                max_date=datetime.now(),
+                                min_date_message="Date must be after 1900-01-01.",
+                                max_date_message="Date cannot be in the future.",
+                                allow_blank=True,
+                            )
+                            if date is None:
+                                self.display_journal("")
+                            else:
+                                self.display_journal(date.strftime("%Y-%m-%d"))
+                        case 6:
+                            keyword = input("Enter keyword to search for exercises: ")
+                            self.search_exercises(keyword)
 
-                            match selected_choice:
-                                case 1:
-                                    # Book Appointment
-                                    request_appointment(
-                                        self.database, self.user_id, self.clinician_id
-                                    )
-                                case 2:
-                                    # View Appointments
-                                    self.view_appointments()
-                                case 3:
-                                    # Cancel appointment
-                                    self.view_appointments()
-                                    appointment_id = int(
-                                        input("Enter appointment ID to cancel: ")
-                                    )
-                                    cancel_appointment(self.database, appointment_id)
-                                case 4:
-                                    action = "Exit"
-                        else:
+                        case 7:
+                            if self.clinician_id:
+                                appointment_options = [
+                                    "Book Appointment",
+                                    "View Appointments",
+                                    "Cancel Appointment",
+                                    "Exit appointments",
+                                ]
+                                selected_choice = display_choice(
+                                    "Please select an option:", appointment_options
+                                )
+
+                                match selected_choice:
+                                    case 1:
+                                        # Book Appointment
+                                        request_appointment(
+                                            self.database,
+                                            self.user_id,
+                                            self.clinician_id,
+                                        )
+                                    case 2:
+                                        # View Appointments
+                                        self.view_appointments()
+                                    case 3:
+                                        # Cancel appointment
+                                        self.view_appointments()
+                                        appointment_id = int(
+                                            input("Enter appointment ID to cancel: ")
+                                        )
+                                        cancel_appointment(
+                                            self.database, appointment_id
+                                        )
+                                    case 4:
+                                        action = "Exit"
+                            # else:
+                            #    clear_terminal()
+                            #    return True
+                        # case 8:
+                        #    clear_terminal()
+                        #    return True
+
+                    if action != "Exit":
+                        next_step = display_choice(
+                            "Would you like to:",
+                            ["Retry the same action", "Go back to the main menu"],
+                            choice_str="Your selection: ",
+                        )
+
+                        # TODO implement the retry option
+                        # "Quit", Implemented at the cost of slightly unclean code and
+                        # Quit going to main menu.
+                        if next_step == 1:
+                            acting_on_choice(choice)
+                        # elif next_step == 3:
+                        #    clear_terminal()
+                        #    print("Thanks for using Breeze! Goodbye!")
+                        #    return False
+
+                match choice:
+                    case 7:
+                        if not self.clinician_id:
                             clear_terminal()
                             return True
                     case 8:
-                        clear_terminal()
-                        return True
-
-                if action != "Exit":
-                    next_step = display_choice(
-                        "Would you like to:",
-                        [
-                            "Retry the same action",
-                            "Go back to the main menu",
-                            "Quit",
-                        ],
-                        choice_str="Your selection: ",
-                    )
-
-                    # TODO implement the retry option
-                    if next_step == 1:
-                        pass
-                    elif next_step == 3:
+                        if self.clinician_id:
+                            clear_terminal()
+                            return True
+                        if not self.clinician_id:
+                            clear_terminal()
+                            print("Thanks for using Breeze! Goodbye!")
+                            return False
+                    case 9:
                         clear_terminal()
                         print("Thanks for using Breeze! Goodbye!")
                         return False
+                acting_on_choice(choice)
