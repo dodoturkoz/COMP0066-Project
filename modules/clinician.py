@@ -16,8 +16,8 @@ class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def display_appointment_options(self, appointments: list):
-        """This function presents options to the clinician based on the 
-            list of appointments passed into it."""
+        """This function presents options to the clinician based on the
+        list of appointments passed into it."""
         appointment_strings = []
 
         for appointment in appointments:

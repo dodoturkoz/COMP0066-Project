@@ -1,6 +1,7 @@
 import re
 from typing import Union
 from datetime import datetime
+from collections.abc import Iterable
 
 
 def get_valid_email(prompt: str, existing_emails: Union[list[str], None] = None) -> str:
@@ -86,4 +87,30 @@ def get_valid_string(prompt: str, max_len: int = 250, min_len: int = 0) -> str:
             print(
                 f"Invalid input. Please try again. Input must be between {min_len} and {max_len} characters."
             )
+            continue
+
+
+def get_user_input_with_limited_choice(
+    prompt: str,
+    options: Iterable[str | int],
+    invalid_options_text: str = "Invalid choice. Please try again.",
+) -> str | int:
+    """
+    Get a valid input from the user from a list of options and return it;
+    unlike display_choice, this is a free-form input for the user.
+
+    For now, this function only supports integers and string objects, but
+    can be extended if needed.
+    """
+    while True:
+        raw_value = input(prompt).strip()
+        if raw_value.isdigit():
+            value = int(raw_value)
+        else:
+            value = raw_value
+
+        if value in options:
+            return value
+        else:
+            print(invalid_options_text)
             continue
