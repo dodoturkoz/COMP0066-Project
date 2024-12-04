@@ -366,7 +366,9 @@ class Clinician(User):
                         )
 
                     else:
-                        print("No mood entries found for the specified date.")
+                        print(
+                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: No entries"""
+                        )
 
                 except sqlite3.OperationalError as e:
                     print(f"Database error occurred: {e}")
