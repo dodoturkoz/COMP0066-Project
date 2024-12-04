@@ -467,8 +467,6 @@ class Patient(User):
                                 "Cancel Appointment",
                                 "Exit appointments",
                             ]
-                            # Put exit appointment management to go back to main menu,
-                            # Change next step below.
                             selected_choice = display_choice(
                                 "Please select an option:", appointment_options
                             )
