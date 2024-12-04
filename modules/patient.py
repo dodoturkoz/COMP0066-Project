@@ -381,93 +381,136 @@ class Patient(User):
 
         while True:
             clear_terminal()
-            greeting = (
-                f"Hello, {self.first_name} {self.surname}!"
-                if not self.clinician
-                else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
-            )
-            print(greeting)
+            if not self.is_active:
+                print(
+                    "Your account is currently disabled."
+                    "\nYou cannot access any features of this app."
+                    "\nPlease contact the admin."
+                )
+                options = [
+                    "Look at this message again.",
+                    "Log Out",
+                ]
 
-            options = [
-                "Edit Personal Info",
-                "Record Mood of the Day",
-                "Display Previous Moods",
-                "Add Journal Entry",
-                "Read Journal Entries",
-                "Search Exercises",
-                "Book Appointment",
-                "View Appointments",
-                "Cancel Appointment",
-                "Log Out",
-            ]
+                choice = display_choice("Please select an option:", options)
 
-            choice = display_choice("Please select an option:", options)
+                match choice:
+                    # Case 1 should just repeat the thing and show message again.
 
-            # requires python version >= 3.10
-            # using pattern matching to handle the choices
-            match choice:
-                case 1:
-                    self.edit_patient_info()
-                case 2:
-                    self.mood_of_the_day()
-                case 3:
-                    date = get_valid_date(
-                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
-                        min_date=datetime(1900, 1, 1),
-                        max_date=datetime.now(),
-                        min_date_message="Date must be after 1900-01-01.",
-                        max_date_message="Date cannot be in the future.",
-                        allow_blank=True,
-                    )
-                    if date is None:
-                        self.display_previous_moods("")
-                    else:
-                        self.display_previous_moods(date.strftime("%Y-%m-%d"))
-                case 4:
-                    content = get_valid_string("Enter new journal entry: ")
-                    self.journal(content)
-                case 5:
-                    date = get_valid_date(
-                        "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
-                        min_date=datetime(1900, 1, 1),
-                        max_date=datetime.now(),
-                        min_date_message="Date must be after 1900-01-01.",
-                        max_date_message="Date cannot be in the future.",
-                        allow_blank=True,
-                    )
-                    if date is None:
-                        self.display_journal("")
-                    else:
-                        self.display_journal(date.strftime("%Y-%m-%d"))
-                case 6:
-                    keyword = input("Enter keyword to search for exercises: ")
-                    self.search_exercises(keyword)
-                case 7:
-                    request_appointment(self.database, self.user_id, self.clinician_id)
-                case 8:
-                    self.view_appointments()
-                case 9:
-                    self.view_appointments()
-                    appointment_id = int(input("Enter appointment ID to cancel: "))
-                    cancel_appointment(self.database, appointment_id)
-                case 10:
+                    case 2:
+                        clear_terminal()
+                        return True
+            elif self.is_active:
+                greeting = (
+                    f"Hello, {self.first_name} {self.surname}!"
+                    if not self.clinician
+                    else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
+                )
+                print(greeting)
+
+                options = [
+                    "Edit Personal Info",
+                    "Record Mood of the Day",
+                    "Display Previous Moods",
+                    "Add Journal Entry",
+                    "Read Journal Entries",
+                    "Search Exercises",
+                    "View and manage Appointments",
+                    "Log Out",
+                ]
+
+                # Will make distinction between patients with clinician and no clinician tmrw morn.
+
+                choice = display_choice("Please select an option:", options)
+
+                # requires python version >= 3.10
+                # using pattern matching to handle the choices
+                match choice:
+                    case 1:
+                        self.edit_patient_info()
+                    case 2:
+                        self.mood_of_the_day()
+                    case 3:
+                        date = get_valid_date(
+                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                            min_date=datetime(1900, 1, 1),
+                            max_date=datetime.now(),
+                            min_date_message="Date must be after 1900-01-01.",
+                            max_date_message="Date cannot be in the future.",
+                            allow_blank=True,
+                        )
+                        if date is None:
+                            self.display_previous_moods("")
+                        else:
+                            self.display_previous_moods(date.strftime("%Y-%m-%d"))
+                    case 4:
+                        content = get_valid_string("Enter new journal entry: ")
+                        self.journal(content)
+                    case 5:
+                        date = get_valid_date(
+                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                            min_date=datetime(1900, 1, 1),
+                            max_date=datetime.now(),
+                            min_date_message="Date must be after 1900-01-01.",
+                            max_date_message="Date cannot be in the future.",
+                            allow_blank=True,
+                        )
+                        if date is None:
+                            self.display_journal("")
+                        else:
+                            self.display_journal(date.strftime("%Y-%m-%d"))
+                    case 6:
+                        keyword = input("Enter keyword to search for exercises: ")
+                        self.search_exercises(keyword)
+                    case 7:
+                        appointment_options = [
+                            "Book Appointment",
+                            "View Appointments",
+                            "Cancel Appointment",
+                            "Exit appointment management",
+                        ]
+
+                        selected_choice = display_choice(
+                            "Please select an option:", appointment_options
+                        )
+
+                        match selected_choice:
+                            case 1:
+                                # Book Appointment
+                                request_appointment(
+                                    self.database, self.user_id, self.clinician_id
+                                )
+                            case 2:
+                                # View Appointments
+                                self.view_appointments()
+                            case 3:
+                                # Cancel appointment
+                                self.view_appointments()
+                                appointment_id = int(
+                                    input("Enter appointment ID to cancel: ")
+                                )
+                                cancel_appointment(self.database, appointment_id)
+
+                            # Case 4 goes to Dogukan's next step.
+
+                    case 8:
+                        clear_terminal()
+                        return True
+
+                next_step = display_choice(
+                    "Would you like to:",
+                    [
+                        "Retry the same action",
+                        "Go back to the main menu",
+                        "Quit",
+                    ],
+                    choice_str="Your selection: ",
+                )
+
+                # TODO implement the retry option
+                if next_step == 1:
+                    pass
+                elif next_step == 3:
                     clear_terminal()
-                    return True
-
-            next_step = display_choice(
-                "Would you like to:",
-                [
-                    "Retry the same action",
-                    "Go back to the main menu",
-                    "Quit",
-                ],
-                choice_str="Your selection: ",
-            )
-
-            # TODO implement the retry option
-            if next_step == 1:
-                pass
-            elif next_step == 3:
-                clear_terminal()
-                print("Thanks for using Breeze! Goodbye!")
-                return False
+                    print("Thanks for using Breeze! Goodbye!")
+                    return False
