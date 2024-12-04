@@ -1,5 +1,8 @@
 import sqlite3
+import pandas as pd
 from datetime import datetime
+from typing import Literal
+from database.setup import Database
 
 from modules.utilities.display_utils import display_choice
 
@@ -174,3 +177,55 @@ def cancel_appointment(database, appointment_id: int) -> bool:
     except sqlite3.OperationalError as e:
         print(f"Error canceling appointment: {e}")
         return False
+
+#TODO: Consume this where appropriate
+def display_appointment_engagement(
+    database: Database,
+    user_type: Literal["patient", "clinician"],
+    clinician_id: int | None = None,
+) -> pd.DataFrame | None:
+    """
+    Display all the appointments that the user has engaged with
+    """
+
+    id_attribute = "user_id" if user_type == "patient" else "clinician_id"
+
+    query = f"""
+    SELECT a.status, a.{id_attribute}, u.first_name, u.surname
+    FROM Appointments a JOIN Users u ON a.user_id = u.user_id
+    {f"WHERE a.clinician_id = {clinician_id}" if clinician_id else ""}
+    """
+
+    appointment_cursor = database.cursor.execute(query)
+    appointments_data = appointment_cursor.fetchall()
+    appointments_df = pd.DataFrame(appointments_data)
+
+    # Group by user_id and status to get the count of each status
+    pivot_columns = ["first_name", "surname"]
+    pivot_columns.insert(0, id_attribute)
+
+    # Step 1: Create a pivot table with counts of each status per user
+    status_counts = appointments_df.pivot_table(
+        index=pivot_columns,
+        columns="status",
+        aggfunc="size",
+        fill_value=0,
+    )
+
+    # Step 2: Add a 'total_appointments' column
+    status_counts["Total Appointments"] = status_counts.sum(axis=1)
+
+    # Step 3: Sort the DataFrame according to user type
+    if user_type == "clinician":
+        sort_by = ["Cancelled By Clinician"] if "Cancelled By Clinician" in status_counts.columns else []
+    else:
+        sort_by = []
+        for column in ["Did Not Attend", "Cancelled By Patient"]:
+            if column in status_counts.columns:
+                sort_by.append(column)
+                
+    sort_by = ["Did Not Attend", "Cancelled By Patient"] if user_type == "patient" else ["Cancelled By Clinician"]
+    status_counts = status_counts.sort_values(by=sort_by, ascending=False)
+
+    print(status_counts)
+    return status_counts
