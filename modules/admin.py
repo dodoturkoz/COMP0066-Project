@@ -149,10 +149,10 @@ class Admin(User):
         Plug in a dataframe (in practice, moods or journals) to create a row
         around a specific time
         """
-        if time_period == "last week": 
-            pass 
-        pass 
-    
+        if time_period == "last week":
+            pass
+        pass
+
     def view_table(self, user_type: str, sub_type: str):
         """
         Selects the relevant portion of the Pandas dataframe for the user, as
@@ -183,13 +183,12 @@ class Admin(User):
             clinician_df = self.user_df.query(('role == "clinician"'))[
                 ["first_name", "surname", "email"]
             ]
-            
-            patient_df = self.user_df.query(
-                ('role == "patient"')
-            ).groupby(
-                ('clinician_id')               
-            ).agg({'username':'count'}
-            ).rename(columns={'username': 'registered_patients'}
+
+            patient_df = (
+                self.user_df.query(('role == "patient"'))
+                .groupby(("clinician_id"))
+                .agg({"username": "count"})
+                .rename(columns={"username": "registered_patients"})
             )
 
             registration_df = pd.merge(
@@ -199,7 +198,7 @@ class Admin(User):
 
         elif user_type == "":
             pass
-        
+
         else:
             pass
 
@@ -281,7 +280,6 @@ class Admin(User):
 
     # Admin FLow
     def flow(self) -> bool:
-        
         while True:
             clear_terminal()
             print(f"Hello, {self.username}!")
@@ -299,64 +297,64 @@ class Admin(User):
             # TODO: We should probably have a cancel option during any of these 7 operations
 
             # Menu choices
-            selection = display_choice ("What would you like to do?",choices)
+            selection = display_choice("What would you like to do?", choices)
 
             # Assign a patient to clinician
 
             if selection == 1:
                 print("\nAssign Patient to Clinician \n")
-                #show the unregistered patients 
+                # show the unregistered patients
                 patient_ids = self.view_table("patients", "registration")
-                if not patient_ids: 
+                if not patient_ids:
                     print("No unregistered patients found.")
                     wait_terminal()
                     continue
-                #chose patient
+                # chose patient
                 patient_id = get_user_input_with_limited_choice(
                     "Enter the patient ID to assign:", patient_ids
                 )
-                #show the clinicians 
-                clinician_ids,_ = self.view_table("clinicians", "registration")
+                # show the clinicians
+                clinician_ids, _ = self.view_table("clinicians", "registration")
                 if not clinician_ids:
                     print("No clinicians found.")
-                    wait_terminal() 
-                    continue 
-                #chose a clinician 
+                    wait_terminal()
+                    continue
+                # chose a clinician
                 clinician_id = get_user_input_with_limited_choice(
                     "Enter the clinician ID to assign:", clinician_ids
                 )
-                #call the function 
-                #self.assign_patient_to_clinician(patient_id, clinician_id)
-                #cant find the assign/register function?
-                print(f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}.")
-                #wait_terminal 
-
+                # call the function
+                # self.assign_patient_to_clinician(patient_id, clinician_id)
+                # cant find the assign/register function?
+                print(
+                    f"Pateint {patient_id} successfully assigned to Clinician {clinician_id}."
+                )
+                # wait_terminal
 
             # View all user info
             elif selection == 2:
                 print("\nView all User information \n")
                 self.view_table("users")
-                #wait_terminal 
+                # wait_terminal
 
             # View speicifc users - not sure if this is needed
             elif selection == 3:
                 print("\nView a Specific User\n")
-                #Get all user IDs 
+                # Get all user IDs
 
-                user_ids,_= self.view_table("users")
-                if not user_ids: 
+                user_ids, _ = self.view_table("users")
+                if not user_ids:
                     print("No users found.")
-                    wait_terminal 
+                    wait_terminal
                     continue
-                #select the specific person 
+                # select the specific person
                 user_id = get_user_input_with_limited_choice(
                     "Enter the user ID to view:", user_ids
                 )
                 user_data = self.df.loc[user_id]
-                print ("\nUser infromation\n")
+                print("\nUser infromation\n")
                 print(user_data)
-                #wait_terminal
-                
+                # wait_terminal
 
             # Edit info
             elif selection == 4:
@@ -365,8 +363,8 @@ class Admin(User):
                 if table_choice == "1":
                     print("")
                     self.view_table("patients", "none")
-                    #patient_ids, columns = self.view_table("Patients")
-                    #user_id = get_user_input_with_limited_choice("Enter the user ID to edit: ", patient_ids)
+                    # patient_ids, columns = self.view_table("Patients")
+                    # user_id = get_user_input_with_limited_choice("Enter the user ID to edit: ", patient_ids)
                     # attribute = get_user_input_with_limited_choice("Enter the attribute to edit: ", columns)
                     user_id = int(input("\nEnter the user ID to edit: "))
                     attribute = input(
@@ -389,50 +387,53 @@ class Admin(User):
             # Disable someone
             elif selection == 5:
                 print("\nDisable User\n")
-                #Get user IDs
-                users_ids,_ = self.view_table("users")
+                # Get user IDs
+                users_ids, _ = self.view_table("users")
                 if not user_ids:
                     print("No users found.")
                     wait_terminal
-                    continue 
-                #chose someone 
+                    continue
+                # chose someone
                 user_id = get_user_input_with_limited_choice(
                     "Enter the user ID to disable:", user_ids
                 )
 
-                #confirm 
-                confirm = get_valid_yes_or_no(f"Are you sure you want to disbale User {user_id}? (Y/N):")
-                if confirm: 
-                    self.alter_user(user_id, "is_active", False )
+                # confirm
+                confirm = get_valid_yes_or_no(
+                    f"Are you sure you want to disbale User {user_id}? (Y/N):"
+                )
+                if confirm:
+                    self.alter_user(user_id, "is_active", False)
                     print(f"\n User {user_id} has been sucessfully disabled.")
-                else: 
+                else:
                     print("\nCancelled.")
-                #wait_terminal
-                
+                # wait_terminal
+
             # Deleting user
             elif selection == 6:
                 print("\nDelete a User\n")
-                #Get user IDs 
-                user_ids,_ = self.view_table("users")
-                if not user_ids: 
+                # Get user IDs
+                user_ids, _ = self.view_table("users")
+                if not user_ids:
                     print("No user found")
-                    wait_terminal 
-                    continue 
-                #chose someone 
+                    wait_terminal
+                    continue
+                # chose someone
                 user_id = get_user_input_with_limited_choice(
                     "Enter the User ID to delete:", user_ids
-                    )
-                #confirm 
-                confirm = get_valid_yes_or_no(f"Are you sure you want to delete User {user_id}?(Y/N):")
-                if confirm: 
+                )
+                # confirm
+                confirm = get_valid_yes_or_no(
+                    f"Are you sure you want to delete User {user_id}?(Y/N):"
+                )
+                if confirm:
                     self.delete_user(user_id)
                     print(f"\nUser {user_id} has been successfully deleted.")
-                else: 
+                else:
                     print("\nCancelled.")
-                #wait_terminal 
+                # wait_terminal
 
             # Exit
             elif selection == 7:
                 print("Goodby Admin.")
                 return False
-
