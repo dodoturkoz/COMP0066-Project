@@ -42,7 +42,6 @@ def login(db: Database) -> Union[User, None]:
     ).fetchone()
 
     if user_data:
-        user_id = user_data["user_id"]
         role = user_data["role"]
 
         if role == "admin":
