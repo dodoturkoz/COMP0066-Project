@@ -102,22 +102,24 @@ class Admin(User):
         """
         # TODO: figure out whether I keep the joins here or apply them to the
         # database process later.
-        appointments_query = self.database.cursor.execute("""
-        SELECT
-            a.user_id AS patient_id,
-            p.name AS patient_name,
-            a.clinician_id,
-            c.name AS clinician_name,
-            date,
-            is_confirmed, 
-            is_complete
-        FROM Appointments a
-        LEFT JOIN Users p on p.user_id = a.user_id                                                                                                                                                                                               
-        LEFT JOIN Users c on c.user_id = a.clinician_id;""")
 
-        appointments_data = appointments_query.fetchall()
-        self.appointments_df = pd.DataFrame(appointments_data)
-        self.appointments_df.set_index("patient_id", inplace=True)
+        # appointments_query = self.database.cursor.execute("""
+        # SELECT
+        #     a.user_id AS patient_id,
+        #     p.first_name AS patient_first_name,
+        #     a.clinician_id,
+        #     c.first_name AS clinician_first_name,
+        #     date,
+        #     is_confirmed, 
+        #     is_complete
+        # FROM Appointments a
+        # LEFT JOIN Users p on p.user_id = a.user_id                                                                                                                                                                                               
+        # LEFT JOIN Users c on c.user_id = a.clinician_id;""")
+
+        # appointments_data = appointments_query.fetchall()
+        # self.appointments_df = pd.DataFrame(appointments_data)
+        # self.appointments_df.set_index("patient_id", inplace=True)
+
         # It might be worth rewriting this query, cutting out the joins and
         # assuming that I'm just going to connect it with the user_df
 
@@ -265,7 +267,7 @@ class Admin(User):
     def flow(self) -> bool:
         while True:
             clear_terminal()
-            print(f"Hello, {self.name}!")
+            print(f"Hello, {self.first_name}!")
 
             # Display the Admin menu
             choices = [
