@@ -385,21 +385,21 @@ class Patient(User):
                 print(
                     "Your account is currently disabled."
                     "\nYou cannot access any features of this app."
-                    "\nPlease contact the admin."
+                    "\nPlease contact the admin.\n"
                 )
-                options = [
-                    "Look at this message again.",
-                    "Log Out",
-                ]
+                # options = ["Log Out"]
+                # choice = display_choice("Please select an option:", options)
+                # exit=input("Press enter when you are ready to log out.")
+                return True
+                # match choice:
+                # Case 1 should just repeat the thing and show message again.
+                # Have only kept case 1 in case change decision and show
+                # journal entries and mood entries. If not keeping showing entries,
+                # just remove options and have one input.
 
-                choice = display_choice("Please select an option:", options)
-
-                match choice:
-                    # Case 1 should just repeat the thing and show message again.
-
-                    case 2:
-                        clear_terminal()
-                        return True
+                #    case 1:
+                #       return True
+                # Note: Remove all comments here if happy with current state.
             elif self.is_active:
                 greeting = (
                     f"Hello, {self.first_name} {self.surname}!"
