@@ -94,31 +94,37 @@ RELAXATION_RESOURCES = [
 
 MOODS = {
     "6": {
+        "int": 6,
         "color": "Dark green",
         "description": "Outstanding \U0001f600",
         "ansi": "\033[32m",
     },
     "5": {
+        "int": 5,
         "color": "Green",
         "description": "Great \U0001f642",
         "ansi": "\033[92m",
     },
     "4": {
+        "int": 4,
         "color": "Yellow",
         "description": "Okay \U0001f610",
         "ansi": "\033[93m",
     },
     "3": {
+        "int": 3,
         "color": "Orange",
         "description": "Bit bad \U0001f641",
         "ansi": "\033[33m",
     },
     "2": {
+        "int": 2,
         "color": "Red",
         "description": "Very bad \U0001f61e",
         "ansi": "\033[91m",
     },
     "1": {
+        "int": 1,
         "color": "Brown",
         "description": "Terrible \U0001f622",
         "ansi": "\033[31m",
