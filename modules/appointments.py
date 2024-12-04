@@ -59,6 +59,7 @@ def print_appointment(appointment: dict) -> None:
         + f"{appointment['status']}\n"
     )
 
+
 def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
     appointments = get_appointments(database, clinician_id)
@@ -157,7 +158,9 @@ def cancel_appointment(database, appointment_id: int) -> bool:
     try:
         database.cursor.execute(
             """
-            DELETE FROM Appointments WHERE appointment_id = ?
+            UPDATE Appointments
+            SET status = 'Cancelled by Patient'
+            WHERE appointment_id = ?;
             """,
             (appointment_id,),
         )
