@@ -40,30 +40,10 @@ def clear_terminal():
         os.system("clear")
 
 
-<<<<<<< HEAD
 def wait_terminal(wait_text: str = "Press enter to return to the dashboard") -> bool:
     """We can use this function to wait for the user to press enter
     before continuing, such as after displaying a message or data."""
     while True:
         if input(wait_text) is not None:
-=======
-<<<<<<< HEAD
-def wait_terminal(message: str = "Press enter to return to the dashboard") -> bool:
-    """
-    We can use this function to wait for the user to press enter
-    before continuing, such as after displaying a message or data.
-
-    It takes an optional message.
-    """
-    while True:
-        if input(message) is not None:
-=======
-def wait_terminal(wait_text: str = "Press enter to return to the dashboard") -> bool:
-    """We can use this function to wait for the user to press enter
-    before continuing, such as after displaying a message or data."""
-    while True:
-        if input(wait_text) is not None:
->>>>>>> 811d89e (manage inactive user login)
->>>>>>> 8fbc2a1 (manage inactive user login)
             clear_terminal()
             return False

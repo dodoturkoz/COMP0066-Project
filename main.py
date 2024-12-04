@@ -1,15 +1,11 @@
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
-<<<<<<< HEAD
 from modules.utilities.display_utils import (
     display_choice,
     clear_terminal,
     wait_terminal,
 )
-=======
-from modules.utilities.display import display_choice, clear_terminal, wait_terminal
->>>>>>> 8fbc2a1 (manage inactive user login)
 
 db = Database()
 
