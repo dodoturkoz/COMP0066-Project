@@ -466,20 +466,33 @@ class Clinician(User):
                 "Would you like to edit any patient's information? (Y/N): "
             )
             if decision == "Y":
-                patient_id = int(input("Please enter the patient's ID: "))
-                patient_details = self.database.cursor.execute(
-                    """
-                    SELECT * 
-                    FROM Patients
-                    INNER JOIN Users ON Patients.user_id = Users.user_id
-                    WHERE Patients.user_id = ?""",
-                    [patient_id],
-                ).fetchone()
-                patient = Patient(self.database, **patient_details)
-                self.edit_patient_info(patient)
-                clear_terminal()
-                return False
-            if decision == "N":
+                try:
+                    patient_id = patients[
+                        display_choice(
+                            "Select your patient:",
+                            [
+                                f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
+                                for patient in patients
+                            ],
+                        )
+                        - 1
+                    ]["user_id"]
+                    patient_details = self.database.cursor.execute(
+                        """
+                        SELECT * 
+                        FROM Patients
+                        INNER JOIN Users ON Patients.user_id = Users.user_id
+                        WHERE Patients.user_id = ?""",
+                        [patient_id],
+                    ).fetchone()
+                    patient = Patient(self.database, **patient_details)
+                    self.edit_patient_info(patient)
+                    clear_terminal()
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                    wait_terminal()
+
+            elif decision == "N":
                 wait_terminal()
 
         if dashboard_home_choice == 2:
