@@ -131,13 +131,14 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         try:
             database.cursor.execute(
                 """
-                    INSERT INTO Appointments (user_id, clinician_id, date, patient_notes)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO Appointments (user_id, clinician_id, date, status, patient_notes)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
                 (
                     patient_id,
                     clinician_id,
                     chosen_time,
+                    "Pending",
                     description,
                 ),
             )
