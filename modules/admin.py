@@ -218,10 +218,24 @@ class Admin(User):
             print(registration_df)
             return registration_df.index, registration_df.columns
 
+        # else assumes user_type == "users"
         else:
-            print("\nBreeze Users:")
-            print(self.user_df)
-            return self.user_df.index, self.user_df.columns
+            if sub_type == "none":
+                print("\nBreeze Users:")
+                print(self.user_df)
+                return self.user_df.index, self.user_df.columns
+            else:
+                if sub_type == "active":
+                    query = "is_active == True"
+                elif sub_type == "inactive":
+                    query = "is_active == False"
+                else:
+                    query = "user_id != 0"
+                users_df = self.user_df.query(query)
+                users_df = users_df.filter(items=["username", "email", "name", "role"])
+                print(f"\n{sub_type.capitalize()} Breeze Users:")
+                print(users_df)
+                return users_df.index, users_df.columns
 
     def alter_user(self, user_id: int, attribute: str, value: Any) -> bool:
         """
@@ -391,8 +405,90 @@ class Admin(User):
                 min_len=0 if attribute == "password" else 1,
             )
 
-        self.alter_user(user_id, attribute, value)
+        result = self.alter_user(user_id, attribute, value)
         print(f"\n Successfully updated {attribute} for User {user_id} to {value}.")
+        return wait_terminal(return_value=result)
+
+    def disable_user_flow(self) -> bool:
+        """
+        Logic to disable or re-enable a user
+        """
+
+        clear_terminal()
+        print("\nDisable User\n")
+
+        actions = ["Disable", "Re-enable"]
+        choice = display_choice(
+            "Would you like to disable or re-enable a user?", actions
+        )
+
+        # Display users and get ids
+        user_ids, _ = self.view_table("users", "active" if choice == 1 else "inactive")
+        if user_ids.empty:
+            print(f"No users available to {actions[choice - 1]}.")
+            return wait_terminal()
+
+        # chose someone
+        user_id = get_user_input_with_limited_choice(
+            f"Enter the user ID to {actions[choice - 1]}: ",
+            user_ids,
+            invalid_options_text="Invalid User ID, please try again.",
+        )
+        
+        # confirm
+        confirm = get_valid_yes_or_no(
+            f"Are you sure you want to disable User {user_id}? (Y/N): "
+        )
+        if confirm:
+            new_status = False if choice == 1 else True
+            result = self.alter_user(user_id, "is_active", new_status)
+            if result:
+                print(
+                    f"\n User {user_id} has been sucessfully {"disabled" if choice == 1 else "re-enabled"}."
+                )
+            else:
+                print(
+                    f"Error {"disabling" if choice == 1 else "enabling"} user {user_id}."
+                )
+        else:
+            print("\nCancelled.")
+            result = False
+        wait_terminal(return_value=result)
+
+    def delete_user_flow(self) -> bool:
+        """
+        Logic to delete a user
+        """
+
+        clear_terminal()
+        print("\nDelete a User\n")
+
+        # Get user IDs
+        user_ids, _ = self.view_table("users", "all")
+        if user_ids.empty:
+            print("No user found")
+            return wait_terminal()
+
+        # chose someone
+        user_id = get_user_input_with_limited_choice(
+            "Enter the User ID to delete: ",
+            user_ids,
+            invalid_options_text="Invalid User ID, try again.",
+        )
+
+        # confirm
+        confirm = get_valid_yes_or_no(
+            f"Are you sure you want to delete User {user_id}? (Y/N): "
+        )
+
+        if confirm:
+            result = self.delete_user(user_id)
+            if result:
+                print(f"\nUser {user_id} has been successfully deleted.")
+            else:
+                print(f"Error deleting user {user_id}.")
+        else:
+            print("\nCancelled.")
         wait_terminal()
 
     # Admin FLow
@@ -406,9 +502,9 @@ class Admin(User):
                 "Assign Patient to Clinician",
                 "View User Information",
                 "Edit User Information",
-                "Disable User",
+                "Disable or Enable User",
                 "Delete User",
-                "Quit",
+                "Log Out",
             ]
             # TODO: We should probably have a cancel option during any of these 7 operations
 
@@ -432,67 +528,13 @@ class Admin(User):
 
             # Disable someone
             elif selection == 4:
-                print("\nDisable User\n")
-                action = get_user_input_with_limited_choice(
-                    "Would you like to disable or re-enable a user?",
-                    ["disable", "re-enable"],
-                    invalid_options_text="Invalid choice. Please select 'disable' or 're-enable'",
-                )
-                # Change to display with two options - which handles input.
-                user_ids, _ = self.view_table("Users")
-                if user_ids.empty:
-                    print(f"No users available to {action.lower()}.")
-                    wait_terminal()
-                    continue
-
-                # chose someone
-                user_id = get_user_input_with_limited_choice(
-                    "Enter the user ID to {action.lower()}:",
-                    user_ids,
-                    invalid_options_text="Invalid User ID, please try again.",
-                )
-
-                # confirm
-                confirm = get_valid_yes_or_no(
-                    f"Are you sure you want to disable User {user_id}? (Y/N):"
-                )
-                if confirm:
-                    new_status = False if action == "disable" else True
-                    self.alter_user(user_id, "is_active", new_status)
-                    print(
-                        f"\n User {user_id} has been sucessfully {"disabled" if not new_status else "re-enabled"}."
-                    )
-                else:
-                    print("\nCancelled.")
-                wait_terminal()
+                self.disable_user_flow()
 
             # Deleting user
             elif selection == 5:
-                print("\nDelete a User\n")
-                # Get user IDs
-                user_ids, _ = self.view_table("users")
-                if user_ids.empty:
-                    print("No user found")
-                    wait_terminal()
-                    continue
-                # chose someone
-                user_id = get_user_input_with_limited_choice(
-                    "Enter the User ID to delete:",
-                    user_ids,
-                    invalid_options_text="Invalid User ID, try again.",
-                )
-                # confirm
-                confirm = get_valid_yes_or_no(
-                    f"Are you sure you want to delete User {user_id}?(Y/N):"
-                )
-                if confirm:
-                    self.delete_user(user_id)
-                    print(f"\nUser {user_id} has been successfully deleted.")
-                else:
-                    print("\nCancelled.")
-                wait_terminal()
+                self.delete_user_flow()
 
             # Exit
             elif selection == 6:
                 print("Goodbye Admin.")
-                return False
+                return wait_terminal(return_value=True)
