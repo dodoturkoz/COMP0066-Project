@@ -394,17 +394,6 @@ class Patient(User):
                     if log_out in ["y", "yes"]:
                         return True
 
-                # options = ["Stay on this page", "Log Out"]
-                # choice = display_choice("Please select an option:", options)
-                # exit=input("Enter anything/Press enter when you are ready to
-                # log out.")
-                # return True
-                # match choice:
-                #    case 2:
-                #        return True
-                # Note: Remove all comments here if happy with current state.
-                # Was going to use utils function but don't want a bunch of error
-                # messages ruining terminal if they type random inputs.
             elif self.is_active:
                 greeting = (
                     f"Hello, {self.first_name} {self.surname}!"
@@ -422,9 +411,8 @@ class Patient(User):
                     "Search Exercises",
                 ]
 
-                # Will make distinction between patients with clinician and no clinician tmrw morn.
                 if self.clinician_id:
-                    options.extend(["View and manage Appointments", "Log Out"])
+                    options.extend(["Appointments", "Log Out"])
                 else:
                     options.append("Log Out")
 
