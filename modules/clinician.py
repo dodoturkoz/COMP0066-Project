@@ -28,10 +28,10 @@ class Clinician(User):
     def add_notes(self, appointment: dict):
         """Used to add clinician notes for a given appointment"""
         if appointment["clinician_notes"]:
-            print(
-                "There are already notes stored for this appointment. Would you like to edit them?"
-            )
-            # add option to edit - Y/N choice?
+            if get_valid_yes_or_no(
+                "There are already notes stored for this appointment. Would you like to edit them? (Y/N)"
+            ):
+                self.edit_notes(appointment)
         else:
             note = get_valid_string(
                 "Please enter your notes for this appointment:"
@@ -55,7 +55,7 @@ class Clinician(User):
         print("Here are your previously saved notes for the appointment:")
         print(current_notes)
 
-        if get_valid_yes_or_no("Would you like to add additional notes?"):
+        if get_valid_yes_or_no("Would you like to add additional notes? (Y/N)"):
             updated_notes = current_notes + (
                 get_valid_string("Please enter your notes for this appointment:")
                 + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
