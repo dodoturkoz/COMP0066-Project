@@ -217,20 +217,21 @@ class Admin(User):
         # dataframe
         user_info = self.user_df.loc[
             user_id,
-            ["username", "name", "email", "is_active", "role"],
+            ["username", "first_name", "surname", "email", "is_active", "role"],
         ]
 
         # Unpacking the attributes and instantiating a user object to edit
         # itself in the database.
-        user, name, email, is_active, role = user_info
+        user, first_name, surname, email, is_active, role = user_info
         altered_user = User(
             self.database,
             user_id=int(user_id),
             username=str(user),
-            name=str(name),
+            first_name=str(first_name),
+            surname=str(surname),
             email=str(email),
             is_active=bool(is_active),
-            role=role,
+            role=str(role),
         )
 
         altered_user.edit_info(attribute, value)
@@ -305,7 +306,7 @@ class Admin(User):
             if selection == 1:
                 print("\nAssign Patient to Clinician \n")
                 #show the unregistered patients 
-                patient_ids, _ = self.view_table("patients, registration")
+                patient_ids = self.view_table("patients", "registration")
                 if not patient_ids: 
                     print("No unregistered patients found.")
                     wait_terminal()
@@ -315,7 +316,7 @@ class Admin(User):
                     "Enter the patient ID to assign:", patient_ids
                 )
                 #show the clinicians 
-                clinician_ids,_ = self.view_table("clinicians, registration")
+                clinician_ids,_ = self.view_table("clinicians", "registration")
                 if not clinician_ids:
                     print("No clinicians found.")
                     wait_terminal() 
@@ -369,7 +370,7 @@ class Admin(User):
                     # attribute = get_user_input_with_limited_choice("Enter the attribute to edit: ", columns)
                     user_id = int(input("\nEnter the user ID to edit: "))
                     attribute = input(
-                        "Enter the attribute to edit (e.g., email, name): "
+                        "Enter the attribute to edit (e.g., email, first_name): "
                     ).strip()
                     value = input("Enter the new value: ").strip()
                     self.alter_user(user_id, attribute, value)
@@ -378,7 +379,7 @@ class Admin(User):
                     self.view_table("clinicians", "none")
                     user_id = int(input("\nEnter the user ID to edit: "))
                     attribute = input(
-                        "Enter the attribute to edit (e.g., email, name): "
+                        "Enter the attribute to edit (e.g., email, first_name): "
                     ).strip()
                     value = input("Enter the new value: ").strip()
                     self.alter_user(user_id, attribute, value)
