@@ -311,7 +311,7 @@ class Admin(User):
                     continue
                 # chose patient
                 patient_id = get_user_input_with_limited_choice(
-                    "Enter the patient ID to assign:", patient_ids
+                    "Enter the patient ID to assign:", patient_ids, invalid_options_text= "Invalid Patient ID, please chose from the list"
                 )
                 # show the clinicians
                 clinician_ids, _ = self.view_table("clinicians", "registration")
