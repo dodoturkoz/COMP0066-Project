@@ -5,7 +5,7 @@ from modules.utilities.display_utils import (
     display_choice,
     wait_terminal,
 )
-from modules.utilities.input_utils import get_valid_string
+from modules.utilities.input_utils import get_valid_string, get_valid_yes_or_no
 from modules.utilities.send_email import send_email
 from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
@@ -33,7 +33,9 @@ class Clinician(User):
             )
             # add option to edit - Y/N choice?
         else:
-            note = get_valid_string("Please enter your notes for this appointment:")
+            note = get_valid_string(
+                "Please enter your notes for this appointment:"
+            ) + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
 
             try:
                 self.database.cursor.execute(
@@ -42,6 +44,30 @@ class Clinician(User):
                     SET clinician_notes = ?
                     WHERE appointment_id = ?""",
                     [note, appointment["appointment_id"]],
+                )
+                self.database.connection.commit()
+            except sqlite3.IntegrityError as e:
+                print(f"Failed to add note: {e}")
+
+    def edit_notes(self, appointment: dict):
+        """Used to edit clinician notes for a given appointment"""
+        current_notes = appointment["clinician_notes"]
+        print("Here are your previously saved notes for the appointment:")
+        print(current_notes)
+
+        if get_valid_yes_or_no("Would you like to add additional notes?"):
+            updated_notes = current_notes + (
+                get_valid_string("Please enter your notes for this appointment:")
+                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            )
+
+            try:
+                self.database.cursor.execute(
+                    """
+                    UPDATE Appointments
+                    SET clinician_notes = ?
+                    WHERE appointment_id = ?""",
+                    [updated_notes, appointment["appointment_id"]],
                 )
                 self.database.connection.commit()
             except sqlite3.IntegrityError as e:
