@@ -15,6 +15,15 @@ from database.setup import diagnoses
 class Clinician(User):
     MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
+    def view_notes(appointment: dict):
+        """Print out clinician and patient notes for a given appointment"""
+        if appointment["clinician_notes"]:
+                print("\nYour notes:")
+                print(appointment["clinician_notes"])
+        if appointment["patient_notes"]:
+                print("\nPatient notes:")
+                print(appointment["patient_notes"] + "\n")
+
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
         list of appointments passed into it."""
@@ -46,12 +55,7 @@ class Clinician(User):
             else:
                 selected_appointment = appointments[0]
 
-            if selected_appointment["clinician_notes"]:
-                print("\nYour notes:")
-                print(selected_appointment["clinician_notes"])
-            if selected_appointment["patient_notes"]:
-                print("\nPatient notes:")
-                print(selected_appointment["patient_notes"] + "\n")
+            self.view_notes(selected_appointment)
 
         # Confirm/Reject appointments
         elif next == 2:
