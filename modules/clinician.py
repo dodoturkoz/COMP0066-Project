@@ -34,9 +34,10 @@ class Clinician(User):
             ):
                 self.edit_notes(appointment)
         else:
-            note = get_valid_string(
-                "Please enter your notes for this appointment:"
-            ) + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            note = (
+                get_valid_string("Please enter your notes for this appointment:")
+                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            )
 
             try:
                 self.database.cursor.execute(
@@ -59,9 +60,13 @@ class Clinician(User):
         print("Here are your previously saved notes for the appointment:")
         print(current_notes)
 
-        updated_notes = current_notes + '\n' + (
-            get_valid_string("Please enter your new notes for this appointment: ")
-            + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+        updated_notes = (
+            current_notes
+            + "\n"
+            + (
+                get_valid_string("Please enter your new notes for this appointment: ")
+                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            )
         )
 
         try:
@@ -112,10 +117,14 @@ class Clinician(User):
             self.view_notes(selected_appointment)
 
             if selected_appointment["clinician_notes"]:
-                if get_valid_yes_or_no("Would you like to edit your notes for this appointment? (Y/N) "):
+                if get_valid_yes_or_no(
+                    "Would you like to edit your notes for this appointment? (Y/N) "
+                ):
                     self.edit_notes(selected_appointment)
-            elif get_valid_yes_or_no("Would you like to add notes to this appointment? (Y/N) "):
-                    self.add_notes(selected_appointment)
+            elif get_valid_yes_or_no(
+                "Would you like to add notes to this appointment? (Y/N) "
+            ):
+                self.add_notes(selected_appointment)
 
         # Add notes
         elif next == 2:
