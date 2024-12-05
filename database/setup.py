@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
 import random
 
 
@@ -21,11 +21,8 @@ def old_day(days_ago):
 
 def old_appointment_day(days_ago):
     return (
-        datetime.now()
-        - timedelta(
-            days=days_ago,
-            hours=random.randint(0, 12)
-        )
+        datetime.combine(date.today(), time(random.randint(9, 17), 0))
+        - timedelta(days=days_ago)
     ).strftime("%Y-%m-%d %H:%M")
 
 
