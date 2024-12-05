@@ -3,6 +3,7 @@ from datetime import datetime
 
 roles = ("admin", "patient", "clinician")
 diagnoses = (
+    "Not Specified",
     "Depression",
     "Anxiety",
     "Bipolar Disorder",
@@ -570,29 +571,29 @@ class Database:
                     "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
                 )
 
-            # appointments = [
-            #     (
-            #         1,
-            #         2,
-            #         5,
-            #         datetime(2024, 11, 20, hour=12, minute=0),
-            #         "Completed",
-            #         "detailed notes",
-            #         "This is what the clinician thinks",
-            #     ),
-            #     (
-            #         2,
-            #         2,
-            #         5,
-            #         datetime(2024, 12, 11, hour=16, minute=0),
-            #         "Pending",
-            #         "notes about condition",
-            #         None,
-            #     ),
-            # ]
-            # self.cursor.executemany(
-            #     "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
-            # )
+            appointments = [
+                (
+                    1,
+                    2,
+                    5,
+                    datetime(2024, 11, 20, hour=12, minute=0),
+                    "Attended",
+                    "detailed notes",
+                    "This is what the clinician thinks",
+                ),
+                (
+                    2,
+                    2,
+                    5,
+                    datetime(2024, 12, 11, hour=16, minute=0),
+                    "Pending",
+                    "notes about condition",
+                    None,
+                ),
+            ]
+            self.cursor.executemany(
+                "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
+            )
 
             self.connection.commit()
 
