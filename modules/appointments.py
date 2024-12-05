@@ -52,6 +52,17 @@ def get_appointments(database, clinician_id: int) -> list:
         return []
 
 
+def get_unconfirmed_appointments(database, clinician_id: int) -> list:
+    """Find all unconfirmed future appointments for a specified clinician"""
+    appointments = get_appointments(database, clinician_id)
+
+    return [
+        appointment
+        for appointment in appointments
+        if appointment["status"] == "Pending" and appointment["date"] >= datetime.now()
+    ]
+
+
 def print_appointment(appointment: dict) -> None:
     print(
         f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
