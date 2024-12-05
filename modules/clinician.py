@@ -161,6 +161,19 @@ class Clinician(User):
         elif next == 4:
             return False
 
+    def get_all_appointments_without_notes(self) -> list:
+        """Returns all the clinician's appointments that have no notes recorded"""
+
+        # Get all appointments for this clinician
+        appointments = get_appointments(self.database, self.user_id)
+
+        # Select appointments without notes and return them in a list
+        return [
+            appointment
+            for appointment in appointments
+            if not appointment["clinician_notes"]
+        ]
+
     def view_calendar(self):
         """
         This allows the clinician to view all their past and
