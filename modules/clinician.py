@@ -5,21 +5,97 @@ from modules.utilities.display_utils import (
     display_choice,
     wait_terminal,
 )
+from modules.utilities.input_utils import get_valid_string, get_valid_yes_or_no
 from modules.utilities.send_email import send_email
 from modules.appointments import get_appointments, print_appointment
 from datetime import datetime
 import sqlite3
 from database.setup import diagnoses
-from modules.constants import MOODS
 
 
 class Clinician(User):
+    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
+
+    def view_notes(self, appointment: dict):
+        """Print out clinician and patient notes for a given appointment"""
+        if appointment["clinician_notes"]:
+            print("\nYour notes:")
+            print(appointment["clinician_notes"])
+        if appointment["patient_notes"]:
+            print("\nPatient notes:")
+            print(appointment["patient_notes"] + "\n")
+
+    def add_notes(self, appointment: dict):
+        """Used to add clinician notes for a given appointment"""
+        clear_terminal()
+
+        # If notes already exist, offer the option to edit them
+        if appointment["clinician_notes"]:
+            if get_valid_yes_or_no(
+                "There are already notes stored for this appointment. Would you like to edit them? (Y/N) "
+            ):
+                self.edit_notes(appointment)
+        else:
+            # Otherwise, take a valid input from the user + add timestamp
+            note = (
+                get_valid_string("Please enter your notes for this appointment:")
+                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            )
+
+            try:
+                # Insert the new note into the DB
+                self.database.cursor.execute(
+                    """
+                    UPDATE Appointments
+                    SET clinician_notes = ?
+                    WHERE appointment_id = ?""",
+                    [note, appointment["appointment_id"]],
+                )
+                self.database.connection.commit()
+                print(f"Your notes were stored as:\n{note}")
+
+            except sqlite3.IntegrityError as e:
+                print(f"Failed to add note: {e}")
+
+    def edit_notes(self, appointment: dict):
+        """Used to edit clinician notes for a given appointment"""
+        clear_terminal()
+        # Display previous notes to the user
+        current_notes = appointment["clinician_notes"]
+        print("Here are your previously saved notes for the appointment:")
+        print(current_notes)
+
+        # Append the new note to the saved notes, with a timestamp
+        updated_notes = (
+            current_notes
+            + "\n"
+            + (
+                get_valid_string("Please enter your new notes for this appointment: ")
+                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
+            )
+        )
+
+        try:
+            # Update the saved notes in the DB
+            self.database.cursor.execute(
+                """
+                UPDATE Appointments
+                SET clinician_notes = ?
+                WHERE appointment_id = ?""",
+                [updated_notes, appointment["appointment_id"]],
+            )
+            self.database.connection.commit()
+            print(f"Your notes were stored as:\n{updated_notes}")
+        except sqlite3.IntegrityError as e:
+            print(f"Failed to add note: {e}")
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
         list of appointments passed into it."""
         appointment_strings = []
 
+        # Loop through the appointments, printing them for the user and saving a string
+        # for each in appointment_strings
         for appointment in appointments:
             print_appointment(appointment)
             appointment_strings.append(
@@ -28,8 +104,10 @@ class Clinician(User):
                 + f"{appointment['status']}"
             )
 
+        # Offer choice to the user
         options = [
             "View appointment notes",
+            "Add notes to an appointment",
             "Confirm/Reject Appointments",
             "Return to Main Menu",
         ]
@@ -37,6 +115,7 @@ class Clinician(User):
 
         # View appointment notes
         if next == 1:
+            # If there is only one appointment, select that - otherwise offer a choice
             if len(appointments) > 1:
                 clear_terminal()
                 selected = display_choice(
@@ -46,19 +125,54 @@ class Clinician(User):
             else:
                 selected_appointment = appointments[0]
 
+            # Display the appointment notes
+            self.view_notes(selected_appointment)
+
+            # If notes already exist, offer the option to edit
             if selected_appointment["clinician_notes"]:
-                print("\nYour notes:")
-                print(selected_appointment["clinician_notes"])
-            if selected_appointment["patient_notes"]:
-                print("\nPatient notes:")
-                print(selected_appointment["patient_notes"] + "\n")
+                if get_valid_yes_or_no(
+                    "Would you like to edit your notes for this appointment? (Y/N) "
+                ):
+                    self.edit_notes(selected_appointment)
+            # If not, offer the option to add notes
+            elif get_valid_yes_or_no(
+                "Would you like to add notes to this appointment? (Y/N) "
+            ):
+                self.add_notes(selected_appointment)
+
+        # Add notes
+        elif next == 2:
+            # If there is only one appointment, select that - otherwise offer a choice
+            if len(appointments) > 1:
+                clear_terminal()
+                selected = display_choice(
+                    "Please choose an appointment to add notes to", appointment_strings
+                )
+                selected_appointment = appointments[selected - 1]
+            else:
+                selected_appointment = appointments[0]
+
+            self.add_notes(selected_appointment)
 
         # Confirm/Reject appointments
-        elif next == 2:
+        elif next == 3:
             self.view_requested_appointments()
         # Exit
-        elif next == 3:
+        elif next == 4:
             return False
+
+    def get_all_appointments_without_notes(self) -> list:
+        """Returns all the clinician's appointments that have no notes recorded"""
+
+        # Get all appointments for this clinician
+        appointments = get_appointments(self.database, self.user_id)
+
+        # Select appointments without notes and return them in a list
+        return [
+            appointment
+            for appointment in appointments
+            if not appointment["clinician_notes"]
+        ]
 
     def view_calendar(self):
         """
@@ -67,11 +181,13 @@ class Clinician(User):
         """
 
         clear_terminal()
+        # Get all appointments for this clinician
         appointments = get_appointments(self.database, self.user_id)
 
         if not appointments:
             print("You have no registered appointments.")
         else:
+            # Offer a choice of different sets of appointments, grouped by time
             view_options = ["All", "Past", "Upcoming"]
             view = display_choice(
                 "Which appointments would you like to view?", view_options
@@ -105,11 +221,12 @@ class Clinician(User):
         reject them"""
 
         clear_terminal()
+        # Get all appointments for this clinician
         appointments = get_appointments(self.database, self.user_id)
         unconfirmed_appointments = []
         choice_strings = []
 
-        # Find any unconfirmed appointments and store them in the array
+        # Find any unconfirmed appointments (in the future) and store them in the array
         # Add a string for each appointment to the choice_strings array
         if appointments:
             for appointment in appointments:
@@ -124,6 +241,7 @@ class Clinician(User):
                     )
             choice_strings.append("Exit")
 
+            # If there are unconfirmed appointments, offer choice to the user
             while unconfirmed_appointments:
                 # Let user choose an appointment
                 confirm_choice = display_choice(
@@ -132,6 +250,7 @@ class Clinician(User):
                     f"Would you like to confirm or reject any appointment? Please choose from the following options {[*range(1, len(unconfirmed_appointments) + 2)]}: ",
                 )
 
+                # If user selects 'Exit', go back to the main menu
                 if confirm_choice == len(unconfirmed_appointments) + 1:
                     return False
                 else:
@@ -148,6 +267,7 @@ class Clinician(User):
                         ]
 
                         try:
+                            # Set the appointment as confirmed in the DB
                             self.database.cursor.execute(
                                 """
                                 UPDATE Appointments
@@ -163,7 +283,7 @@ class Clinician(User):
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(accepted_appointment)
 
-                            # Send emails to the client and the clinician
+                            # Email messages to send to the client and the clinician
                             clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
                             patient_confirmation = f"Your appointment with {self.first_name} {self.surname} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
 
@@ -185,6 +305,7 @@ class Clinician(User):
                             print(f"Failed to confirm appointment: {e}")
                             return False
 
+                        # Option to go back and choose another appointment
                         next_action = display_choice(
                             "What would you like to do next?",
                             ["Accept/Reject another appointment", "Exit"],
@@ -279,50 +400,28 @@ class Clinician(User):
         except Exception as e:
             print(f"Error: {e}")
 
-    def edit_patient_info(self, patient: Patient) -> bool:
+    def edit_patient_info(self, patient: Patient):
         """Edit patient information"""
+        patient.MODIFIABLE_ATTRIBUTES = ["diagnosis"]
 
         while True:
             edit_choice = display_choice(
                 "What would you like to edit?",
-                ["Diagnosis", "Exit"],
+                ["First Name", "Surname", "Diagnosis", "Exit"],
                 "Please choose from the above options: ",
             )
             if edit_choice == 1:
-                attribute = "diagnosis"
-                value = diagnoses[
-                    display_choice("Please choose a diagnosis: ", diagnoses) - 1
-                ]
-                break
+                new_first_name = input("Please enter the new first name: ")
+                patient.edit_info("first_name", new_first_name)
             if edit_choice == 2:
+                new_surname = input("Please enter the new surname: ")
+                patient.edit_info("surname", new_surname)
+            if edit_choice == 3:
+                new_diagnosis = input("Please enter the new diagnosis: ")
+                patient.edit_info("diagnosis", new_diagnosis)
+            if edit_choice == 4:
                 return False
 
-        try:
-            # First update on the database
-            print(f"Updating {attribute} to {value} for user {patient.user_id}")
-            self.database.cursor.execute(
-                f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
-                (value, patient.user_id),
-            )
-            self.database.connection.commit()
-
-            # Then in the object if that particular attribute is stored here
-            if hasattr(self, attribute):
-                setattr(self, attribute, value)
-
-            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
-            wait_terminal()
-
-        # If there is an error with the query
-        except sqlite3.OperationalError as e:
-            print(
-                f"{e} Error updating, likely the selected attribute does not exist for Users"
-            )
-            wait_terminal()
-            return False
-
-    # This method is used to view the dashboard
-    # All other methods must be declared prior to this method
     def view_dashboard(self):
         """View the dashboard.
 
@@ -338,60 +437,26 @@ class Clinician(User):
             patients = self.get_all_patients()
             print("Here are all your patients:")
             for patient in patients:
-                patient = Patient(self.database, **patient)
-                query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
-                params = [patient.user_id]
-
-                query += " ORDER BY date ASC"
-
-                try:
-                    self.database.cursor.execute(query, tuple(params))
-                    entries = [
-                        {"date": row["date"], "text": row["text"], "mood": row["mood"]}
-                        for row in self.database.cursor.fetchall()
-                    ]
-                    latest_entry = entries[-1] if entries else None
-
-                    if latest_entry:
-                        old_mood = MOODS[str(latest_entry["mood"])]
-                        show_moods = (
-                            f"{old_mood['ansi']} {old_mood['description']}\033[00m"
-                        )
-                        print(
-                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: {str(latest_entry['date']).split()[0]} - Mood: {show_moods}"""
-                        )
-
-                    else:
-                        print(
-                            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - Last Updated: No entries"""
-                        )
-
-                except sqlite3.OperationalError as e:
-                    print(f"Database error occurred: {e}")
-                    return []
-
+                print(
+                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
+                )
             decision = input(
                 "Would you like to edit any patient's information? (Y/N): "
             )
             if decision == "Y":
                 patient_id = int(input("Please enter the patient's ID: "))
-                try:
-                    patient_details = self.database.cursor.execute(
-                        """
+                patient_details = self.database.cursor.execute(
+                    """
                     SELECT * 
                     FROM Patients
                     INNER JOIN Users ON Patients.user_id = Users.user_id
                     WHERE Patients.user_id = ?""",
-                        [patient_id],
-                    ).fetchone()
-                    patient = Patient(self.database, **patient_details)
-                    self.edit_patient_info(patient)
-                    clear_terminal()
-
-                except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
-                    wait_terminal()
-
+                    [patient_id],
+                ).fetchone()
+                patient = Patient(self.database, **patient_details)
+                self.edit_patient_info(patient)
+                clear_terminal()
+                return False
             if decision == "N":
                 wait_terminal()
 
