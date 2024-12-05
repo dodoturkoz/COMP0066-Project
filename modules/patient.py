@@ -19,35 +19,15 @@ from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
 
 
-def comment_input():
-    """
-    Ask if patient wants to comment and then pass the comment to patient method.
-    """
-    do_comment = input(
-        "Would you like to enter any comments regarding your mood?\nChoose a number.\n1.Yes\n2.No\n "
-    )
-    if (
-        do_comment == "1"
-        or do_comment == "1."
-        or do_comment == "Yes"
-        or do_comment == "yes"
-    ):
-        comment = input("Enter any comments regarding your mood:\n")
-    elif (
-        do_comment == "2"
-        or do_comment == "2."
-        or do_comment == "No"
-        or do_comment == "no"
-    ):
-        comment = "There is no comment associated with the mood of this day.\n"
-    else:
-        print("Please ensure you enter the number 1 or 2.")
-        comment = comment_input()
-
-    return comment
-
-
 class Patient(User):
+    MODIFIABLE_ATTRIBUTES = [
+        "username",
+        "email",
+        "password",
+        "first_name",
+        "surname",
+    ]
+
     def __init__(
         self,
         database: Database,
@@ -57,6 +37,7 @@ class Patient(User):
         surname: str,
         email: str,
         is_active: bool,
+        clinician_id: int,
         *args,
         **kwargs,
     ):
@@ -72,22 +53,7 @@ class Patient(User):
             **kwargs,
         )
 
-        # fetch additional patient-specific data
-        patient_data = database.cursor.execute(
-            """
-            SELECT emergency_email, date_of_birth, diagnosis, clinician_id
-            FROM Patients
-            WHERE user_id = ?
-            """,
-            (user_id,),
-        ).fetchone()
-
-        if not patient_data:
-            raise Exception("Patient data not found for user ID.")
-
-        self.emergency_email = patient_data["emergency_email"]
-        self.diagnosis = patient_data["diagnosis"]
-        self.clinician_id = patient_data["clinician_id"]
+        self.clinician_id = clinician_id
         self.clinician = self.get_clinician()
 
     def get_clinician(self) -> Optional[User]:
@@ -108,53 +74,11 @@ class Patient(User):
                 return User(self.database, *clinician_data)
         return None
 
-    def edit_info(self, attribute: str, value: Any) -> bool:
-        if attribute in [
-            "clinician_id",
-            "diagnosis",
-            "emergency_email",
-            "date_of_birth",
-        ]:
-            return self.edit_patient_info(attribute, value)
-        else:
-            return super().edit_info(attribute, value)
-
-    def edit_patient_info(self, attribute: str, value: Any) -> bool:
-        """
-        Updates attributes fromt the Patients table both in the object
-        and in the database, returns the result of the update
-        """
-
-        try:
-            # First update on the database
-            self.database.cursor.execute(
-                f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
-                (value, self.user_id),
-            )
-            self.database.connection.commit()
-
-            # Then in the object if that particular attribute is stored here
-            if hasattr(self, attribute):
-                setattr(self, attribute, value)
-
-            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
-
-            # Return true as the update was successful
-            return True
-
-        # If there is an error with the query
-        except sqlite3.OperationalError as e:
-            print(
-                f"There was an error updating the {attribute.replace('_', ' ').capitalize()}.\n Error: {e}"
-            )
-            return False
-
-    def edit_self_info(self) -> bool:
+    def edit_patient_info(self) -> bool:
         """
         Allows the patient to change their details.
         """
         clear_terminal()
-        # TODO: Add option to edit birth date
         options = [
             "Username",
             "Email",
@@ -412,10 +336,10 @@ class Patient(User):
 
     def view_appointments(self) -> list[dict[str, Any]]:
         """
-        Views all appointments for the patient, including their status.
+        Views all appointments for the patient.
         """
         query = (
-            "SELECT appointment_id, date, patient_notes, status "
+            "SELECT appointment_id, date, notes, is_complete "
             "FROM Appointments "
             "WHERE user_id = ?"
         )
@@ -426,8 +350,8 @@ class Patient(User):
                 {
                     "appointment_id": row["appointment_id"],
                     "date": row["date"],
-                    "patient_notes": row["patient_notes"],
-                    "status": row["status"],
+                    "notes": row["notes"],
+                    "is_complete": bool(row["is_complete"]),
                 }
                 for row in self.database.cursor.fetchall()
             ]
@@ -437,9 +361,10 @@ class Patient(User):
                 for appointment in appointments:
                     print(f"ID: {appointment['appointment_id']}")
                     print(f"Date: {appointment['date']}")
-                    print(f"Your Notes: {appointment['patient_notes']}")
-                    print(f"Status: {appointment['status']}")
-                    print("-" * 40)
+                    print(f"Notes: {appointment['notes']}")
+                    print(
+                        f"Completed: {'Yes' if appointment['is_complete'] else 'No'}\n"
+                    )
             else:
                 print("You don't have any appointments.")
 
@@ -482,7 +407,7 @@ class Patient(User):
             # using pattern matching to handle the choices
             match choice:
                 case 1:
-                    self.edit_self_info()
+                    self.edit_patient_info()
                 case 2:
                     self.mood_of_the_day()
                 case 3:

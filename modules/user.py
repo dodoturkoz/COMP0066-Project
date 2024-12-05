@@ -32,40 +32,14 @@ class User:
         self.email = email
         self.is_active = is_active
 
-    def view_info(self, attribute:str, value: Any ) -> bool: 
-        """
-        Returns information stored about a user in the database
-        """
-        try:
-            # First update on the database
-            self.database.cursor.execute(
-                f"VIEW Users SET {attribute} = ? WHERE user_id = ?",
-                (value, self.user_id),
-            )
-            self.database.connection.commit()
-
-            # Then in the object if that particular attribute is stored here
-            if hasattr(self, attribute):
-                setattr(self, attribute, value)
-
-            # Return true as the update was successful
-            return 
-
-        # If there is an error with the query
-        except sqlite3.OperationalError:
-            print(
-                "Error updating, likely the selected attribute does not exist for Users"
-            )
-            return False
-        pass 
-    
-
     def edit_info(self, attribute: str, value: Any) -> bool:
         """
         Updates the attribute both in the object and in the database,
         returns the result of the update
         """
-
+        # if attribute not in self.MODIFIABLE_ATTRIBUTES:
+        #     print("You don't have the permissions to change this value.")
+        #     return False
         try:
             # First update on the database
             self.database.cursor.execute(
@@ -84,9 +58,15 @@ class User:
             return True
 
         # If there is an error with the query
-        except sqlite3.OperationalError as e:
+        except sqlite3.OperationalError:
             print(
-                f"There was an error updating the {attribute.replace('_', ' ').capitalize()}.\n Error: {e}"
+                "Error updating, likely the selected attribute does not exist for Users"
+            )
+            return False
+    
+        except sqlite3.OperationalError:
+            print(
+                "Error updating, likely you selected an invalid username"
             )
             return False
 

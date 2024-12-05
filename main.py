@@ -36,9 +36,7 @@ try:
 
             # NOTE: if flow returns True -> login screen
             # if flow returns False -> quits app
-except KeyboardInterrupt:
-    clear_terminal()
-    print("\nThanks for using Breeze. Goodbye!")
+
 except ValueError as e:
     # If instead of selecting a number the user types something, we get a ValueError
     # Note: at some point we need to review that this fails gracefully anywhere in the app
