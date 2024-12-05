@@ -18,7 +18,6 @@ from database.setup import diagnoses
 
 
 class Clinician(User):
-    MODIFIABLE_ATTRIBUTES = ["username", "email", "password"]
 
     def print_notifications(self):
         """Checks if the clinican has requested appointments, or past appointments
