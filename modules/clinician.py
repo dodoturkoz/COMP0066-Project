@@ -13,6 +13,8 @@ from modules.utilities.display_utils import (
     clear_terminal,
     display_choice,
     wait_terminal,
+    format_patient_data,
+    format_patient_data_with_mood,
 )
 from modules.utilities.input_utils import get_valid_string, get_valid_yes_or_no
 from modules.utilities.send_email import send_email
@@ -422,29 +424,65 @@ class Clinician(User):
         except Exception as e:
             print(f"Error: {e}")
 
-    def edit_patient_info(self, patient: Patient):
-        """Edit patient information"""
-        patient.MODIFIABLE_ATTRIBUTES = ["diagnosis"]
-
-        while True:
-            edit_choice = display_choice(
+    def edit_patient_info_screen(self, patient: Patient):
+        """Edit patient information screen"""
+        choice = display_choice(
                 "What would you like to edit?",
                 ["First Name", "Surname", "Diagnosis", "Exit"],
                 "Please choose from the above options: ",
             )
-            if edit_choice == 1:
-                new_first_name = input("Please enter the new first name: ")
-                patient.edit_info("first_name", new_first_name)
-            if edit_choice == 2:
-                new_surname = input("Please enter the new surname: ")
-                patient.edit_info("surname", new_surname)
-            if edit_choice == 3:
-                new_diagnosis = input("Please enter the new diagnosis: ")
-                patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 4:
-                return False
+        if choice == 1:
+                attribute = "diagnosis"
+                value = diagnoses[
+                    display_choice("Please choose a diagnosis: ", diagnoses) - 1
+                ]
+            return False
+        if edit_choice == 2:
+            return False
+    
+    def edit_patient_info_db_call(self, patient: Patient) -> bool:
 
-    def view_dashboard(self):
+
+        try:
+            # First update on the database
+            print(f"Updating {attribute} to {value} for user {patient.user_id}")
+            self.database.cursor.execute(
+                f"UPDATE Patients SET {attribute} = ? WHERE user_id = ?",
+                (value, patient.user_id),
+            )
+            self.database.connection.commit()
+
+            # Then in the object if that particular attribute is stored here
+            if hasattr(self, attribute):
+                setattr(self, attribute, value)
+
+            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+            wait_terminal()
+
+        # If there is an error with the query
+        except sqlite3.OperationalError as e:
+            print(
+                f"{e} Error updating, likely the selected attribute does not exist for Users"
+            )
+            wait_terminal()
+            return False
+
+    def present_filtered_diagnosis_list(self):
+        clear_terminal()
+    # Filter by diagnosis
+        diagnosis = display_choice(
+        "Please enter the diagnosis you would like to filter by: ", diagnoses
+        )
+        patients = self.get_all_patients_by_diagnosis(diagnosis)
+        print(f"Here are all your patients with the diagnosis {diagnosis}:")
+        for patient in patients:
+            print(
+                f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
+            )
+        wait_terminal()
+
+
+    def flow_patient_dashboard(self):
         """View the dashboard.
 
         All methods used are declared as class methods to allow for other classes to access them.
@@ -457,11 +495,31 @@ class Clinician(User):
         if dashboard_home_choice == 1:
             clear_terminal()
             patients = self.get_all_patients()
-            print("Here are all your patients:")
+            # Process mood
             for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
+                patient = Patient(self.database, **patient)
+                query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
+                params = [patient.user_id]
+                query += " ORDER BY date ASC"
+                try:
+                    self.database.cursor.execute(query, tuple(params))
+                    entries = [
+                        {"date": row["date"], "text": row["text"], "mood": row["mood"]}
+                        for row in self.database.cursor.fetchall()
+                    ]
+                    latest_entry = entries[-1] if entries else None
+
+                    if latest_entry:
+                        old_mood = MOODS[str(latest_entry["mood"])]
+                        show_moods = (
+                            f"{old_mood['ansi']} {old_mood['description']}\033[00m"
+                        )
+                        patient.latest_mood = show_moods
+
+                except sqlite3.OperationalError as e:
+                    print(f"Database error occurred: {e}")
+                    return []
+
             decision = input(
                 "Would you like to edit any patient's information? (Y/N): "
             )
@@ -470,10 +528,7 @@ class Clinician(User):
                     patient_id = patients[
                         display_choice(
                             "Select your patient:",
-                            [
-                                f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                                for patient in patients
-                            ],
+                            format_patient_data_with_mood(patients),
                         )
                         - 1
                     ]["user_id"]
@@ -486,7 +541,7 @@ class Clinician(User):
                         [patient_id],
                     ).fetchone()
                     patient = Patient(self.database, **patient_details)
-                    self.edit_patient_info(patient)
+                    self.edit_info(patient)
                     clear_terminal()
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
@@ -496,18 +551,7 @@ class Clinician(User):
                 wait_terminal()
 
         if dashboard_home_choice == 2:
-            clear_terminal()
-            # Filter by diagnosis
-            diagnosis = display_choice(
-                "Please enter the diagnosis you would like to filter by: ", diagnoses
-            )
-            patients = self.get_all_patients_by_diagnosis(diagnosis)
-            print(f"Here are all your patients with the diagnosis {diagnosis}:")
-            for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
-            wait_terminal()
+            self.present_filter_diagnosis()
         if dashboard_home_choice == 3:
             # Edit patient info
             clear_terminal()
@@ -536,7 +580,7 @@ class Clinician(User):
             if selection == 1:
                 self.view_calendar()
             if selection == 2:
-                self.view_dashboard()
+                self.flow_patient_dashboard()
             if selection == 3:
                 self.view_requested_appointments()
             if selection == 4:
