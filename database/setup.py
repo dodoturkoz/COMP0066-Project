@@ -4,6 +4,9 @@ import random
 
 
 def old_date(days_ago):
+    """Returns a random time with a date determined by parameter days_ago and today's date.)"""
+    # Subtracts number of days from today's date to give a date.
+    # Returns the given date with a random time
     return (
         datetime.now()
         - timedelta(
@@ -16,14 +19,24 @@ def old_date(days_ago):
 
 
 def old_day(days_ago):
+    """Returns a date relative to today's date by the number given in parameter."""
     return (datetime.now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
 
 
 def old_appointment_day(days_ago):
+    """Returns a date relative to today's date and a random time between 9 to 4 pm."""
+    # Only used for future and past dates.
     return (
-        datetime.combine(date.today(), time(random.randint(9, 17), 0))
+        datetime.combine(date.today(), time(random.randint(9, 16), 0))
         - timedelta(days=days_ago)
     ).strftime("%Y-%m-%d %H:%M")
+
+
+def today_appointment(past_or_present):
+    """Returns today's date and a random time before or after current time."""
+    # TO DO: Add a way get a random appointment time before current time and after
+    # current time but only for today.
+    pass
 
 
 roles = ("admin", "patient", "clinician")
