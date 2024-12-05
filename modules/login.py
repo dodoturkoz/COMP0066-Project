@@ -42,7 +42,6 @@ def login(db: Database) -> Union[User, None]:
     ).fetchone()
 
     if user_data:
-        user_id = user_data["user_id"]
         role = user_data["role"]
 
         if role == "admin":
@@ -50,23 +49,7 @@ def login(db: Database) -> Union[User, None]:
         elif role == "clinician":
             return Clinician(database=db, **user_data)
         elif role == "patient":
-            # fetch additional patient-specific data
-            patient_data = db.cursor.execute(
-                """
-                SELECT emergency_email, date_of_birth, diagnosis, clinician_id
-                FROM Patients
-                WHERE user_id = ?
-                """,
-                (user_id,),
-            ).fetchone()
-
-            if not patient_data:
-                raise Exception("Patient data not found for user ID.")
-
-            # merge the user and patient data
-            # old way: combined_data = {**user_data, **patient_data}
-            combined_data = user_data | patient_data
-            return Patient(database=db, **combined_data)
+            return Patient(database=db, **user_data)
         else:
             raise Exception("User role is not defined in the system.")
     else:
