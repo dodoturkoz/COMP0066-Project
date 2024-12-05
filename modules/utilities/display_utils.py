@@ -64,8 +64,9 @@ def wait_terminal(
     before continuing, such as after displaying a message or data."""
     while True:
         if input(wait_text) is not None:
-            clear_terminal()
             if redirect_function:
+                clear_terminal()
                 redirect_function()
-
+            else:
+                clear_terminal()
             return return_value
