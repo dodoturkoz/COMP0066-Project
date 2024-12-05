@@ -32,13 +32,6 @@ def old_appointment_day(days_ago):
     ).strftime("%Y-%m-%d %H:%M")
 
 
-def today_appointment(past_or_present):
-    """Returns today's date and a random time before or after current time."""
-    # TO DO: Add a way get a random appointment time before current time and after
-    # current time but only for today.
-    pass
-
-
 roles = ("admin", "patient", "clinician")
 diagnoses = (
     "Not Specified",
@@ -1028,7 +1021,7 @@ class Database:
                         3,
                         3,
                         5,
-                        old_appointment_day(0),
+                        old_appointment_day(-5),
                         "Pending",
                         None,
                         None,
