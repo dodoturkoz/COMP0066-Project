@@ -28,18 +28,22 @@ class Clinician(User):
     def add_notes(self, appointment: dict):
         """Used to add clinician notes for a given appointment"""
         clear_terminal()
+
+        # If notes already exist, offer the option to edit them
         if appointment["clinician_notes"]:
             if get_valid_yes_or_no(
                 "There are already notes stored for this appointment. Would you like to edit them? (Y/N) "
             ):
                 self.edit_notes(appointment)
         else:
+            # Otherwise, take a valid input from the user + add timestamp
             note = (
                 get_valid_string("Please enter your notes for this appointment:")
                 + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
             )
 
             try:
+                # Insert the new note into the DB
                 self.database.cursor.execute(
                     """
                     UPDATE Appointments
@@ -56,10 +60,12 @@ class Clinician(User):
     def edit_notes(self, appointment: dict):
         """Used to edit clinician notes for a given appointment"""
         clear_terminal()
+        # Display previous notes to the user
         current_notes = appointment["clinician_notes"]
         print("Here are your previously saved notes for the appointment:")
         print(current_notes)
 
+        # Append the new note to the saved notes, with a timestamp
         updated_notes = (
             current_notes
             + "\n"
@@ -70,6 +76,7 @@ class Clinician(User):
         )
 
         try:
+            # Update the saved notes in the DB
             self.database.cursor.execute(
                 """
                 UPDATE Appointments
@@ -87,6 +94,8 @@ class Clinician(User):
         list of appointments passed into it."""
         appointment_strings = []
 
+        # Loop through the appointments, printing them for the user and saving a string
+        # for each in appointment_strings
         for appointment in appointments:
             print_appointment(appointment)
             appointment_strings.append(
@@ -95,6 +104,7 @@ class Clinician(User):
                 + f"{appointment['status']}"
             )
 
+        # Offer choice to the user
         options = [
             "View appointment notes",
             "Add notes to an appointment",
@@ -105,6 +115,7 @@ class Clinician(User):
 
         # View appointment notes
         if next == 1:
+            # If there is only one appointment, select that - otherwise offer a choice
             if len(appointments) > 1:
                 clear_terminal()
                 selected = display_choice(
@@ -114,13 +125,16 @@ class Clinician(User):
             else:
                 selected_appointment = appointments[0]
 
+            # Display the appointment notes
             self.view_notes(selected_appointment)
 
+            # If notes already exist, offer the option to edit
             if selected_appointment["clinician_notes"]:
                 if get_valid_yes_or_no(
                     "Would you like to edit your notes for this appointment? (Y/N) "
                 ):
                     self.edit_notes(selected_appointment)
+            # If not, offer the option to add notes
             elif get_valid_yes_or_no(
                 "Would you like to add notes to this appointment? (Y/N) "
             ):
@@ -128,6 +142,7 @@ class Clinician(User):
 
         # Add notes
         elif next == 2:
+            # If there is only one appointment, select that - otherwise offer a choice
             if len(appointments) > 1:
                 clear_terminal()
                 selected = display_choice(
@@ -153,11 +168,13 @@ class Clinician(User):
         """
 
         clear_terminal()
+        # Get all appointments for this clinician
         appointments = get_appointments(self.database, self.user_id)
 
         if not appointments:
             print("You have no registered appointments.")
         else:
+            # Offer a choice of different sets of appointments, grouped by time
             view_options = ["All", "Past", "Upcoming"]
             view = display_choice(
                 "Which appointments would you like to view?", view_options
@@ -191,11 +208,12 @@ class Clinician(User):
         reject them"""
 
         clear_terminal()
+        # Get all appointments for this clinician
         appointments = get_appointments(self.database, self.user_id)
         unconfirmed_appointments = []
         choice_strings = []
 
-        # Find any unconfirmed appointments and store them in the array
+        # Find any unconfirmed appointments (in the future) and store them in the array
         # Add a string for each appointment to the choice_strings array
         if appointments:
             for appointment in appointments:
@@ -210,6 +228,7 @@ class Clinician(User):
                     )
             choice_strings.append("Exit")
 
+            # If there are unconfirmed appointments, offer choice to the user
             while unconfirmed_appointments:
                 # Let user choose an appointment
                 confirm_choice = display_choice(
@@ -218,6 +237,7 @@ class Clinician(User):
                     f"Would you like to confirm or reject any appointment? Please choose from the following options {[*range(1, len(unconfirmed_appointments) + 2)]}: ",
                 )
 
+                # If user selects 'Exit', go back to the main menu
                 if confirm_choice == len(unconfirmed_appointments) + 1:
                     return False
                 else:
@@ -234,6 +254,7 @@ class Clinician(User):
                         ]
 
                         try:
+                            # Set the appointment as confirmed in the DB
                             self.database.cursor.execute(
                                 """
                                 UPDATE Appointments
@@ -249,7 +270,7 @@ class Clinician(User):
                             # Remove the appointment from the list so it is not displayed to the user again
                             unconfirmed_appointments.remove(accepted_appointment)
 
-                            # Send emails to the client and the clinician
+                            # Email messages to send to the client and the clinician
                             clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
                             patient_confirmation = f"Your appointment with {self.first_name} {self.surname} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
 
@@ -271,6 +292,7 @@ class Clinician(User):
                             print(f"Failed to confirm appointment: {e}")
                             return False
 
+                        # Option to go back and choose another appointment
                         next_action = display_choice(
                             "What would you like to do next?",
                             ["Accept/Reject another appointment", "Exit"],
