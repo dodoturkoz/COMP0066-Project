@@ -17,10 +17,9 @@ from modules.utilities.input_utils import (
     get_valid_yes_or_no,
     get_valid_email,
 )
-from modules.utilities.dataframe_utils import(
-    filter_df_by_date
-)
+from modules.utilities.dataframe_utils import filter_df_by_date
 import pandas as pd
+
 
 class Admin(User):
     user_df: pd.DataFrame
@@ -128,18 +127,18 @@ class Admin(User):
         moods_data = moods_query.fetchall()
         self.patient_moods_df = pd.DataFrame(moods_data)
         # self.patient_information_df.set_index("user_id", inplace=True)
-    
+
     def view_table(
-        self, user_type: str, sub_type: str = "none", time_frame:str = "none"
+        self, user_type: str, sub_type: str = "none", time_frame: str = "none"
     ) -> tuple[pd.Index, pd.Index]:
         """
         Selects the relevant portion of the Pandas dataframe for the user, as
         defined by the inputs.
         """
-        
+
         # This is getting quite large now, I'm going to have to organise it a bit
 
-        if user_type == "patients" and sub_type == "none" and time_frame =="none":
+        if user_type == "patients" and sub_type == "none" and time_frame == "none":
             patient_df = self.user_df.query(('role == "patient"'))
             patient_df = patient_df.filter(
                 items=["username", "email", "name", "is_active"]
@@ -157,7 +156,11 @@ class Admin(User):
             print(clinician_df)
             return clinician_df.index, clinician_df.columns
 
-        elif user_type == "patients" and sub_type == "registration" and time_frame == "none":
+        elif (
+            user_type == "patients"
+            and sub_type == "registration"
+            and time_frame == "none"
+        ):
             unregistered_patient_df = self.user_df.query(
                 ('role == "patient" and clinician_id.isna()')
             )
@@ -168,7 +171,11 @@ class Admin(User):
             print(unregistered_patient_df)
             return unregistered_patient_df.index, unregistered_patient_df.columns
 
-        elif user_type == "clinicians" and sub_type == "registration" and time_frame == "none":
+        elif (
+            user_type == "clinicians"
+            and sub_type == "registration"
+            and time_frame == "none"
+        ):
             clinician_df = self.user_df.query(('role == "clinician"'))[
                 ["first_name", "surname", "email"]
             ]
@@ -186,17 +193,25 @@ class Admin(User):
             print("\nBreeze Clinicians:")
             print(registration_df)
             return registration_df.index, registration_df.columns
-        
 
-        elif user_type == "clinicians" and sub_type == "appointments" and time_frame == "current week":
+        elif (
+            user_type == "clinicians"
+            and sub_type == "appointments"
+            and time_frame == "current week"
+        ):
             # Filtering the appointments table by the current week
             relative_time, time_period = time_frame.split()
             current_appointments_df = filter_df_by_date(
-                self.appointments_df, relative_time, time_period)
-            
+                self.appointments_df, relative_time, time_period
+            )
+
             # Grouping appointments by clinician
-            partial_appointments_df = current_appointments_df.query('status == "Confirmed"').groupby(("clinician_id")
-            ).agg({"user_id":"count"}).rename(columns={"user_id": "Appointments this week"})
+            partial_appointments_df = (
+                current_appointments_df.query('status == "Confirmed"')
+                .groupby(("clinician_id"))
+                .agg({"user_id": "count"})
+                .rename(columns={"user_id": "Appointments this week"})
+            )
 
             # Merging with main user_df to get more attributes
             clinician_appointments_df = pd.merge(
@@ -204,11 +219,11 @@ class Admin(User):
                 partial_appointments_df,
                 left_index=True,
                 right_on="clinician_id",
-            )[["username", "Appointments this week"]] 
+            )[["username", "Appointments this week"]]
             print(clinician_appointments_df)
             return clinician_appointments_df.index, clinician_appointments_df.columns
-            #I'm not sure we need to return anything here
-            
+            # I'm not sure we need to return anything here
+
         # else assumes user_type == "users"
         else:
             if sub_type == "none":
@@ -227,7 +242,7 @@ class Admin(User):
                 print(f"\n{sub_type.capitalize()} Breeze Users:")
                 print(users_df)
                 return users_df.index, users_df.columns
-        
+
         # IDEA: crude pagination.
         # Can implement a crude pagination using either the index or df.iloc[], taking values
         # 0 - 25 then giving the user a [1] [0] choice to go forwards or backwards
@@ -435,7 +450,7 @@ class Admin(User):
             user_ids,
             invalid_options_text="Invalid User ID, please try again.",
         )
-        
+
         # confirm
         confirm = get_valid_yes_or_no(
             f"Are you sure you want to disable User {user_id}? (Y/N): "
@@ -513,7 +528,7 @@ class Admin(User):
             # Menu choices
             selection = display_choice("What would you like to do?", choices)
 
-        #     # Assign a patient to clinician
+            #     # Assign a patient to clinician
 
             if selection == 1:
                 self.assing_patient_flow()
@@ -536,8 +551,8 @@ class Admin(User):
             elif selection == 5:
                 self.delete_user_flow()
 
-            # Clinician appointments 
-            elif selection == 6: 
+            # Clinician appointments
+            elif selection == 6:
                 clear_terminal()
                 self.view_table("clinicians", "appointments", "current week")
                 wait_terminal()

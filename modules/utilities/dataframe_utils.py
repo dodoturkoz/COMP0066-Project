@@ -1,16 +1,17 @@
 import pandas as pd
 from datetime import datetime, timedelta
 
+
 def filter_df_by_date(input_df: pd.DataFrame, relative_time: str, time_period: str):
     """
     Plug in a dataframe (in practice, moods or journals) to create a row
     around a specific time
     """
-    #Most of this works, a few details to figure out
+    # Most of this works, a few details to figure out
 
     today = datetime.today().date()
     start_of_today = datetime.combine(today, datetime.min.time())
-    
+
     if time_period == "year":
         start_of_range = start_of_today.replace(month=1, day=1)
         end_of_range = start_of_today.replace(month=12, day=31)
