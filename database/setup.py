@@ -590,6 +590,42 @@ class Database:
                     "notes about condition",
                     None,
                 ),
+                (
+                    3,
+                    3,
+                    5,
+                    datetime(2024, 12, 5, hour=16, minute=0),
+                    "Pending",
+                    None,
+                    None,
+                ),
+                (
+                    4,
+                    4,
+                    5,
+                    datetime(2024, 12, 2, hour=10, minute=0),
+                    "Attended",
+                    "notes about condition",
+                    "long rambling text",
+                ),
+                (
+                    5,
+                    7,
+                    5,
+                    datetime(2024, 12, 6, hour=18, minute=0),
+                    "Confirmed",
+                    None,
+                    None,
+                ),
+                (
+                    6,
+                    8,
+                    5,
+                    datetime(2024, 12, 11, hour=16, minute=0),
+                    "Confirmed",
+                    None,
+                    None,
+                ),
             ]
             self.cursor.executemany(
                 "INSERT INTO Appointments VALUES(?, ?, ?, ?, ?, ?, ?)", appointments
