@@ -24,8 +24,7 @@ def old_appointment_day(days_ago):
         datetime.now()
         - timedelta(
             days=days_ago,
-            hours=random.randint(0, 12),
-            minutes=random.randint(0, 60),
+            hours=random.randint(0, 12)
         )
     ).strftime("%Y-%m-%d %H:%M")
 
