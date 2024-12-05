@@ -287,6 +287,7 @@ class Admin(User):
             self.database.connection.commit()
 
             # Return true as the operation was completed successfully
+            self.refresh_user_df()
             return True
 
         # If there is an error with the query
@@ -367,13 +368,16 @@ class Admin(User):
             invalid_options_text="Invalid attribute. Please select a valid option from the columns of the previous table.",
         )
 
+        patient_ids = self.user_df.query(('role == "patient"')).index
         clinician_ids = self.user_df.query(('role == "clinician"')).index
+        # check admin
 
         # Handle input according to the column they are trying to edit
         if attribute in ["user_id", "role"]:
             print(f"Attribute {attribute} cannot be changed.")
+            # TODO: maybe add a return to the top of the function
             return wait_terminal()
-        elif user_id in clinician_ids and attribute in [
+        elif user_id not in patient_ids and attribute in [
             "clinician_id",
             "diagnosis",
             "emergency_email",
@@ -386,7 +390,8 @@ class Admin(User):
         elif attribute == "is_active":
             value = get_valid_yes_or_no(f"Enter the new value for {attribute} (Y/N): ")
         elif attribute == "diagnosis":
-            value = display_choice("Select the diagnosis for the patient: ", diagnoses)
+            choice = display_choice("Select the diagnosis for the patient: ", diagnoses)
+            value = diagnoses[choice - 1]
         elif attribute == "date_of_birth":
             value = get_valid_date(
                 "Enter the new date of birth (YYYY-MM-DD): ",
