@@ -397,6 +397,8 @@ class Patient(User):
                 "Search Exercises",
             ]
 
+            # if/else statement to show different options to users
+            # based on whether they already have a clinician or not.
             if self.clinician_id:
                 options.extend(["Appointments", "Log Out", "Quit"])
             else:
@@ -405,9 +407,35 @@ class Patient(User):
             choice = display_choice("Please select an option:", options)
 
             def acting_on_choice(choice):
+                """
+                Recursive function to match different methods to different choices/options
+                Only quit and logout option/choice not matched here.
+                """
+                # Acting_on_choice function only called twice. 1. At the end of flow
+                # code to allow patients to go into different options from main menu.
+                # 2. Inside the acting_on_choice function in the next step when patient
+                # are allowed to retry the same action. Using this function, the choice
+                # (integer matching to case and methods) does not change and you can
+                # endlessly retry the same option until you decide to exit the menu.
+                # If patients choose to exit menu when retry the same action is shown,
+                # the function just completes and the outer while true loop happens
+                # where the main menu is shown. On second thoughts, can use while loop
+                # instead. Recursive function was just more intuitive for me at that time.
+
                 # requires python version >= 3.10
                 # using pattern matching to handle the choices
-                action = "Stay"
+                # action variable used for next step logic implemented at the end
+                # after you do methods in each option. Action variable only used twice.
+                # action = "Option to redo previous action" means that after doing
+                # methods for the option you picked you get the chance to redo that
+                # prevous action or choose to exit back to the menu.
+                # action = "Exit back to main menu" is only used for appointments
+                # when the patient wants to exit back to the main menu straight
+                # after pressing appointment option without using any methods.
+                # This is in case 7 (appointments) and case 4 (Exit appointments), which
+                # only exists if you have a clinician id.
+
+                action = "Option to redo previous action"
                 match choice:
                     case 1:
                         self.edit_patient_info()
@@ -447,6 +475,8 @@ class Patient(User):
                         self.search_exercises(keyword)
 
                     case 7:
+                        # if statement here since case 7 would be appointments if
+                        # the patient had a clinician. Otherwise it would be log out.
                         if self.clinician_id:
                             appointment_options = [
                                 "Book Appointment",
@@ -458,6 +488,7 @@ class Patient(User):
                                 "Please select an option:", appointment_options
                             )
 
+                            # Options within appointments option in patient menu.
                             match selected_choice:
                                 case 1:
                                     # Book Appointment
@@ -477,46 +508,63 @@ class Patient(User):
                                     )
                                     cancel_appointment(self.database, appointment_id)
                                 case 4:
-                                    action = "Exit"
-                        # else:
-                        #    clear_terminal()
-                        #    return True
-                    # case 8:
-                    #    clear_terminal()
-                    #    return True
+                                    # Setting action to exit back to main menu so that
+                                    # exit appointments does not lead to the options
+                                    # Retry the same action or go back to main menu.
+                                    action = "Exit back to main menu"
 
-                if action != "Exit":
+                # if the previous step was not exit appointments from appointments
+                # option, we show the option to retry the same action.
+                # Action variables allow choice of which methods/ options can lead
+                # to retrying that same method and which option cannot. e.g.
+                # if re-reading journal entries is something we do not want an option
+                # to redo the same action, we just put action = "Exit back to main menu"
+                # over there.
+                if action != "Exit back to main menu":
                     next_step = display_choice(
                         "Would you like to:",
                         ["Retry the same action", "Go back to the main menu"],
                         choice_str="Your selection: ",
                     )
 
-                    # TODO implement the retry option
-                    # "Quit", Implemented at the cost of slightly unclean code and
-                    # Quit going to main menu.
+                    # So if the users choose option 1, acting_on_choice recursive
+                    # function is called on again. And you keep going back to that case
+                    # and method you were using before.
+                    # If next_step == 2, there is nothing to do since the function
+                    # just completes and you return to while true loop and see main menu.
+
                     if next_step == 1:
                         acting_on_choice(choice)
-                    # elif next_step == 3:
-                    #    clear_terminal()
-                    #    print("Thanks for using Breeze! Goodbye!")
-                    #    return False
 
+            # Matching choices here outside of the acting on choice function
+            # if the choice is to logout or quit.
             match choice:
                 case 7:
+                    # Option 7 is appointments if there is a clinician. This is already
+                    # put in place in acting on choice function.
+
+                    # If there is no clinician, option 7 is logout
                     if not self.clinician_id:
                         clear_terminal()
                         return True
                 case 8:
+                    # If there is a clinician, option 8 is logout.
                     if self.clinician_id:
                         clear_terminal()
                         return True
+
+                    # If there is no clinician, option 8 is quit.
                     if not self.clinician_id:
                         clear_terminal()
                         print("Thanks for using Breeze! Goodbye!")
                         return False
                 case 9:
+                    # Option only exists if there is a clinicin. Option in such
+                    # case is to quit.
                     clear_terminal()
                     print("Thanks for using Breeze! Goodbye!")
                     return False
+
+            # Calling upon acting_on_choice function for patient to do different
+            # methods when they have chosen an option from the main menu.
             acting_on_choice(choice)
