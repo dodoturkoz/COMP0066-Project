@@ -18,6 +18,7 @@ from modules.utilities.input_utils import (
     get_valid_email,
 )
 from modules.utilities.dataframe_utils import filter_df_by_date
+from modules.appointments import display_appointment_engagement
 import pandas as pd
 
 
@@ -147,7 +148,7 @@ class Admin(User):
             print(patient_df)
             return (patient_df.index, patient_df.columns)
 
-        elif user_type == "clinicians" and sub_type == "none":
+        elif user_type == "clinicians" and sub_type == "none" and time_frame == "none":
             clinician_df = self.user_df.query(('role == "clinician"'))
             clinician_df = clinician_df.filter(
                 items=["username", "email", "name", "is_active"]
@@ -300,7 +301,7 @@ class Admin(User):
                 "DELETE FROM Users WHERE user_id = ?", (user_id,)
             )
             self.database.connection.commit()
-
+            self.refresh_user_df()
             # Return true as the operation was completed successfully
             return True
 
@@ -328,7 +329,7 @@ class Admin(User):
             wait_terminal()
             return False
 
-        # chose patient
+        # choose a patient
         patient_id = get_user_input_with_limited_choice(
             "Enter the patient ID to assign: ",
             patient_ids,
@@ -342,7 +343,7 @@ class Admin(User):
             print("No clinicians found.")
             return wait_terminal()
 
-        # chose a clinician
+        # choose a clinician
         clinician_id = get_user_input_with_limited_choice(
             "Enter the clinician ID to assign: ",
             clinician_ids,
@@ -485,14 +486,14 @@ class Admin(User):
             print("No user found")
             return wait_terminal()
 
-        # chose someone
+        # Choose someone
         user_id = get_user_input_with_limited_choice(
             "Enter the User ID to delete: ",
             user_ids,
             invalid_options_text="Invalid User ID, try again.",
         )
 
-        # confirm
+        # Confirm
         confirm = get_valid_yes_or_no(
             f"Are you sure you want to delete User {user_id}? (Y/N): "
         )
@@ -505,7 +506,101 @@ class Admin(User):
                 print(f"Error deleting user {user_id}.")
         else:
             print("\nCancelled.")
-        wait_terminal()
+        return wait_terminal()
+
+    def appointments_flow(self) -> bool:
+        """
+        Logic to see a user's appointments information, filtered by user choice
+        """
+
+        clear_terminal()
+        print("\nView appointments\n")
+
+        # Step 1: Get the user_type
+        user_options = ["Patients", "Clinicians"]
+        user_choice = display_choice(
+            "Would you like to view patients or clinicians?", user_options
+        )
+        if user_choice == 1:
+            user_type = "patient"
+        elif user_choice == 2:
+            user_type = "clinician"
+
+        # Step 2: Get a specific user to filter by, if relevant
+        filter_specific_user = get_valid_yes_or_no(
+            "Would you like to filter for a specific user? (Y/N): "
+        )
+        if filter_specific_user:
+            if user_type == "patient":
+                clear_terminal()
+                patient_ids, _ = self.view_table("patients", "none", "none")
+                filter_id = get_user_input_with_limited_choice(
+                    "\nEnter the ID of the patient you want to see: ",
+                    patient_ids,
+                    invalid_options_text="Invalid Patient ID, please chose from list.",
+                )
+            elif user_type == "clinician":
+                clear_terminal()
+                clinician_ids, _ = self.view_table(
+                    "clinician",
+                    "none",
+                    "none",
+                )
+                filter_id = get_user_input_with_limited_choice(
+                    "\nEnter the ID of the clinician you want to see: ",
+                    clinician_ids,
+                    invalid_options_text="Invalid Patient ID, please chose from list.",
+                )
+        else:
+            filter_id = None
+
+        # Step 3: Get a timeframe
+        time_options = [
+            "none",
+            "current day",
+            "current week",
+            "current month",
+            "current year",
+            "next day",
+            "next week",
+            "next month",
+            "next year",
+            "last day",
+            "last week",
+            "last week",
+            "last year",
+        ]
+        print()
+        for i in time_options:
+            print(i)
+        print()
+
+        while True:
+            user_time_option = input(
+                "Please choose one of the above options to filter by date: "
+            ).lower()
+            if user_time_option in time_options:
+                break
+            else:
+                print("Invalid input. Please try again. ")
+
+        # Breaking the string
+        if user_time_option == "none":
+            relative_time = "none"
+            time_period = "none"
+        else:
+            relative_time, time_period = user_time_option.split()
+
+        # Run the function
+        clear_terminal()
+        display_appointment_engagement(
+            self.database,
+            user_type,
+            filter_id,
+            relative_time,
+            time_period,
+        )
+        return wait_terminal()
 
     # Admin FLow
     def flow(self) -> bool:
@@ -520,7 +615,7 @@ class Admin(User):
                 "Edit User Information",
                 "Disable or Enable User",
                 "Delete User",
-                "Confirmed Bookings per clinician for the current week",
+                "View Appointments",
                 "Log Out",
             ]
             # TODO: We should probably have a cancel option during any of these 7 operations
@@ -551,11 +646,10 @@ class Admin(User):
             elif selection == 5:
                 self.delete_user_flow()
 
-            # Clinician appointments
+            # User appointments
             elif selection == 6:
-                clear_terminal()
-                self.view_table("clinicians", "appointments", "current week")
-                wait_terminal()
+                self.appointments_flow()
+
             # Exit
             elif selection == 7:
                 print("Goodbye Admin.")
