@@ -14,6 +14,7 @@ from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.appointments import (
     request_appointment,
     cancel_appointment,
+    get_patient_appointments,
 )
 from modules.constants import RELAXATION_RESOURCES, MOODS
 from modules.user import User
@@ -386,14 +387,10 @@ class Patient(User):
         """
         Views all appointments for the patient, including their status.
         """
-        query = (
-            "SELECT appointment_id, date, patient_notes, status "
-            "FROM Appointments "
-            "WHERE user_id = ?"
-        )
 
         try:
-            self.database.cursor.execute(query, (self.user_id,))
+            raw_appointments = get_patient_appointments(self.database, self.user_id)
+
             appointments = [
                 {
                     "appointment_id": row["appointment_id"],
@@ -401,7 +398,7 @@ class Patient(User):
                     "patient_notes": row["patient_notes"],
                     "status": row["status"],
                 }
-                for row in self.database.cursor.fetchall()
+                for row in raw_appointments
             ]
 
             if appointments:
