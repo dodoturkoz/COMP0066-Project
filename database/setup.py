@@ -90,9 +90,7 @@ def old_appointment_day(days_ago, hour):
                 # Could have been Sat
                 days_ago = -8
                 # Now will be Friday
-    return (
-        datetime.combine(date.today(), time(hour, 0)) - timedelta(days=days_ago)
-    ).strftime("%Y-%m-%d %H:%M")
+    return datetime.combine(date.today(), time(hour, 0)) - timedelta(days=days_ago)
 
 
 roles = ("admin", "patient", "clinician")
