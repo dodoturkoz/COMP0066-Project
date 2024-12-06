@@ -42,7 +42,6 @@ def login(db: Database) -> Union[User, None]:
     ).fetchone()
 
     if user_data:
-        user_id = user_data["user_id"]
         role = user_data["role"]
 
         if role == "admin":
@@ -50,23 +49,7 @@ def login(db: Database) -> Union[User, None]:
         elif role == "clinician":
             return Clinician(database=db, **user_data)
         elif role == "patient":
-            # fetch additional patient-specific data
-            patient_data = db.cursor.execute(
-                """
-                SELECT emergency_email, date_of_birth, diagnosis, clinician_id
-                FROM Patients
-                WHERE user_id = ?
-                """,
-                (user_id,),
-            ).fetchone()
-
-            if not patient_data:
-                raise Exception("Patient data not found for user ID.")
-
-            # merge the user and patient data
-            # old way: combined_data = {**user_data, **patient_data}
-            combined_data = user_data | patient_data
-            return Patient(database=db, **combined_data)
+            return Patient(database=db, **user_data)
         else:
             raise Exception("User role is not defined in the system.")
     else:
@@ -78,9 +61,9 @@ def registration_input(
     existing_usernames: list[str], existing_emails: list[str]
 ) -> dict[str, Union[str, datetime]]:
     """
-    Gets the registration information and returns i
+    Gets the registration information and returns it
     """
-    # Collect user information in a dictionar
+    # Collect user information in a dictionary
     registration_info = {
         "username": "",
         "password": "",
@@ -145,9 +128,9 @@ def registration_input(
     display_dict(registration_info)
     register = get_valid_yes_or_no("Is this information correct? (Y/N): ")
     if register:
-        return registration_input(existing_usernames)
-    else:
         return registration_info
+    else:
+        return registration_input(existing_usernames, existing_emails)
 
 
 def signup(db: Database) -> bool:
@@ -158,7 +141,9 @@ def signup(db: Database) -> bool:
     If it is not successfull, prints a message to the user before quitting the app.
     """
 
-    # Get a list of registered unique usernames
+    clear_terminal()
+
+    # Get a list of registered unique usernams
     existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
     user_info = registration_input(existing_usernames, existing_emails)
