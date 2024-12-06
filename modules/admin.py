@@ -556,45 +556,29 @@ class Admin(User):
 
         # Step 3: Get a timeframe
         time_options = [
-            "none",
-            "current day",
-            "current week",
-            "current month",
-            "current year",
-            "next day",
-            "next week",
-            "next month",
-            "next year",
-            "last day",
-            "last week",
-            "last month",
-            "last year",
+            "See all appointments",
+            "Current day",
+            "Current week",
+            "Current month",
+            "Current year",
+            "Next day",
+            "Next week",
+            "Next month",
+            "Next year",
+            "Last day",
+            "Last week",
+            "Last month",
+            "Last year",
         ]
-        print()
-        for i in time_options:
-            print(i)
-        print()
 
-        while True:
-            user_time_option = input(
-                "Please choose one of the above options to filter by date: "
-            ).lower()
-            if user_time_option in time_options:
-                break
-            else:
-                print("Invalid input. Please try again. ")
+        choice = display_choice("Select a time period to filter by:", time_options)
 
         # Breaking the string into the relevant variables
-        if user_time_option == "none":
+        if choice == 1:
             relative_time = "none"
             time_period = "none"
         else:
-            relative_time, time_period = user_time_option.split()
-
-        # print(user_type)
-        # print(filter_id)
-        # print(relative_time, "", time_period)
-        # print(time_period)
+            relative_time, time_period = time_options[choice - 1].lower().split()
 
         # Run the function
         clear_terminal()
@@ -630,7 +614,7 @@ class Admin(User):
             # Menu choices
             selection = display_choice("What would you like to do?", choices)
 
-            #     # Assign a patient to clinician
+            # Assign a patient to clinician
 
             if selection == 1:
                 self.assing_patient_flow()

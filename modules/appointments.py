@@ -196,8 +196,8 @@ def display_appointment_engagement(
     # Query to build a dataframe form database information
     query = f"""
     SELECT a.status, a.{id_attribute}, u.first_name, u.surname, a.date
-    FROM Appointments a JOIN Users u ON a.user_id = u.user_id
-    {f"WHERE a.clinician_id = {filter_id}" if filter_id else ""}
+    FROM Appointments a JOIN Users u ON a.{id_attribute} = u.user_id
+    {f"WHERE a.{id_attribute} = {filter_id}" if filter_id else ""}
     """
     appointment_cursor = database.cursor.execute(query)
     appointments_data = appointment_cursor.fetchall()
