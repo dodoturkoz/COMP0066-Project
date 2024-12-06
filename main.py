@@ -15,6 +15,7 @@ try:
     display_emergency_numbers()
     run = True
     while run:
+        clear_terminal()
         selection = display_choice(
             "Please select an option to continue:", ["Log In", "Sign Up", "Quit"]
         )
