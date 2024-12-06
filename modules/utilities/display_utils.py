@@ -4,7 +4,10 @@ from datetime import datetime
 
 # I have added the option to change the input string given when the choice is offered
 def display_choice(
-    header: str, options: list[str], choice_str: str = "Your selection: "
+    header: str,
+    options: list[str],
+    choice_str: str = "Your selection: ",
+    callback=None,
 ) -> int:
     """
     Displays a list of options to the user and returns their choice.
@@ -17,6 +20,8 @@ def display_choice(
         choice = input(choice_str)
         if choice.isnumeric() and 1 <= int(choice) <= len(options):
             return int(choice)
+        elif choice == "0" and callback:
+            callback()
         else:
             print("Invalid choice. Please try again.")
 
@@ -40,10 +45,17 @@ def clear_terminal():
         os.system("clear")
 
 
-def wait_terminal():
+def wait_terminal(
+    wait_text: str = "Press enter to return to the dashboard",
+    return_value: bool = False,
+    redirect_function=None,
+) -> bool:
     """We can use this function to wait for the user to press enter
     before continuing, such as after displaying a message or data."""
     while True:
-        if input("Press enter to return to the dashboard") == "":
+        if input(wait_text) is not None:
             clear_terminal()
-            return False
+            if redirect_function:
+                redirect_function()
+
+            return return_value
