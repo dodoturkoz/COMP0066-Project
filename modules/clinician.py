@@ -80,6 +80,7 @@ class Clinician(User):
                 )
                 self.database.connection.commit()
                 print(f"Your notes were stored as:\n{note}")
+                wait_terminal()
 
             except sqlite3.IntegrityError as e:
                 print(f"Failed to add note: {e}")
@@ -113,6 +114,7 @@ class Clinician(User):
             )
             self.database.connection.commit()
             print(f"Your notes were stored as:\n{updated_notes}")
+            wait_terminal()
         except sqlite3.IntegrityError as e:
             print(f"Failed to add note: {e}")
 
@@ -242,8 +244,6 @@ class Clinician(User):
                     ),
                 )
 
-        wait_terminal()
-
     def view_requested_appointments(self):
         """This allows the clinician to view all appointments that have been
         requested but not confirmed yet, and gives the option to confirm or
@@ -278,6 +278,7 @@ class Clinician(User):
             if confirm_choice == len(unconfirmed_appointments) + 1:
                 return False
             else:
+                clear_terminal()
                 options = ["Confirm", "Reject", "Go Back"]
                 accept_or_reject = display_choice(
                     f"You have selected {choice_strings[confirm_choice - 1]} - would you like to confirm or reject the appointment?",
@@ -298,6 +299,7 @@ class Clinician(User):
                             [accepted_appointment["appointment_id"]],
                         )
                         self.database.connection.commit()
+                        clear_terminal()
                         print(
                             "The appointment has been confirmed. An email with full details will be sent to you and the patient."
                         )
@@ -349,6 +351,7 @@ class Clinician(User):
                             [rejected_appointment["appointment_id"]],
                         )
                         self.database.connection.commit()
+                        clear_terminal()
                         print(
                             "The appointment has been rejected. A notification email will be sent to you and the patient."
                         )
