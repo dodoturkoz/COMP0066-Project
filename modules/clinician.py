@@ -7,7 +7,6 @@ from modules.appointments import (
     get_unconfirmed_clinician_appointments,
     print_appointment,
 )
-from modules.constants import MOODS
 from modules.patient import Patient
 from modules.user import User
 from modules.utilities.display_utils import (
@@ -20,7 +19,6 @@ from modules.utilities.send_email import send_email
 
 
 class Clinician(User):
-
     def print_notifications(self):
         """Checks if the clinican has requested appointments, or past appointments
         without notes, to display as notifications on the main menu"""
