@@ -1,20 +1,23 @@
-from modules.user import User
+import sqlite3
+from datetime import datetime
+
+from database.setup import diagnoses
+from modules.appointments import (
+    get_clinician_appointments,
+    print_appointment,
+)
+from modules.constants import MOODS
 from modules.patient import Patient
+from modules.user import User
 from modules.utilities.display_utils import (
     clear_terminal,
     display_choice,
     wait_terminal,
 )
 from modules.utilities.send_email import send_email
-from modules.appointments import get_appointments, print_appointment
-from datetime import datetime
-import sqlite3
-from database.setup import diagnoses
-from modules.constants import MOODS
 
 
 class Clinician(User):
-
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
         list of appointments passed into it."""
@@ -67,7 +70,7 @@ class Clinician(User):
         """
 
         clear_terminal()
-        appointments = get_appointments(self.database, self.user_id)
+        appointments = get_clinician_appointments(self.database, self.user_id)
 
         if not appointments:
             print("You have no registered appointments.")
@@ -105,7 +108,7 @@ class Clinician(User):
         reject them"""
 
         clear_terminal()
-        appointments = get_appointments(self.database, self.user_id)
+        appointments = get_clinician_appointments(self.database, self.user_id)
         unconfirmed_appointments = []
         choice_strings = []
 
