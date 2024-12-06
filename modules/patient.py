@@ -465,6 +465,7 @@ class Patient(User):
 
             # Log out if no choice is made.
             if not choice:
+                clear_terminal()
                 return True
 
             def acting_on_choice(choice):
@@ -476,7 +477,7 @@ class Patient(User):
                 action = "Option to redo previous action"
                 match choice:
                     case 1:
-                        self.edit_patient_info()
+                        self.edit_self_info()
                     case 2:
                         self.mood_of_the_day()
                     case 3:
