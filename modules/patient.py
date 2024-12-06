@@ -11,7 +11,11 @@ from modules.utilities.input_utils import (
     get_valid_date,
     get_valid_yes_or_no,
 )
-from modules.utilities.display_utils import display_choice, clear_terminal
+from modules.utilities.display_utils import (
+    display_choice,
+    clear_terminal,
+    wait_terminal,
+)
 from modules.appointments import (
     request_appointment,
     cancel_appointment,
@@ -135,7 +139,7 @@ class Patient(User):
             "Password",
             "First Name",
             "Surname",
-            "Emergency Email\n[0] Return to main menu",
+            "Emergency Email",
         ]
 
         try:
@@ -168,6 +172,7 @@ class Patient(User):
             success = self.edit_info(attribute, value)
 
             if success:
+                wait_terminal("Press enter to continue.")
                 return True
             else:
                 print(f"Failed to update {options[choice - 1]}. Please try again.")
@@ -510,6 +515,7 @@ class Patient(User):
                         keyword = input("Enter keyword to search for exercises: ")
                         self.search_exercises(keyword)
                     case 7:
+                        clear_terminal()
                         appointment_options = [
                             "Book Appointment",
                             "View Appointments",
@@ -551,16 +557,17 @@ class Patient(User):
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
-                    next_step = display_choice(
-                        "Would you like to:",
-                        ["Retry the same action"],
-                        choice_str="Your selection: ",
-                        enable_zero_quit=True,
-                    )
-                    if not next_step:
-                        return False
-                    if next_step == 1:
-                        acting_on_choice(choice)
+                    if choice != 1:
+                        next_step = display_choice(
+                            "Would you like to:",
+                            ["Retry the same action"],
+                            choice_str="Your selection: ",
+                            enable_zero_quit=True,
+                        )
+                        if not next_step:
+                            return False
+                        if next_step == 1:
+                            acting_on_choice(choice)
 
             # Call to process the selected option.
             acting_on_choice(choice)
