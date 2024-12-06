@@ -136,6 +136,7 @@ class Clinician(User):
 
         clear_terminal()
         self.print_filtered_patients_list_by_diagnosis(choice, patients)
+        ###TO DO -> Select patient from this screen
         wait_terminal()
 
     def flow_patient_summary(self):
@@ -369,9 +370,15 @@ class Clinician(User):
             "View appointment notes",
             "Add notes to an appointment",
             "Confirm/Reject Appointments",
-            "Return to Main Menu",
         ]
-        next = display_choice("What would you like to do now?", options)
+        next = display_choice(
+            "What would you like to do now?",
+            options,
+            enable_zero_quit=True,
+            zero_option_message="Return to Main Menu",
+        )
+        if not next:
+            return False
 
         # View appointment notes
         if next == 1:
@@ -418,8 +425,6 @@ class Clinician(User):
         elif next == 3:
             self.view_requested_appointments()
         # Exit
-        elif next == 4:
-            return False
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
@@ -451,7 +456,10 @@ class Clinician(User):
             # Offer a choice of different sets of appointments, grouped by time
             view_options = ["All", "Past", "Upcoming"]
             view = display_choice(
-                "Which appointments would you like to view?", view_options
+                "Which appointments would you like to view?",
+                view_options,
+                enable_zero_quit=True,
+                zero_option_message="Return to Main Menu",
             )
 
             # Show all appointments
