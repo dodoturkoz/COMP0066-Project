@@ -5,12 +5,17 @@ from datetime import datetime
 
 from database.setup import Database
 from modules.utilities.input_utils import (
+    get_user_input_with_limited_choice,
     get_valid_string,
     get_valid_email,
     get_valid_date,
     get_valid_yes_or_no,
 )
-from modules.utilities.display_utils import display_choice, clear_terminal
+from modules.utilities.display_utils import (
+    display_choice,
+    clear_terminal,
+    wait_terminal,
+)
 from modules.appointments import (
     request_appointment,
     cancel_appointment,
@@ -134,7 +139,7 @@ class Patient(User):
             "Password",
             "First Name",
             "Surname",
-            "Emergency Email\n[0] Return to main menu",
+            "Emergency Email",
         ]
 
         try:
@@ -167,6 +172,7 @@ class Patient(User):
             success = self.edit_info(attribute, value)
 
             if success:
+                wait_terminal("Press enter to continue.")
                 return True
             else:
                 print(f"Failed to update {options[choice - 1]}. Please try again.")
@@ -465,6 +471,7 @@ class Patient(User):
 
             # Log out if no choice is made.
             if not choice:
+                clear_terminal()
                 return True
 
             def acting_on_choice(choice):
@@ -476,7 +483,7 @@ class Patient(User):
                 action = "Option to redo previous action"
                 match choice:
                     case 1:
-                        self.edit_patient_info()
+                        self.edit_self_info()
                     case 2:
                         self.mood_of_the_day()
                     case 3:
@@ -508,6 +515,7 @@ class Patient(User):
                         keyword = input("Enter keyword to search for exercises: ")
                         self.search_exercises(keyword)
                     case 7:
+                        clear_terminal()
                         appointment_options = [
                             "Book Appointment",
                             "View Appointments",
@@ -533,9 +541,15 @@ class Patient(User):
                                 self.view_appointments()
                             case 3:
                                 # Cancel appointment
-                                self.view_appointments()
-                                appointment_id = int(
-                                    input("Enter appointment ID to cancel: ")
+                                my_appointments = self.view_appointments()
+                                appointment_id = get_user_input_with_limited_choice(
+                                    "Enter appointment ID to cancel: ",
+                                    [
+                                        appointment["appointment_id"]
+                                        for appointment in my_appointments
+                                        if appointment["date"] >= datetime.now()
+                                    ],
+                                    "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
                                 )
                                 cancel_appointment(self.database, appointment_id)
                             case 4:
@@ -543,16 +557,17 @@ class Patient(User):
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
-                    next_step = display_choice(
-                        "Would you like to:",
-                        ["Retry the same action"],
-                        choice_str="Your selection: ",
-                        enable_zero_quit=True,
-                    )
-                    if not next_step:
-                        return False
-                    if next_step == 1:
-                        acting_on_choice(choice)
+                    if choice != 1:
+                        next_step = display_choice(
+                            "Would you like to:",
+                            ["Retry the same action"],
+                            choice_str="Your selection: ",
+                            enable_zero_quit=True,
+                        )
+                        if not next_step:
+                            return False
+                        if next_step == 1:
+                            acting_on_choice(choice)
 
             # Call to process the selected option.
             acting_on_choice(choice)
