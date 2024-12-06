@@ -85,12 +85,14 @@ class Patient(User):
             "Password",
             "First Name",
             "Surname",
-            "Emergency Email",
+            "Emergency Email\n[0] Return to main menu",
         ]
 
         try:
             # Display editable attributes
-            choice = display_choice("Select an attribute to edit:", options)
+            choice = display_choice(
+                "Select an attribute to edit:", options, callback=self.flow
+            )
             attribute = options[choice - 1].lower().replace(" ", "_")
 
             # Handle specific validation for emails
@@ -374,6 +376,10 @@ class Patient(User):
             print(f"Error viewing appointments: {e}")
             return []
 
+    def logout(self):
+        #Trying to logout
+        print("Bye")
+
     def flow(self):
         """
         Displays the main patient menu and handles the selection of various options.
@@ -394,22 +400,30 @@ class Patient(User):
                 "Display Previous Moods",
                 "Add Journal Entry",
                 "Read Journal Entries",
-                "Search Exercises",
             ]
+
+            def logout(choice):
+                #Trying to logout
+                print("Bye!/n Quote of the day:")
 
             # if/else statement to show different options to users
             # based on whether they already have a clinician or not.
             if self.clinician_id:
-                options.extend(["Appointments", "Log Out", "Quit"])
+                options.extend(["Search Exercises", "Appointments\n[0] Log out"])
             else:
-                options.extend(["Log Out", "Quit"])
+                options.append("Search Exercises\n[0] Log out")
 
-            choice = display_choice("Please select an option:", options)
+            choice = display_choice(
+                "Please select an option:", options, callback=#Must have option to logout
+            )
+
+            #Trying to logout
+            if choice == "0":
+                return True
 
             def acting_on_choice(choice):
                 """
                 Recursive function to match different methods to different choices/options
-                Only quit and logout option/choice not matched here.
                 """
                 # Acting_on_choice function only called twice. 1. At the end of flow
                 # code to allow patients to go into different options from main menu.
@@ -419,8 +433,7 @@ class Patient(User):
                 # endlessly retry the same option until you decide to exit the menu.
                 # If patients choose to exit menu when retry the same action is shown,
                 # the function just completes and the outer while true loop happens
-                # where the main menu is shown. On second thoughts, can use while loop
-                # instead. Recursive function was just more intuitive for me at that time.
+                # where the main menu is shown. Plan to change to while loop later.
 
                 # requires python version >= 3.10
                 # using pattern matching to handle the choices
@@ -475,17 +488,17 @@ class Patient(User):
                         self.search_exercises(keyword)
 
                     case 7:
-                        # if statement here since case 7 would be appointments if
-                        # the patient had a clinician. Otherwise it would be log out.
+                        # case 7 only exists if have clinician. Will remove if statement.
                         if self.clinician_id:
                             appointment_options = [
                                 "Book Appointment",
                                 "View Appointments",
-                                "Cancel Appointment",
-                                "Exit appointments",
+                                "Cancel Appointment\n[0] Return to main menu",
                             ]
                             selected_choice = display_choice(
-                                "Please select an option:", appointment_options
+                                "Please select an option:",
+                                appointment_options,
+                                callback=self.flow,
                             )
 
                             # Options within appointments option in patient menu.
@@ -523,8 +536,9 @@ class Patient(User):
                 if action != "Exit back to main menu":
                     next_step = display_choice(
                         "Would you like to:",
-                        ["Retry the same action", "Go back to the main menu"],
+                        ["Retry the same action\n[0] Return to main menu"],
                         choice_str="Your selection: ",
+                        callback=self.flow,
                     )
 
                     # So if the users choose option 1, acting_on_choice recursive
@@ -535,35 +549,6 @@ class Patient(User):
 
                     if next_step == 1:
                         acting_on_choice(choice)
-
-            # Matching choices here outside of the acting on choice function
-            # if the choice is to logout or quit.
-            match choice:
-                case 7:
-                    # Option 7 is appointments if there is a clinician. This is already
-                    # put in place in acting on choice function.
-
-                    # If there is no clinician, option 7 is logout
-                    if not self.clinician_id:
-                        clear_terminal()
-                        return True
-                case 8:
-                    # If there is a clinician, option 8 is logout.
-                    if self.clinician_id:
-                        clear_terminal()
-                        return True
-
-                    # If there is no clinician, option 8 is quit.
-                    if not self.clinician_id:
-                        clear_terminal()
-                        print("Thanks for using Breeze! Goodbye!")
-                        return False
-                case 9:
-                    # Option only exists if there is a clinicin. Option in such
-                    # case is to quit.
-                    clear_terminal()
-                    print("Thanks for using Breeze! Goodbye!")
-                    return False
 
             # Calling upon acting_on_choice function for patient to do different
             # methods when they have chosen an option from the main menu.
