@@ -6,7 +6,7 @@ from modules.appointments import (
     get_clinician_appointments,
     print_appointment,
 )
-from modules.constants import MOODS
+
 from modules.patient import Patient
 from modules.user import User
 from modules.utilities.display_utils import (
