@@ -7,10 +7,7 @@ from modules.appointments import (
     get_unconfirmed_clinician_appointments,
     print_appointment,
 )
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/clinician-notifications
 from modules.patient import Patient
 from modules.user import User
 from modules.utilities.display_utils import (
@@ -23,7 +20,6 @@ from modules.utilities.send_email import send_email
 
 
 class Clinician(User):
-<<<<<<< HEAD
     def __init__(self, database, **kwargs):
         super().__init__(database, **kwargs)
         self.should_logout = False
@@ -188,7 +184,7 @@ class Clinician(User):
 
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-=======
+
     def print_notifications(self):
         """Checks if the clinican has requested appointments, or past appointments
         without notes, to display as notifications on the main menu"""
@@ -287,7 +283,6 @@ class Clinician(User):
             wait_terminal()
         except sqlite3.IntegrityError as e:
             print(f"Failed to add note: {e}")
->>>>>>> origin/clinician-notifications
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
@@ -365,11 +360,8 @@ class Clinician(User):
         elif next == 3:
             self.view_requested_appointments()
         # Exit
-<<<<<<< HEAD
-=======
         elif next == 4:
             return False
->>>>>>> origin/clinician-notifications
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
@@ -608,85 +600,11 @@ class Clinician(User):
                 print("You have no patients.")
                 return []
 
-<<<<<<< HEAD
             patient_list = []
             for patient_data in patients:
                 patient = Patient(self.database, **patient_data)
                 patient.mood = (
                     patient_data["mood"] if patient_data["mood"] else "None recorded"
-=======
-    def edit_patient_info(self, patient: Patient):
-        """Edit patient information"""
-        patient.MODIFIABLE_ATTRIBUTES = ["diagnosis"]
-
-        while True:
-            edit_choice = display_choice(
-                "What would you like to edit?",
-                ["First Name", "Surname", "Diagnosis", "Exit"],
-                "Please choose from the above options: ",
-            )
-            if edit_choice == 1:
-                new_first_name = input("Please enter the new first name: ")
-                patient.edit_info("first_name", new_first_name)
-            if edit_choice == 2:
-                new_surname = input("Please enter the new surname: ")
-                patient.edit_info("surname", new_surname)
-            if edit_choice == 3:
-                new_diagnosis = input("Please enter the new diagnosis: ")
-                patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 4:
-                return False
-
-    def view_dashboard(self):
-        """View the dashboard.
-
-        All methods used are declared as class methods to allow for other classes to access them.
-        """
-        clear_terminal()
-        dashboard_home_choice = display_choice(
-            "Welcome to your dashboard. Where would you like to go?",
-            ["View All", "Filter By Diagnosis", "Exit"],
-        )
-        if dashboard_home_choice == 1:
-            clear_terminal()
-            patients = self.get_all_patients()
-            print("Here are all your patients:")
-            for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
-            decision = input(
-                "Would you like to edit any patient's information? (Y/N): "
-            )
-            if decision == "Y":
-                patient_id = int(input("Please enter the patient's ID: "))
-                patient_details = self.database.cursor.execute(
-                    """
-                    SELECT * 
-                    FROM Patients
-                    INNER JOIN Users ON Patients.user_id = Users.user_id
-                    WHERE Patients.user_id = ?""",
-                    [patient_id],
-                ).fetchone()
-                patient = Patient(self.database, **patient_details)
-                self.edit_patient_info(patient)
-                clear_terminal()
-                return False
-            if decision == "N":
-                wait_terminal()
-
-        if dashboard_home_choice == 2:
-            clear_terminal()
-            # Filter by diagnosis
-            diagnosis = display_choice(
-                "Please enter the diagnosis you would like to filter by: ", diagnoses
-            )
-            patients = self.get_all_patients_by_diagnosis(diagnosis)
-            print(f"Here are all your patients with the diagnosis {diagnosis}:")
-            for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
->>>>>>> origin/clinician-notifications
                 )
                 patient_list.append(patient)
 
@@ -709,37 +627,3 @@ class Clinician(User):
         if not filtered_patients:
             print("There are no patients with that diagnosis.")
             return False
-<<<<<<< HEAD
-=======
-
-    def flow(self) -> bool:
-        """Controls flow of the program from the clinician class
-
-        The program stays within the while loop until a condition is met that
-        breaks the flow. We return to False to indicate to Main.py that our User
-        has quit.
-        """
-        while True:
-            clear_terminal()
-            print(f"Hello, {self.first_name} {self.surname}!")
-            self.print_notifications()
-
-            choices = [
-                "Calendar",
-                "Your Patient Dashboard",
-                "View Requested Appointments",
-                "Quit",
-            ]
-            selection = display_choice("What would you like to do?", choices)
-
-            if selection == 1:
-                self.view_calendar()
-            if selection == 2:
-                self.view_dashboard()
-            if selection == 3:
-                self.view_requested_appointments()
-            if selection == 4:
-                clear_terminal()
-                print("Thanks for using Breeze!")
-                return False
->>>>>>> origin/clinician-notifications
