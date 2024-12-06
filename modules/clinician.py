@@ -19,6 +19,10 @@ from modules.utilities.send_email import send_email
 
 
 class Clinician(User):
+    def __init__(self, database, **kwargs):
+        super().__init__(database, **kwargs)
+        self.should_logout = False
+
     def flow(self) -> bool:
         """Controls flow of the program from the clinician class
 
@@ -26,7 +30,10 @@ class Clinician(User):
         breaks the flow. We return to False to indicate to Main.py that our User
         has quit.
         """
+
         while True:
+            if self.should_logout:
+                return True
             clear_terminal()
             print(f"Hello, {self.first_name} {self.surname}!")
 
@@ -34,9 +41,14 @@ class Clinician(User):
                 "Calendar",
                 "Your Patient Dashboard",
                 "View Requested Appointments",
-                "Quit",
             ]
-            selection = display_choice("What would you like to do?", choices)
+            selection = display_choice(
+                "What would you like to do?",
+                choices,
+                "Please choose from the above options: ",
+                enable_zero_quit=True,
+                zero_option_message="Log Out",
+            )
 
             if selection == 1:
                 self.view_calendar()
@@ -44,21 +56,29 @@ class Clinician(User):
                 self.flow_patient_dashboard()
             if selection == 3:
                 self.view_requested_appointments()
-            if selection == 4:
+            if not selection:
+                self.should_logout = True
+                return True
                 clear_terminal()
-                print("Thanks for using Breeze!")
-                return False
+                # return True because flow() logs out when True is returned
 
     def flow_patient_dashboard(self):
         """View the dashboard.
 
         All methods used are declared as class methods to allow for other classes to access them.
         """
+        if self.should_logout:
+            return True
+
         clear_terminal()
         choice = display_choice(
             "Welcome to your dashboard. Where would you like to go?",
-            ["View All", "Filter By Diagnosis", "Exit"],
+            ["View All", "Filter By Diagnosis"],
+            enable_zero_quit=True,
+            zero_option_callback=self.flow,
+            zero_option_message="Return to main menu",
         )
+
         if choice == 1:
             self.flow_patient_summary()
 
@@ -66,64 +86,102 @@ class Clinician(User):
             self.flow_filtered_diagnosis_list()
 
         # Return to main menu
-        if choice == 3:
-            clear_terminal()
+        if not choice:
             return False
 
     def flow_edit_patient_info_screen(self, patient: Patient):
         """Edit patient information screen"""
-
+        if self.should_logout:
+            return True
         clear_terminal()
 
         choice = display_choice(
-            f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to change?",
-            ["Diagnosis", "Exit", "Return to the dashboard"],
+            f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to do?",
+            [
+                "Edit Diagnosis",
+            ],
             "Please choose from the above options: ",
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_summary,
+            zero_option_message="Return to patient list",
         )
 
         # Edit Diagnosis
         if choice == 1:
             clear_terminal()
-            self.choose_from_list_and_update_diagnosis(patient)
-            wait_terminal(
-                "Press enter to return to the patient summary screen.",
-                False,
-                self.flow_patient_summary,
-            )
-
-        if choice == 2:
+            self.flow_choose_from_list_and_update_diagnosis(patient)
+            # wait_terminal(
+            #     "Press enter to continue",
+            #     redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
+            # )
+        if not choice:
             return False
 
-        if choice == 3:
-            self.flow_patient_dashboard()
-
     def flow_filtered_diagnosis_list(self):
+        if self.should_logout:
+            return True
+        patients: list[Patient] = self.get_all_patients()
         clear_terminal()
+
         choice: int = display_choice(
-            "Please enter the diagnosis you would like to filter by or press 0 to go back: ",
+            "Please enter the diagnosis you would like to filter by: ",
             diagnoses,
-            callback=self.flow_patient_dashboard,
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_dashboard,
+            zero_option_message="Return to the dashboard",
         )
+
+        if not choice:
+            return False
+
         clear_terminal()
-        self.print_filtered_patients_list_by_diagnosis(choice)
+        self.print_filtered_patients_list_by_diagnosis(choice, patients)
         wait_terminal()
 
     def flow_patient_summary(self):
-        clear_terminal()
+        if self.should_logout:
+            return True
         patients: list[Patient] = self.get_all_patients()
+        clear_terminal()
+
         patient_strings: list[str] = self.create_pretty_patient_list(patients)
         selected = display_choice(
             "Choose your patient:",
             [*patient_strings],
-            "Press 0 to return to the dashboard or choose a patient: ",
-            self.flow_patient_dashboard,
+            "Choose a patient: ",
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_dashboard,
         )
+        if not selected:
+            return False
 
-        if selected == 0:
-            self.flow_patient_dashboard()
+        return self.flow_edit_patient_info_screen(patients[selected - 1])
 
-        else:
-            self.flow_edit_patient_info_screen(patients[selected - 1])
+    def flow_choose_from_list_and_update_diagnosis(self, patient: Patient):
+        """Displays a list of diagnoses and allows the user to choose one"""
+        if self.should_logout:
+            return True
+
+        try:
+            choice = display_choice(
+                f"Please choose a new diagnosis for {patient.first_name} {patient.surname}. Current Diagnosis: {patient.diagnosis}",
+                diagnoses,
+                enable_zero_quit=True,
+            )
+
+            if not choice:
+                return False
+
+            diagnosis = diagnoses[choice - 1]
+            patient.edit_info("diagnosis", diagnosis)
+            print(f"Diagnosis updated to {diagnosis}.")
+            wait_terminal(
+                "Press enter to return to patient overview.",
+                redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
+            )
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def view_notes(self, appointment: dict):
         """Print out clinician and patient notes for a given appointment"""
@@ -610,9 +668,8 @@ class Clinician(User):
         except Exception as e:
             print(f"Error: {e}")
 
-    def print_filtered_patients_list_by_diagnosis(self, choice: int) -> None:
-        """Interface for display choice method which allows the user to select a diagnosis to filter by"""
-        patients: list[Patient] = self.get_all_patients()
+    def print_filtered_patients_list_by_diagnosis(self, choice: int, patients) -> None:
+        """Prints a list of filtered patients"""
         filtered_patients = [
             patient
             for patient in patients
@@ -624,16 +681,4 @@ class Clinician(User):
 
         if not filtered_patients:
             print("There are no patients with that diagnosis.")
-
-    def choose_from_list_and_update_diagnosis(self, patient: Patient):
-        """Displays a list of diagnoses and allows the user to choose one"""
-        try:
-            choice = display_choice(
-                f"Please choose a new diagnosis for {patient.first_name} {patient.surname}. Current Diagnosis: {patient.diagnosis}",
-                diagnoses,
-            )
-            diagnosis = diagnoses[choice - 1]
-            patient.edit_info("diagnosis", diagnosis)
-
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            return False

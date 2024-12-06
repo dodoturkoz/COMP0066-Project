@@ -66,6 +66,6 @@ def wait_terminal(
         if input(wait_text) is not None:
             clear_terminal()
             if redirect_function:
-                redirect_function()
+                return redirect_function()
 
             return return_value
