@@ -4,6 +4,7 @@ from datetime import datetime
 from database.setup import diagnoses
 from modules.appointments import (
     get_clinician_appointments,
+    get_unconfirmed_clinician_appointments,
     print_appointment,
 )
 from modules.constants import MOODS
@@ -23,7 +24,7 @@ class Clinician(User):
     def print_notifications(self):
         """Checks if the clinican has requested appointments, or past appointments
         without notes, to display as notifications on the main menu"""
-        requested_appointments = get_unconfirmed_appointments(
+        requested_appointments = get_unconfirmed_clinician_appointments(
             self.database, self.user_id
         )
         appointments_without_notes = self.get_all_appointments_without_notes()
@@ -38,10 +39,10 @@ class Clinician(User):
 
         if appointments_without_notes:
             if len(appointments_without_notes) == 1:
-                print("You have 1 previous appointment to add notes on.")
+                print("You have 1 previous appointment to add notes for.")
             else:
                 print(
-                    f"There are {len(appointments_without_notes)} previous appointments to add notes on."
+                    f"There are {len(appointments_without_notes)} previous appointments to add notes for."
                 )
 
     def view_notes(self, appointment: dict):
@@ -66,7 +67,7 @@ class Clinician(User):
         else:
             # Otherwise, take a valid input from the user + add timestamp
             note = (
-                get_valid_string("Please enter your notes for this appointment:")
+                get_valid_string("Please enter your notes for this appointment: ")
                 + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
             )
 
@@ -120,6 +121,7 @@ class Clinician(User):
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
         list of appointments passed into it."""
+        clear_terminal()
         appointment_strings = []
 
         # Loop through the appointments, printing them for the user and saving a string
@@ -193,7 +195,7 @@ class Clinician(User):
         """Returns all the clinician's past appointments that have no notes recorded"""
 
         # Get all appointments for this clinician
-        appointments = get_appointments(self.database, self.user_id)
+        appointments = get_clinician_appointments(self.database, self.user_id)
 
         # Select past appointments without notes and return them in a list
         return [
@@ -251,7 +253,7 @@ class Clinician(User):
 
         clear_terminal()
         # Get all unconfirmed appointments for this clinician
-        unconfirmed_appointments = get_unconfirmed_appointments(
+        unconfirmed_appointments = get_unconfirmed_clinician_appointments(
             self.database, self.user_id
         )
         choice_strings = []

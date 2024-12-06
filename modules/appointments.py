@@ -52,9 +52,9 @@ def get_clinician_appointments(database, clinician_id: int) -> list:
         return []
 
 
-def get_unconfirmed_appointments(database, clinician_id: int) -> list:
+def get_unconfirmed_clinician_appointments(database, clinician_id: int) -> list:
     """Find all unconfirmed future appointments for a specified clinician"""
-    appointments = get_appointments(database, clinician_id)
+    appointments = get_clinician_appointments(database, clinician_id)
 
     return [
         appointment
