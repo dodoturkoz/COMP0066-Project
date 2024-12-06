@@ -5,6 +5,7 @@ from datetime import datetime
 
 from database.setup import Database
 from modules.utilities.input_utils import (
+    get_user_input_with_limited_choice,
     get_valid_string,
     get_valid_email,
     get_valid_date,
@@ -534,9 +535,15 @@ class Patient(User):
                                 self.view_appointments()
                             case 3:
                                 # Cancel appointment
-                                self.view_appointments()
-                                appointment_id = int(
-                                    input("Enter appointment ID to cancel: ")
+                                my_appointments = self.view_appointments()
+                                appointment_id = get_user_input_with_limited_choice(
+                                    "Enter appointment ID to cancel: ",
+                                    [
+                                        appointment["appointment_id"]
+                                        for appointment in my_appointments
+                                        if appointment["date"] >= datetime.now()
+                                    ],
+                                    "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
                                 )
                                 cancel_appointment(self.database, appointment_id)
                             case 4:
