@@ -23,12 +23,75 @@ def old_day(days_ago):
     return (datetime.now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
 
 
-def old_appointment_day(days_ago):
-    """Returns a date relative to today's date and a random time between 9 to 4 pm."""
+def old_appointment_day(days_ago, hour):
+    """Returns a date relative to today's date with a time that was passed into function."""
     # Only used for future and past dates.
+    # have so many cases to ensure appointment not given on Sat or Sun for dummy dat
+    # but will change this to a dictionary to make code cleaner.
+    day_of_week = datetime.today().weekday()
+    match day_of_week:
+        case 0:
+            # Today is Monday
+            if days_ago == -6 or days_ago == -5:
+                # Could have been Sunday or Sat
+                days_ago = -7
+                # Now will be Monday
+            elif days_ago == 1 or days_ago == 2:
+                # Could have been Sunday or Sat
+                days_ago = 3
+                # Now will be Friday
+
+        case 1:
+            # Today is Tuesday
+            if days_ago == -5 or days_ago == -4:
+                # Could have been Sunday or Sat
+                days_ago = -6
+                # Now will be Monday
+            elif days_ago == 2 or days_ago == 3:
+                # Could have been Sunday or Sat
+                days_ago = 4
+                # Now will be Friday
+
+        case 2:
+            # Today is Wednesday
+            if days_ago == -4 or days_ago == -3:
+                # Could have been Sunday or Sat
+                days_ago = -5
+                # Now will be Monday
+            elif days_ago == 3:
+                # Could have been Sunday or Sat
+                days_ago = 5
+                # Now will be Friday
+        case 3:
+            # Today is Thursday
+            if days_ago == -3 or days_ago == -2:
+                # Could have been Sunday or Sat
+                days_ago = -4
+                # Now will be Monday
+        case 4:
+            # Today is Friday
+            if days_ago == -2 or days_ago == -1:
+                # Could have been Sunday or Sat
+                days_ago = -3
+                # Now will be Monday
+        case 5:
+            # Today is Saturday
+            if days_ago == -1:
+                # Could have been Sunday
+                days_ago = -2
+                # Now will be Monday
+        case 6:
+            # Today is Sunday
+            if days_ago == 1:
+                # Could have been  Sat
+                days_ago = 2
+                # Now will be Monday
+            elif days_ago == -6:
+                # Could have been Sat
+                days_ago = -8
+                # Now will be Friday
     return (
-        datetime.combine(date.today(), time(random.randint(9, 16), 0))
-        - timedelta(days=days_ago)
+        datetime.combine(date.today(), time(hour, 0)) - timedelta(days=days_ago)
     ).strftime("%Y-%m-%d %H:%M")
 
 
@@ -1003,54 +1066,162 @@ class Database:
                         1,
                         2,
                         5,
-                        old_appointment_day(1),
+                        old_appointment_day(3, 9),
                         "Attended",
-                        "detailed notes",
-                        "This is what the clinician thinks",
+                        "I feel changes in medication is required given current change in condition.",
+                        "I feel patient should continue with the given medication.",
                     ),
                     (
                         2,
-                        2,
-                        5,
-                        old_appointment_day(-1),
-                        "Pending",
-                        "notes about condition",
-                        None,
-                    ),
-                    (
-                        3,
-                        3,
-                        5,
-                        old_appointment_day(-5),
-                        "Pending",
-                        None,
-                        None,
-                    ),
-                    (
-                        4,
-                        4,
-                        5,
-                        old_appointment_day(-2),
-                        "Attended",
-                        "notes about condition",
-                        "long rambling text",
-                    ),
-                    (
-                        5,
                         7,
                         5,
-                        old_appointment_day(-1),
+                        old_appointment_day(2, 10),
+                        "Did Not Attend",
+                        "Condition worsened.",
+                        None,
+                    ),
+                    (
+                        3,
+                        10,
+                        5,
+                        old_appointment_day(1, 11),
+                        "Rejected",
+                        None,
+                        None,
+                    ),
+                    (
+                        4,
+                        13,
+                        5,
+                        old_appointment_day(1, 12),
+                        "Attended",
+                        "Condition improved.",
+                        "Condition worsened.",
+                    ),
+                    (
+                        5,
+                        16,
+                        5,
+                        old_appointment_day(-1, 13),
                         "Confirmed",
                         None,
                         None,
                     ),
                     (
                         6,
-                        8,
+                        19,
                         5,
-                        old_appointment_day(-2),
+                        old_appointment_day(-1, 14),
+                        "Cancelled By Clinician",
+                        None,
+                        None,
+                    ),
+                    (
+                        7,
+                        19,
+                        5,
+                        old_appointment_day(-2, 15),
+                        "Cancelled By Patient",
+                        None,
+                        None,
+                    ),
+                    (
+                        8,
+                        2,
+                        5,
+                        old_appointment_day(-2, 16),
+                        "Confirmed",
+                        "Condition worsened. Discuss medicine.",
+                        None,
+                    ),
+                    (
+                        9,
+                        2,
+                        5,
+                        old_appointment_day(-3, 9),
+                        "Confirmed",
+                        "Condition improved. Discuss therapy options.",
+                        None,
+                    ),
+                    (
+                        10,
+                        7,
+                        5,
+                        old_appointment_day(-5, 10),
+                        "Pending",
+                        "Condition improving.",
+                        None,
+                    ),
+                    (
+                        11,
+                        2,
+                        5,
+                        old_appointment_day(-6, 11),
+                        "Pending",
+                        None,
+                        None,
+                    ),
+                    (
+                        12,
+                        8,
+                        6,
+                        old_appointment_day(3, 9),
+                        "Attended",
+                        "I feel changes in medication is required given current change in condition.",
+                        "I feel patient should continue with the given medication.",
+                    ),
+                    (
+                        13,
+                        11,
+                        6,
+                        old_appointment_day(2, 10),
+                        "Did Not Attend",
+                        "Condition worsened.",
+                        None,
+                    ),
+                    (
+                        14,
+                        14,
+                        6,
+                        old_appointment_day(1, 11),
+                        "Rejected",
+                        None,
+                        None,
+                    ),
+                    (
+                        15,
+                        17,
+                        6,
+                        old_appointment_day(1, 12),
+                        "Attended",
+                        "Condition improved.",
+                        "Condition worsened.",
+                    ),
+                    (
+                        16,
+                        20,
+                        6,
+                        old_appointment_day(-1, 13),
                         "Confirmed",
                         None,
+                        None,
+                    ),
+                    (
+                        17,
+                        8,
+                        6,
+                        old_appointment_day(-2, 14),
+                        "Cancelled By Patient",
+                        None,
+                        None,
+                    ),
+                    (
+                        18,
+                        14,
+                        6,
+                        old_appointment_day(-2, 15),
+                        "Confirmed",
+                        "Condition worsened.",
                         None,
                     ),
                 ]
