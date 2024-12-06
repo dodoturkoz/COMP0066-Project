@@ -71,31 +71,38 @@ class Clinician(User):
             return False
 
     def flow_edit_patient_info_screen(self, patient: Patient):
-        """Interface for editing a patient's information"""
+        """Edit patient information screen"""
+
+        clear_terminal()
 
         choice = display_choice(
-            "What would you like to edit?",
+            f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to change?",
             ["Diagnosis", "Exit", "Return to the dashboard"],
             "Please choose from the above options: ",
         )
+
         # Edit Diagnosis
         if choice == 1:
             clear_terminal()
             self.choose_from_list_and_update_diagnosis(patient)
             wait_terminal(
                 "Press enter to return to the patient summary screen.",
+                False,
                 self.flow_patient_summary,
             )
 
         if choice == 2:
             return False
+
         if choice == 3:
             self.flow_patient_dashboard()
 
     def flow_filtered_diagnosis_list(self):
         clear_terminal()
         choice: int = display_choice(
-            "Please enter the diagnosis you would like to filter by: ", diagnoses
+            "Please enter the diagnosis you would like to filter by or press 0 to go back: ",
+            diagnoses,
+            callback=self.flow_patient_dashboard,
         )
         clear_terminal()
         self.print_filtered_patients_list_by_diagnosis(choice)
@@ -106,7 +113,10 @@ class Clinician(User):
         patients: list[Patient] = self.get_all_patients()
         patient_strings: list[str] = self.create_pretty_patient_list(patients)
         selected = display_choice(
-            "Choose your patient:", [*patient_strings, "Return without editing"]
+            "Choose your patient:",
+            [*patient_strings],
+            "Press 0 to return to the dashboard or choose a patient: ",
+            self.flow_patient_dashboard,
         )
 
         if selected == 0:
@@ -114,23 +124,6 @@ class Clinician(User):
 
         else:
             self.flow_edit_patient_info_screen(patients[selected - 1])
-
-        display_choice(
-            "Select your patient:", self.create_pretty_patient_list(patients)
-        )
-
-        if get_valid_yes_or_no(
-            "Would you like to edit any patient's information? (Y/N): "
-        ):
-            try:
-                self.edit_info(display_choice(patient_strings))
-                clear_terminal()
-            except Exception as e:
-                print(f"An unexpected error occurred: {e}")
-                wait_terminal()
-
-        else:
-            wait_terminal()
 
     def view_notes(self, appointment: dict):
         """Print out clinician and patient notes for a given appointment"""
