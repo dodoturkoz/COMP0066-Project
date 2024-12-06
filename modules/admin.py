@@ -542,7 +542,7 @@ class Admin(User):
             elif user_type == "clinician":
                 clear_terminal()
                 clinician_ids, _ = self.view_table(
-                    "clinician",
+                    "clinicians",
                     "none",
                     "none",
                 )
@@ -584,22 +584,28 @@ class Admin(User):
             else:
                 print("Invalid input. Please try again. ")
 
-        # Breaking the string
+        
+        # Breaking the string into the relevant variables
         if user_time_option == "none":
             relative_time = "none"
             time_period = "none"
         else:
             relative_time, time_period = user_time_option.split()
 
+        # print(user_type)
+        # print(filter_id)
+        # print(relative_time, "", time_period)
+        # print(time_period)
+
         # Run the function
         clear_terminal()
-        display_appointment_engagement(
+        print(display_appointment_engagement(
             self.database,
             user_type,
             filter_id,
             relative_time,
             time_period,
-        )
+        ))
         return wait_terminal()
 
     # Admin FLow
