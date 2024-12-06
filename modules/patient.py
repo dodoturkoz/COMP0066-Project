@@ -377,7 +377,7 @@ class Patient(User):
             return []
 
     def logout(self):
-        #Trying to logout
+        # Trying to logout
         print("Bye")
 
     def flow(self):
@@ -403,7 +403,7 @@ class Patient(User):
             ]
 
             def logout(choice):
-                #Trying to logout
+                # Trying to logout
                 print("Bye!/n Quote of the day:")
 
             # if/else statement to show different options to users
@@ -414,10 +414,10 @@ class Patient(User):
                 options.append("Search Exercises\n[0] Log out")
 
             choice = display_choice(
-                "Please select an option:", options, callback=#Must have option to logout
+                "Please select an option:", options, callback=self.flow
             )
 
-            #Trying to logout
+            # Trying to logout
             if choice == "0":
                 return True
 
