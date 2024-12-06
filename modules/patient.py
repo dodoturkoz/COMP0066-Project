@@ -10,7 +10,11 @@ from modules.utilities.input_utils import (
     get_valid_date,
     get_valid_yes_or_no,
 )
-from modules.utilities.display_utils import display_choice, clear_terminal
+from modules.utilities.display_utils import (
+    display_choice,
+    clear_terminal,
+    display_choice_deliberately_with_0,
+)
 from modules.appointments import (
     request_appointment,
     cancel_appointment,
@@ -90,8 +94,13 @@ class Patient(User):
 
         try:
             # Display editable attributes
-            choice = display_choice("Select an attribute to edit:", options)
+            choice = display_choice_deliberately_with_0(
+                "Return back to main menu", "Select an attribute to edit:", options
+            )
             attribute = options[choice - 1].lower().replace(" ", "_")
+
+            if choice == 0:
+                return True
 
             # Handle specific validation for emails
             if attribute in ["email", "emergency_email"]:
@@ -397,14 +406,14 @@ class Patient(User):
                 "Search Exercises",
             ]
 
-            # if/else statement to show different options to users
+            # if statement to show different options to users
             # based on whether they already have a clinician or not.
             if self.clinician_id:
-                options.extend(["Appointments", "Log Out", "Quit"])
-            else:
-                options.extend(["Log Out", "Quit"])
+                options.append("Appointments")
 
-            choice = display_choice("Please select an option:", options)
+            choice = display_choice_deliberately_with_0(
+                "Log out", "Please select an option:", options
+            )
 
             def acting_on_choice(choice):
                 """
@@ -482,10 +491,11 @@ class Patient(User):
                                 "Book Appointment",
                                 "View Appointments",
                                 "Cancel Appointment",
-                                "Exit appointments",
                             ]
-                            selected_choice = display_choice(
-                                "Please select an option:", appointment_options
+                            selected_choice = display_choice_deliberately_with_0(
+                                "Return back to main menu",
+                                "Please select an option:",
+                                appointment_options,
                             )
 
                             # Options within appointments option in patient menu.
@@ -507,7 +517,7 @@ class Patient(User):
                                         input("Enter appointment ID to cancel: ")
                                     )
                                     cancel_appointment(self.database, appointment_id)
-                                case 4:
+                                case 0:
                                     # Setting action to exit back to main menu so that
                                     # exit appointments does not lead to the options
                                     # Retry the same action or go back to main menu.
@@ -521,9 +531,10 @@ class Patient(User):
                 # to redo the same action, we just put action = "Exit back to main menu"
                 # over there.
                 if action != "Exit back to main menu":
-                    next_step = display_choice(
+                    next_step = display_choice_deliberately_with_0(
+                        "Return back to main menu",
                         "Would you like to:",
-                        ["Retry the same action", "Go back to the main menu"],
+                        ["Retry the same action"],
                         choice_str="Your selection: ",
                     )
 
@@ -538,32 +549,9 @@ class Patient(User):
 
             # Matching choices here outside of the acting on choice function
             # if the choice is to logout or quit.
-            match choice:
-                case 7:
-                    # Option 7 is appointments if there is a clinician. This is already
-                    # put in place in acting on choice function.
-
-                    # If there is no clinician, option 7 is logout
-                    if not self.clinician_id:
-                        clear_terminal()
-                        return True
-                case 8:
-                    # If there is a clinician, option 8 is logout.
-                    if self.clinician_id:
-                        clear_terminal()
-                        return True
-
-                    # If there is no clinician, option 8 is quit.
-                    if not self.clinician_id:
-                        clear_terminal()
-                        print("Thanks for using Breeze! Goodbye!")
-                        return False
-                case 9:
-                    # Option only exists if there is a clinicin. Option in such
-                    # case is to quit.
-                    clear_terminal()
-                    print("Thanks for using Breeze! Goodbye!")
-                    return False
+            if choice == 0:
+                clear_terminal()
+                return True
 
             # Calling upon acting_on_choice function for patient to do different
             # methods when they have chosen an option from the main menu.

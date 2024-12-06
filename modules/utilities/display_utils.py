@@ -21,6 +21,27 @@ def display_choice(
             print("Invalid choice. Please try again.")
 
 
+# I have added the option to change the input string given when the choice is offered
+def display_choice_deliberately_with_0(
+    choice_0: str, header: str, options: list[str], choice_str: str = "Your selection: "
+) -> int:
+    """
+    Displays a list of options to the user but with 0 and returns their choice.
+    """
+
+    print(header)
+    for i, option in enumerate(options):
+        print(f"[{i + 1}] {option}")
+        # Choice should be Log out or return back to main menu or exit appointments.
+    print(f"[0] {choice_0}")
+    while True:
+        choice = input(choice_str)
+        if choice.isnumeric() and 0 <= int(choice) <= len(options):
+            return int(choice)
+        else:
+            print("Invalid choice. Please try again.")
+
+
 def display_dict(dict: dict[str, any]) -> None:
     """
     Displays a dictionary in a clean way.
