@@ -549,7 +549,7 @@ class Admin(User):
                 filter_id = get_user_input_with_limited_choice(
                     "\nEnter the ID of the clinician you want to see: ",
                     clinician_ids,
-                    invalid_options_text="Invalid Patient ID, please chose from list.",
+                    invalid_options_text="Invalid Clinician ID, please chose from list.",
                 )
         else:
             filter_id = None
