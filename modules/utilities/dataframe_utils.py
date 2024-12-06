@@ -16,22 +16,23 @@ def filter_df_by_date(
     if time_period != "none" and not input_df.empty:
         # Allows us to call the function without a date-time set
 
-        # Establishing current date as a benchmark
+        # Establishing beginning and end of today as a benchmark
         today = datetime.today().date()
         start_of_today = datetime.combine(today, datetime.min.time())
+        end_of_today = datetime.combine(today, datetime.max.time())
 
         # Creating variables according to user_chosen time_period
         if time_period == "year":
             start_of_range = start_of_today.replace(month=1, day=1)
-            end_of_range = start_of_today.replace(month=12, day=31)
+            end_of_range = end_of_today.replace(month=12, day=31)
             increment = pd.DateOffset(years=1)
         elif time_period == "month":
             start_of_range = start_of_today.replace(day=1)
-            end_of_range = start_of_today + pd.offsets.MonthEnd(0)
+            end_of_range = end_of_today + pd.offsets.MonthEnd(0)
             increment = pd.DateOffset(months=1)
         elif time_period == "week":
             start_of_range = start_of_today - timedelta(days=start_of_today.weekday())
-            end_of_range = start_of_range + timedelta(days=6)
+            end_of_range = start_of_range + timedelta(days=7)
             increment = timedelta(days=7)
         elif time_period == "day":
             start_of_range = datetime.combine(start_of_today, datetime.min.time())
@@ -55,6 +56,9 @@ def filter_df_by_date(
         ]
         return time_sorted_df
 
-        # For a later date, want to add the display options:
-        # 1. For months and years, I'd like to add a column to group by week / month.
-        # For days, I'd also like to add a column for the weekday which corresponds to the meetings
+    # If the user wants no date-time filters, returns the original dataframe
+    return input_df
+
+    # For a later date, want to add the display options:
+    # 1. For months and years, I'd like to add a column to group by week / month.
+    # For days, I'd also like to add a column for the weekday which corresponds to the meetings

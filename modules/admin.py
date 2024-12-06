@@ -517,9 +517,9 @@ class Admin(User):
         print("\nView appointments\n")
 
         # Step 1: Get the user_type
-        user_options = ["Patients", "Clinicians"]
+        user_options = ["Patient", "Clinician"]
         user_choice = display_choice(
-            "Would you like to view patients or clinicians?", user_options
+            "Would you like to view patient or clinician appointments?", user_options
         )
         if user_choice == 1:
             user_type = "patient"
@@ -567,7 +567,7 @@ class Admin(User):
             "next year",
             "last day",
             "last week",
-            "last week",
+            "last month",
             "last year",
         ]
         print()
@@ -584,7 +584,6 @@ class Admin(User):
             else:
                 print("Invalid input. Please try again. ")
 
-        
         # Breaking the string into the relevant variables
         if user_time_option == "none":
             relative_time = "none"
@@ -599,14 +598,16 @@ class Admin(User):
 
         # Run the function
         clear_terminal()
-        print(display_appointment_engagement(
-            self.database,
-            user_type,
-            filter_id,
-            relative_time,
-            time_period,
-        ))
-        return wait_terminal()
+        print(
+            display_appointment_engagement(
+                self.database,
+                user_type,
+                filter_id,
+                relative_time,
+                time_period,
+            )
+        )
+        wait_terminal()
 
     # Admin FLow
     def flow(self) -> bool:

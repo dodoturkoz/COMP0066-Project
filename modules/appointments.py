@@ -203,13 +203,13 @@ def display_appointment_engagement(
     appointments_data = appointment_cursor.fetchall()
     appointments_df = pd.DataFrame(appointments_data)
 
-    if not appointments_df.empty:
-        # Checking that the query has returned results
+    # Calling a function to filter by inputted time range
+    filtered_appointments_df = filter_df_by_date(
+        appointments_df, relative_time, time_period
+    )
 
-        # Calling a function to filter by inputted time range
-        filtered_appointments_df = filter_df_by_date(
-            appointments_df, relative_time, time_period
-        )
+    if not filtered_appointments_df.empty:
+        # Checking that our filters haven't returned an empty dataframe
 
         # Group by user_id and status to get the count of each status
         pivot_columns = ["first_name", "surname"]
@@ -242,5 +242,6 @@ def display_appointment_engagement(
         status_counts = status_counts.sort_values(by=sort_by, ascending=False)
 
         return status_counts
+
     else:
-        print("\nNo appointments could be found\n")
+        return "\nNo appointments could be found\n"
