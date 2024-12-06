@@ -7,21 +7,31 @@ def display_choice(
     header: str,
     options: list[str],
     choice_str: str = "Your selection: ",
-    callback=None,
+    enable_zero_quit: bool = False,
+    zero_option_callback: callable = None,
+    zero_option_message: str = "Go back",
 ) -> int:
     """
     Displays a list of options to the user and returns their choice.
+
+    Optionally allows the user to quit (or another screen via callback) by entering 0.
     """
 
     print(header)
     for i, option in enumerate(options):
         print(f"[{i + 1}] {option}")
+    if enable_zero_quit:
+        print(f"[0] {zero_option_message}")
     while True:
         choice = input(choice_str)
         if choice.isnumeric() and 1 <= int(choice) <= len(options):
             return int(choice)
-        elif choice == "0" and callback:
-            callback()
+        elif choice.isnumeric() and int(choice) == 0:
+            if zero_option_callback:
+                return zero_option_callback()
+            else:
+                return False
+
         else:
             print("Invalid choice. Please try again.")
 

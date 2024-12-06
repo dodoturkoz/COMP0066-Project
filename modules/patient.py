@@ -91,8 +91,15 @@ class Patient(User):
         try:
             # Display editable attributes
             choice = display_choice(
-                "Select an attribute to edit:", options, callback=self.flow
+                "Select an attribute to edit:",
+                options,
+                enable_zero_quit=True,
+                zero_option_message="Go Back to Main Menu",
             )
+
+            if not choice:
+                return False
+
             attribute = options[choice - 1].lower().replace(" ", "_")
 
             # Handle specific validation for emails
@@ -171,6 +178,7 @@ class Patient(User):
             """
             Get mood input from the patient using a number or color name.
             """
+            clear_terminal()
             print("\nMOOD TRACKER:\n")
 
             # display mood options
@@ -409,16 +417,20 @@ class Patient(User):
             # if/else statement to show different options to users
             # based on whether they already have a clinician or not.
             if self.clinician_id:
-                options.extend(["Search Exercises", "Appointments\n[0] Log out"])
+                options.extend(["Search Exercises", "Appointments"])
             else:
-                options.append("Search Exercises\n[0] Log out")
+                options.append("Search Exercises")
 
             choice = display_choice(
-                "Please select an option:", options, callback=self.flow
+                "Please select an option:",
+                options,
+                enable_zero_quit=True,
+                zero_option_message="Log out",
             )
 
-            # Trying to logout
-            if choice == "0":
+            # Logout -> display choices returns False on [0] option
+            # Returning true from flow method logs the user out in main.py
+            if not choice:
                 return True
 
             def acting_on_choice(choice):
@@ -493,13 +505,15 @@ class Patient(User):
                             appointment_options = [
                                 "Book Appointment",
                                 "View Appointments",
-                                "Cancel Appointment\n[0] Return to main menu",
+                                "Cancel Appointment",
                             ]
                             selected_choice = display_choice(
                                 "Please select an option:",
                                 appointment_options,
-                                callback=self.flow,
+                                enable_zero_quit=True,
                             )
+                            if not selected_choice:
+                                return False
 
                             # Options within appointments option in patient menu.
                             match selected_choice:
@@ -536,9 +550,9 @@ class Patient(User):
                 if action != "Exit back to main menu":
                     next_step = display_choice(
                         "Would you like to:",
-                        ["Retry the same action\n[0] Return to main menu"],
+                        ["Retry the same action"],
                         choice_str="Your selection: ",
-                        callback=self.flow,
+                        enable_zero_quit=True,
                     )
 
                     # So if the users choose option 1, acting_on_choice recursive
@@ -546,6 +560,8 @@ class Patient(User):
                     # and method you were using before.
                     # If next_step == 2, there is nothing to do since the function
                     # just completes and you return to while true loop and see main menu.
+                    if not next_step:
+                        return False
 
                     if next_step == 1:
                         acting_on_choice(choice)
