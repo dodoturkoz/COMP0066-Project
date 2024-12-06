@@ -32,7 +32,7 @@ def choose_date() -> datetime:
             )
 
 
-def get_appointments(database, clinician_id: int) -> list:
+def get_clinician_appointments(database, clinician_id: int) -> list:
     """Find all appointments registered for a specific clinician, including unconfirmed ones"""
     try:
         appointments = database.cursor.execute(
@@ -63,6 +63,26 @@ def get_unconfirmed_appointments(database, clinician_id: int) -> list:
     ]
 
 
+def get_patient_appointments(database, user_id: int) -> list:
+    """Find all appointments registered for a specific patient, including unconfirmed ones"""
+    try:
+        appointments = database.cursor.execute(
+            """
+                SELECT appointment_id, a.user_id, clinician_id, date, 
+                status, patient_notes, clinician_notes,
+                u.first_name, u.surname, u.email AS patient_email
+                FROM Appointments AS a, Users AS u 
+                WHERE a.user_id = ?
+                AND a.user_id = u.user_id
+            """,
+            [user_id],
+        ).fetchall()
+        return appointments
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+
 def print_appointment(appointment: dict) -> None:
     print(
         f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
@@ -73,7 +93,7 @@ def print_appointment(appointment: dict) -> None:
 
 def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
-    appointments = get_appointments(database, clinician_id)
+    appointments = get_clinician_appointments(database, clinician_id)
     possible_hours = [9, 10, 11, 12, 14, 15, 16]
     available_slots = []
 

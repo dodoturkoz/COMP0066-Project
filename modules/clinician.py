@@ -1,5 +1,14 @@
-from modules.user import User
+import sqlite3
+from datetime import datetime
+
+from database.setup import diagnoses
+from modules.appointments import (
+    get_clinician_appointments,
+    print_appointment,
+)
+from modules.constants import MOODS
 from modules.patient import Patient
+from modules.user import User
 from modules.utilities.display_utils import (
     clear_terminal,
     display_choice,
@@ -7,14 +16,6 @@ from modules.utilities.display_utils import (
 )
 from modules.utilities.input_utils import get_valid_string, get_valid_yes_or_no
 from modules.utilities.send_email import send_email
-from modules.appointments import (
-    get_appointments,
-    get_unconfirmed_appointments,
-    print_appointment,
-)
-from datetime import datetime
-import sqlite3
-from database.setup import diagnoses
 
 
 class Clinician(User):
@@ -210,7 +211,7 @@ class Clinician(User):
 
         clear_terminal()
         # Get all appointments for this clinician
-        appointments = get_appointments(self.database, self.user_id)
+        appointments = get_clinician_appointments(self.database, self.user_id)
 
         if not appointments:
             print("You have no registered appointments.")
