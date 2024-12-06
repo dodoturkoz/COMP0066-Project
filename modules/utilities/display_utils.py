@@ -26,7 +26,7 @@ def display_choice(
         choice = input(choice_str)
         if choice.isnumeric() and 1 <= int(choice) <= len(options):
             return int(choice)
-        elif choice.isnumeric() and int(choice) == 0:
+        elif choice.isnumeric() and int(choice) and enable_zero_quit == 0:
             if zero_option_callback:
                 return zero_option_callback()
             else:
