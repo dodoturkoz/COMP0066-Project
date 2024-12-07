@@ -36,7 +36,7 @@ class Clinician(User):
                 return True
             clear_terminal()
             print(f"Hello, {self.first_name} {self.surname}!")
-
+            self.print_notifications()
             choices = [
                 "Calendar",
                 "Your Patient Dashboard",
@@ -260,10 +260,10 @@ class Clinician(User):
 
         if requested_appointments:
             if len(requested_appointments) == 1:
-                print("You have 1 requested appointment to review.")
+                print("You have\033[31m 1 requested appointment\033[0m to review.")
             else:
                 print(
-                    f"You have {len(requested_appointments)} requested appointments to review."
+                    f"You have\033[31m {len(requested_appointments)} requested appointments\033[0m to review."
                 )
 
         if appointments_without_notes:
@@ -273,81 +273,6 @@ class Clinician(User):
                 print(
                     f"There are {len(appointments_without_notes)} previous appointments to add notes for."
                 )
-
-    def view_notes(self, appointment: dict):
-        """Print out clinician and patient notes for a given appointment"""
-        if appointment["clinician_notes"]:
-            print("\nYour notes:")
-            print(appointment["clinician_notes"])
-        if appointment["patient_notes"]:
-            print("\nPatient notes:")
-            print(appointment["patient_notes"] + "\n")
-
-    def add_notes(self, appointment: dict):
-        """Used to add clinician notes for a given appointment"""
-        clear_terminal()
-
-        # If notes already exist, offer the option to edit them
-        if appointment["clinician_notes"]:
-            if get_valid_yes_or_no(
-                "There are already notes stored for this appointment. Would you like to edit them? (Y/N) "
-            ):
-                self.edit_notes(appointment)
-        else:
-            # Otherwise, take a valid input from the user + add timestamp
-            note = (
-                get_valid_string("Please enter your notes for this appointment: ")
-                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
-            )
-
-            try:
-                # Insert the new note into the DB
-                self.database.cursor.execute(
-                    """
-                    UPDATE Appointments
-                    SET clinician_notes = ?
-                    WHERE appointment_id = ?""",
-                    [note, appointment["appointment_id"]],
-                )
-                self.database.connection.commit()
-                print(f"Your notes were stored as:\n{note}")
-                wait_terminal()
-
-            except sqlite3.IntegrityError as e:
-                print(f"Failed to add note: {e}")
-
-    def edit_notes(self, appointment: dict):
-        """Used to edit clinician notes for a given appointment"""
-        clear_terminal()
-        # Display previous notes to the user
-        current_notes = appointment["clinician_notes"]
-        print("Here are your previously saved notes for the appointment:")
-        print(current_notes)
-
-        # Append the new note to the saved notes, with a timestamp
-        updated_notes = (
-            current_notes
-            + "\n"
-            + (
-                get_valid_string("Please enter your new notes for this appointment: ")
-                + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
-            )
-        )
-
-        try:
-            # Update the saved notes in the DB
-            self.database.cursor.execute(
-                """
-                UPDATE Appointments
-                SET clinician_notes = ?
-                WHERE appointment_id = ?""",
-                [updated_notes, appointment["appointment_id"]],
-            )
-            self.database.connection.commit()
-            print(f"Your notes were stored as:\n{updated_notes}")
-            wait_terminal()
-        except sqlite3.IntegrityError as e:
-            print(f"Failed to add note: {e}")
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
