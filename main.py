@@ -7,9 +7,8 @@ from modules.utilities.display_utils import (
     wait_terminal,
 )
 
-db = Database()
-
 try:
+    db = Database()
     clear_terminal()
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
     display_emergency_numbers()
@@ -36,12 +35,11 @@ try:
 
             # NOTE: if flow returns True -> login screen
             # if flow returns False -> quits app
-
-except ValueError as e:
-    # If instead of selecting a number the user types something, we get a ValueError
-    # Note: at some point we need to review that this fails gracefully anywhere in the app
-    print(e)  # TODO: delete this when we finish development
-    print("Please make sure your input is a number.")
+except KeyboardInterrupt:
+    # Do nothing if the user presses Ctrl+C, just move to the finally block
+    pass
 finally:
     # If we pass the execution loop, explicitly closes db connection
+    clear_terminal()
+    print("\nThanks for using Breeze. Goodbye!")
     db.close()

@@ -1,7 +1,10 @@
 import sqlite3
+import pandas as pd
 from datetime import datetime
-
+from typing import Literal
+from database.setup import Database
 from modules.utilities.display_utils import display_choice
+from modules.utilities.dataframe_utils import filter_df_by_date
 
 
 def choose_date() -> datetime:
@@ -32,7 +35,7 @@ def choose_date() -> datetime:
             )
 
 
-def get_appointments(database, clinician_id: int) -> list:
+def get_clinician_appointments(database, clinician_id: int) -> list:
     """Find all appointments registered for a specific clinician, including unconfirmed ones"""
     try:
         appointments = database.cursor.execute(
@@ -52,6 +55,37 @@ def get_appointments(database, clinician_id: int) -> list:
         return []
 
 
+def get_unconfirmed_clinician_appointments(database, clinician_id: int) -> list:
+    """Find all unconfirmed future appointments for a specified clinician"""
+    appointments = get_clinician_appointments(database, clinician_id)
+
+    return [
+        appointment
+        for appointment in appointments
+        if appointment["status"] == "Pending" and appointment["date"] >= datetime.now()
+    ]
+
+
+def get_patient_appointments(database, user_id: int) -> list:
+    """Find all appointments registered for a specific patient, including unconfirmed ones"""
+    try:
+        appointments = database.cursor.execute(
+            """
+                SELECT appointment_id, a.user_id, clinician_id, date, 
+                status, patient_notes, clinician_notes,
+                u.first_name, u.surname, u.email AS patient_email
+                FROM Appointments AS a, Users AS u 
+                WHERE a.user_id = ?
+                AND a.user_id = u.user_id
+            """,
+            [user_id],
+        ).fetchall()
+        return appointments
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+
 def print_appointment(appointment: dict) -> None:
     print(
         f"{appointment['appointment_id']} - {appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
@@ -62,7 +96,7 @@ def print_appointment(appointment: dict) -> None:
 
 def get_available_slots(database, clinician_id: int, day: datetime) -> list:
     """Find all available slots for a clinician on a specified day"""
-    appointments = get_appointments(database, clinician_id)
+    appointments = get_clinician_appointments(database, clinician_id)
     possible_hours = [9, 10, 11, 12, 14, 15, 16]
     available_slots = []
 
@@ -175,3 +209,70 @@ def cancel_appointment(database, appointment_id: int) -> bool:
     except sqlite3.OperationalError as e:
         print(f"Error canceling appointment: {e}")
         return False
+
+
+def display_appointment_engagement(
+    database: Database,
+    user_type: Literal["patient", "clinician"],
+    filter_id: int | None = None,
+    relative_time: Literal["current", "next", "last", "none"] = "none",
+    time_period: Literal["year", "month", "week", "day", "none"] = "none",
+) -> pd.DataFrame | None:
+    """
+    Display all the appointments that the user has engaged with
+    """
+
+    id_attribute = "user_id" if user_type == "patient" else "clinician_id"
+
+    # Query to build a dataframe form database information
+    query = f"""
+    SELECT a.status, a.{id_attribute}, u.first_name, u.surname, a.date
+    FROM Appointments a JOIN Users u ON a.{id_attribute} = u.user_id
+    {f"WHERE a.{id_attribute} = {filter_id}" if filter_id else ""}
+    """
+    appointment_cursor = database.cursor.execute(query)
+    appointments_data = appointment_cursor.fetchall()
+    appointments_df = pd.DataFrame(appointments_data)
+
+    # Calling a function to filter by inputted time range
+    filtered_appointments_df = filter_df_by_date(
+        appointments_df, relative_time, time_period
+    )
+
+    if not filtered_appointments_df.empty:
+        # Checking that our filters haven't returned an empty dataframe
+
+        # Group by user_id and status to get the count of each status
+        pivot_columns = ["first_name", "surname"]
+        pivot_columns.insert(0, id_attribute)
+
+        # Step 1: Create a pivot table with counts of each status per user
+        status_counts = filtered_appointments_df.pivot_table(
+            index=pivot_columns,
+            columns="status",
+            aggfunc="size",
+            fill_value=0,
+        )
+
+        # Step 2: Add a 'total_appointments' column
+        status_counts["Total Appointments"] = status_counts.sum(axis=1)
+
+        # Step 3: Sort the DataFrame according to user type
+        if user_type == "clinician":
+            sort_by = (
+                ["Cancelled By Clinician"]
+                if "Cancelled By Clinician" in status_counts.columns
+                else []
+            )
+        else:
+            sort_by = []
+            for column in ["Did Not Attend", "Cancelled By Patient"]:
+                if column in status_counts.columns:
+                    sort_by.append(column)
+
+        status_counts = status_counts.sort_values(by=sort_by, ascending=False)
+
+        return status_counts
+
+    else:
+        return "\nNo appointments could be found\n"
