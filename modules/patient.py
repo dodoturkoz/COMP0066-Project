@@ -413,7 +413,10 @@ class Patient(User):
 
                 elif search_decision == 1:
                     clear_terminal()
-                    try_search_again = input("Enter keyword to search for exercises: ")
+                    try_search_again = input(
+                        "Enter keyword to search for exercises. "
+                        "\nPress enter to see all exercises:"
+                    )
                     searching_exercises(try_search_again)
                 else:
                     clear_terminal()
@@ -577,7 +580,8 @@ class Patient(User):
                         clear_terminal()
                         keyword = input(
                             "Enter 0 to go back to main menu."
-                            "\nEnter keyword to search for exercises: "
+                            "\nEnter keyword to search for exercises. "
+                            "\nPress enter to see all exercises:"
                         )
                         if keyword == "0":
                             return False
