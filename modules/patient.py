@@ -228,7 +228,7 @@ class Patient(User):
         - Updates the existing entry if one exists.
         - Creates a new mood entry if none exists.
         """
-
+        clear_terminal()
         self.database.cursor.execute(
             "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?",
             (self.user_id, datetime.now().strftime("%Y-%m-%d")),
@@ -239,11 +239,9 @@ class Patient(User):
             print("You already have an entry for today.")
             old_mood = MOODS[str(entry["mood"])]
             show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
-            print(
-                f"\nExisting entry found:\nMood: {show_mood}\nComment: {entry['text']}"
-            )
+            print(f"Existing entry found:\nMood: {show_mood}\nComment: {entry['text']}")
             choice = display_choice(
-                "Select an option:",
+                "\nSelect an option:",
                 ["Continue to update mood"],
                 enable_zero_quit=True,
                 zero_option_message="Go Back to Main Menu",
@@ -265,7 +263,6 @@ class Patient(User):
                 print(
                     f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
                 )
-
             valid_inputs = {str(num): mood for num, mood in MOODS.items()}
             valid_inputs.update(
                 {mood["color"].lower(): mood for mood in MOODS.values()}
@@ -273,14 +270,20 @@ class Patient(User):
 
             while True:
                 mood_choice = get_valid_string(
-                    "\nEnter your mood for today (number 6 to 1 or color name): "
+                    "\nEnter your mood for today (number 6 to 1 or color name)."
+                    "\nAlternatively, enter 0 to return to main menu."
+                    "\nYour selection: "
                 ).lower()
-                if mood_choice in valid_inputs:
+                print(mood_choice)
+                if mood_choice == "0":
+                    return mood_choice
+                elif mood_choice in valid_inputs:
                     selected_mood = valid_inputs[mood_choice]
                     return selected_mood["int"]
-                print(
-                    "Invalid input. Please enter a number from 6 to 1 or a valid color name."
-                )
+                else:
+                    print(
+                        "Invalid input. Please enter a number from 6 to 1 or a valid color name."
+                    )
 
         def comment_input():
             """
@@ -291,8 +294,10 @@ class Patient(User):
             return "No comment provided."
 
         mood = mood_input()
+        if mood == "0":
+            return False
         comment = comment_input()
-
+        clear_terminal()
         today_date = datetime.now().strftime("%Y-%m-%d")
         query_check = (
             "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
@@ -310,16 +315,13 @@ class Patient(User):
             if entry:
                 old_mood = MOODS[str(entry["mood"])]
                 show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
-                print(
-                    f"\nExisting entry found:\nMood: {show_mood}\nComment: {entry['text']}"
-                )
+                print(f"\nExisting entry:\nMood: {show_mood}\nComment: {entry['text']}")
                 new_mood = MOODS[str(mood)]
                 show_new_mood = f"{new_mood['ansi']} {new_mood['description']}\033[00m"
-                print("New Mood: ", show_new_mood)
-                print("New Comment: ", comment)
+                print(f"\nNew entry:\nMood: {show_new_mood}\nComment: {comment}")
                 # Confirm update
                 if get_valid_yes_or_no(
-                    "Do you want to update the mood entry for today? (Y/N): "
+                    "Are you sure you want to update the mood entry for today? (Y/N): "
                 ):
                     self.database.cursor.execute(
                         query_update, (comment, mood, self.user_id, today_date)
@@ -510,6 +512,7 @@ class Patient(User):
                         self.edit_self_info()
                     case 2:
                         self.mood_of_the_day()
+                        action = "Exit back to main menu"
                     case 3:
                         date = get_valid_date(
                             "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
