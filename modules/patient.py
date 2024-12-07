@@ -1,6 +1,7 @@
 import sqlite3
 from typing import Optional, Any
 from datetime import datetime
+import random
 
 
 from database.setup import Database
@@ -21,7 +22,7 @@ from modules.appointments import (
     cancel_appointment,
     get_patient_appointments,
 )
-from modules.constants import RELAXATION_RESOURCES, MOODS
+from modules.constants import RELAXATION_RESOURCES, MOODS, QUOTES
 from modules.user import User
 
 
@@ -399,6 +400,30 @@ class Patient(User):
             print(f"Audio File: {resource['audio_file']}")
             print(f"Transcript: {resource['transcript']}")
 
+    @staticmethod
+    def see_quotes():
+        """
+        See inspirational quotes
+        """
+
+        def see_present():
+            print("\U0001f381")
+            choice = input(
+                "Press 0 to exit or press enter to unwrap surprise quote from present"
+            )
+            return choice
+
+        choice = see_present()
+        if choice:
+            if choice == 0:
+                return False
+            else:
+                return False
+            # TO DO: Add recursion so they cannot type anything.
+        else:
+            x = random.randint(1, 164)
+            print(QUOTES[x])
+
     def view_appointments(self) -> list[dict[str, Any]]:
         """
         Views all appointments for the patient, including their status.
@@ -454,6 +479,7 @@ class Patient(User):
                 "Display Previous Moods",
                 "Add Journal Entry",
                 "Read Journal Entries",
+                "Presents",
             ]
 
             # Add options based on whether patient has an assigned clinician
@@ -554,6 +580,9 @@ class Patient(User):
                                 cancel_appointment(self.database, appointment_id)
                             case 4:
                                 action = "Exit back to main menu"
+
+                    case 8:
+                        self.see_quotes()
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
