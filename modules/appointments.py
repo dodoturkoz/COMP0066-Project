@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Literal
 from database.setup import Database
-from modules.utilities.display_utils import display_choice
+from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.utilities.dataframe_utils import filter_df_by_date
 
 
@@ -117,6 +117,7 @@ def request_appointment(database, patient_id: int, clinician_id: int) -> bool:
     """Allows a patient to request an appointment with their clinician"""
 
     # Check that the patient is registered with this clinician
+    clear_terminal()
     result = database.cursor.execute(
         "SELECT clinician_id FROM Patients WHERE user_id = ?", [patient_id]
     ).fetchone()
@@ -138,6 +139,7 @@ def request_appointment(database, patient_id: int, clinician_id: int) -> bool:
         slots = get_available_slots(database, clinician_id, requested_date)
 
         if not slots:
+            clear_terminal()
             choose_again = input(
                 "Sorry, your clinician has no availability on that day - would you like to choose another day? (Y/N) "
             )
@@ -156,7 +158,6 @@ def request_appointment(database, patient_id: int, clinician_id: int) -> bool:
             f"""\nWhich time would you like to request? 
 Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         )
-
         if chosen_slot == len(time_slot_strings):
             return False
         else:
@@ -177,11 +178,13 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
                 ),
             )
             database.connection.commit()
+            clear_terminal()
             print(
                 "\nYour appointment has been requested. You'll receive an email once your clinician has confirmed it."
             )
             return True
         except sqlite3.IntegrityError as e:
+            clear_terminal()
             print(f"Failed to book appointment: {e}")
             return False
 
@@ -201,12 +204,15 @@ def cancel_appointment(database, appointment_id: int) -> bool:
         )
         if database.cursor.rowcount > 0:
             database.connection.commit()
+            clear_terminal()
             print("Appointment canceled successfully.")
             return True
         else:
+            clear_terminal()
             print("Appointment not found or you are not authorized to cancel it.")
             return False
     except sqlite3.OperationalError as e:
+        clear_terminal()
         print(f"Error canceling appointment: {e}")
         return False
 
