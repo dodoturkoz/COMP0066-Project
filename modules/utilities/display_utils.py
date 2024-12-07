@@ -26,7 +26,7 @@ def display_choice(
         choice = input(choice_str)
         if choice.isnumeric() and 1 <= int(choice) <= len(options):
             return int(choice)
-        elif choice.isnumeric() and int(choice) == 0:
+        elif choice.isnumeric() and int(choice) == 0 and enable_zero_quit:
             if zero_option_callback:
                 return zero_option_callback()
             else:
@@ -66,6 +66,6 @@ def wait_terminal(
         if input(wait_text) is not None:
             clear_terminal()
             if redirect_function:
-                redirect_function()
+                return redirect_function()
 
             return return_value

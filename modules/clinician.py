@@ -19,29 +19,170 @@ from modules.utilities.send_email import send_email
 
 
 class Clinician(User):
-    def print_notifications(self):
-        """Checks if the clinican has requested appointments, or past appointments
-        without notes, to display as notifications on the main menu"""
-        requested_appointments = get_unconfirmed_clinician_appointments(
-            self.database, self.user_id
+    def __init__(self, database, **kwargs):
+        super().__init__(database, **kwargs)
+        self.should_logout = False
+
+    def flow(self) -> bool:
+        """Controls flow of the program from the clinician class
+
+        The program stays within the while loop until a condition is met that
+        breaks the flow. We return to False to indicate to Main.py that our User
+        has quit.
+        """
+
+        while True:
+            if self.should_logout:
+                return True
+            clear_terminal()
+            print(f"Hello, {self.first_name} {self.surname}!")
+            self.print_notifications()
+            choices = [
+                "Calendar",
+                "Your Patient Dashboard",
+                "View Requested Appointments",
+            ]
+            selection = display_choice(
+                "What would you like to do?",
+                choices,
+                "Please choose from the above options: ",
+                enable_zero_quit=True,
+                zero_option_message="Log Out",
+            )
+
+            if selection == 1:
+                self.view_calendar()
+            if selection == 2:
+                self.flow_patient_dashboard()
+            if selection == 3:
+                self.view_requested_appointments()
+            if not selection:
+                self.should_logout = True
+                return True
+                clear_terminal()
+                # return True because flow() logs out when True is returned
+
+    def flow_patient_dashboard(self):
+        """View the dashboard.
+
+        All methods used are declared as class methods to allow for other classes to access them.
+        """
+        if self.should_logout:
+            return True
+
+        clear_terminal()
+        choice = display_choice(
+            "Welcome to your dashboard. Where would you like to go?",
+            ["View All", "Filter By Diagnosis"],
+            enable_zero_quit=True,
+            zero_option_callback=self.flow,
+            zero_option_message="Return to main menu",
         )
-        appointments_without_notes = self.get_all_appointments_without_notes()
 
-        if requested_appointments:
-            if len(requested_appointments) == 1:
-                print("You have 1 requested appointment to review.")
-            else:
-                print(
-                    f"You have {len(requested_appointments)} requested appointments to review."
-                )
+        if choice == 1:
+            self.flow_patient_summary()
 
-        if appointments_without_notes:
-            if len(appointments_without_notes) == 1:
-                print("You have 1 previous appointment to add notes for.")
-            else:
-                print(
-                    f"There are {len(appointments_without_notes)} previous appointments to add notes for."
-                )
+        if choice == 2:
+            self.flow_filtered_diagnosis_list()
+
+        # Return to main menu
+        if not choice:
+            return False
+
+    def flow_edit_patient_info_screen(self, patient: Patient):
+        """Edit patient information screen"""
+        if self.should_logout:
+            return True
+        clear_terminal()
+
+        choice = display_choice(
+            f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to do?",
+            [
+                "Edit Diagnosis",
+            ],
+            "Please choose from the above options: ",
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_summary,
+            zero_option_message="Return to patient list",
+        )
+
+        # Edit Diagnosis
+        if choice == 1:
+            clear_terminal()
+            self.flow_choose_from_list_and_update_diagnosis(patient)
+            # wait_terminal(
+            #     "Press enter to continue",
+            #     redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
+            # )
+        if not choice:
+            return False
+
+    def flow_filtered_diagnosis_list(self):
+        if self.should_logout:
+            return True
+        patients: list[Patient] = self.get_all_patients()
+        clear_terminal()
+
+        choice: int = display_choice(
+            "Please enter the diagnosis you would like to filter by: ",
+            diagnoses,
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_dashboard,
+            zero_option_message="Return to the dashboard",
+        )
+
+        if not choice:
+            return False
+
+        clear_terminal()
+        self.print_filtered_patients_list_by_diagnosis(choice, patients)
+        ###TO DO -> Select patient from this screen
+        wait_terminal()
+
+    def flow_patient_summary(self):
+        if self.should_logout:
+            return True
+        patients: list[Patient] = self.get_all_patients()
+        clear_terminal()
+
+        patient_strings: list[str] = self.create_pretty_patient_list(patients)
+        selected = display_choice(
+            "Choose your patient:",
+            [*patient_strings],
+            "Choose a patient: ",
+            enable_zero_quit=True,
+            zero_option_callback=self.flow_patient_dashboard,
+        )
+        if not selected:
+            return False
+
+        return self.flow_edit_patient_info_screen(patients[selected - 1])
+
+    def flow_choose_from_list_and_update_diagnosis(self, patient: Patient):
+        """Displays a list of diagnoses and allows the user to choose one"""
+        if self.should_logout:
+            return True
+
+        try:
+            choice = display_choice(
+                f"Please choose a new diagnosis for {patient.first_name} {patient.surname}. Current Diagnosis: {patient.diagnosis}",
+                diagnoses,
+                enable_zero_quit=True,
+            )
+
+            if not choice:
+                return False
+
+            diagnosis = diagnoses[choice - 1]
+            patient.edit_info("diagnosis", diagnosis)
+            print(f"Diagnosis updated to {diagnosis}.")
+            wait_terminal(
+                "Press enter to return to patient overview.",
+                redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
+            )
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def view_notes(self, appointment: dict):
         """Print out clinician and patient notes for a given appointment"""
@@ -55,22 +196,18 @@ class Clinician(User):
     def add_notes(self, appointment: dict):
         """Used to add clinician notes for a given appointment"""
         clear_terminal()
-
-        # If notes already exist, offer the option to edit them
         if appointment["clinician_notes"]:
             if get_valid_yes_or_no(
                 "There are already notes stored for this appointment. Would you like to edit them? (Y/N) "
             ):
                 self.edit_notes(appointment)
         else:
-            # Otherwise, take a valid input from the user + add timestamp
             note = (
-                get_valid_string("Please enter your notes for this appointment: ")
+                get_valid_string("Please enter your notes for this appointment:")
                 + f" [{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}]"
             )
 
             try:
-                # Insert the new note into the DB
                 self.database.cursor.execute(
                     """
                     UPDATE Appointments
@@ -80,7 +217,6 @@ class Clinician(User):
                 )
                 self.database.connection.commit()
                 print(f"Your notes were stored as:\n{note}")
-                wait_terminal()
 
             except sqlite3.IntegrityError as e:
                 print(f"Failed to add note: {e}")
@@ -88,12 +224,10 @@ class Clinician(User):
     def edit_notes(self, appointment: dict):
         """Used to edit clinician notes for a given appointment"""
         clear_terminal()
-        # Display previous notes to the user
         current_notes = appointment["clinician_notes"]
         print("Here are your previously saved notes for the appointment:")
         print(current_notes)
 
-        # Append the new note to the saved notes, with a timestamp
         updated_notes = (
             current_notes
             + "\n"
@@ -104,7 +238,6 @@ class Clinician(User):
         )
 
         try:
-            # Update the saved notes in the DB
             self.database.cursor.execute(
                 """
                 UPDATE Appointments
@@ -114,9 +247,32 @@ class Clinician(User):
             )
             self.database.connection.commit()
             print(f"Your notes were stored as:\n{updated_notes}")
-            wait_terminal()
         except sqlite3.IntegrityError as e:
             print(f"Failed to add note: {e}")
+
+    def print_notifications(self):
+        """Checks if the clinican has requested appointments, or past appointments
+        without notes, to display as notifications on the main menu"""
+        requested_appointments = get_unconfirmed_clinician_appointments(
+            self.database, self.user_id
+        )
+        appointments_without_notes = self.get_all_appointments_without_notes()
+
+        if requested_appointments:
+            if len(requested_appointments) == 1:
+                print("You have\033[31m 1 requested appointment\033[0m to review.")
+            else:
+                print(
+                    f"You have\033[31m {len(requested_appointments)} requested appointments\033[0m to review."
+                )
+
+        if appointments_without_notes:
+            if len(appointments_without_notes) == 1:
+                print("You have 1 previous appointment to add notes for.")
+            else:
+                print(
+                    f"There are {len(appointments_without_notes)} previous appointments to add notes for."
+                )
 
     def display_appointment_options(self, appointments: list):
         """This function presents options to the clinician based on the
@@ -139,9 +295,15 @@ class Clinician(User):
             "View appointment notes",
             "Add notes to an appointment",
             "Confirm/Reject Appointments",
-            "Return to Main Menu",
         ]
-        next = display_choice("What would you like to do now?", options)
+        next = display_choice(
+            "What would you like to do now?",
+            options,
+            enable_zero_quit=True,
+            zero_option_message="Return to Main Menu",
+        )
+        if not next:
+            return False
 
         # View appointment notes
         if next == 1:
@@ -188,8 +350,6 @@ class Clinician(User):
         elif next == 3:
             self.view_requested_appointments()
         # Exit
-        elif next == 4:
-            return False
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
@@ -221,7 +381,10 @@ class Clinician(User):
             # Offer a choice of different sets of appointments, grouped by time
             view_options = ["All", "Past", "Upcoming"]
             view = display_choice(
-                "Which appointments would you like to view?", view_options
+                "Which appointments would you like to view?",
+                view_options,
+                enable_zero_quit=True,
+                zero_option_message="Return to Main Menu",
             )
 
             # Show all appointments
@@ -398,135 +561,57 @@ class Clinician(User):
 
         wait_terminal()
 
-    def get_all_patients(self):
+    def create_pretty_patient_list(self, patients: list[Patient]) -> list:
+        return [
+            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - {patient.mood}"""
+            for patient in patients
+        ]
+
+    def get_all_patients(self) -> list[Patient]:
         try:
-            return self.database.cursor.execute(
-                """SELECT * 
+            patients = self.database.cursor.execute(
+                """
+                SELECT Users.*, Patients.*, 
+                (SELECT mood FROM MoodEntries 
+                WHERE MoodEntries.user_id = Users.user_id 
+                ORDER BY entry_id DESC LIMIT 1) as mood
                 FROM Patients
-                INNER JOIN Users ON Patients.user_id = Users.user_id
-                WHERE clinician_id = ?""",
+                JOIN Users ON Patients.user_id = Users.user_id 
+                LEFT JOIN MoodEntries ON Users.user_id = MoodEntries.user_id
+                WHERE Patients.clinician_id = ?
+                GROUP BY Users.user_id
+            """,
                 [self.user_id],
             ).fetchall()
+
+            if not patients:
+                print("You have no patients.")
+                return []
+
+            patient_list = []
+            for patient_data in patients:
+                patient = Patient(self.database, **patient_data)
+                patient.mood = (
+                    patient_data["mood"] if patient_data["mood"] else "None recorded"
+                )
+                patient_list.append(patient)
+
+            return patient_list
+
         except Exception as e:
             print(f"Error: {e}")
 
-    def get_all_patients_by_diagnosis(self, diagnosis: str):
-        try:
-            return self.database.cursor.execute(
-                """SELECT * 
-                FROM Patients
-                INNER JOIN Users ON Patients.user_id = Users.user_id
-                WHERE clinician_id = ? AND diagnosis = ?""",
-                [self.user_id, diagnosis],
-            ).fetchall()
-        except Exception as e:
-            print(f"Error: {e}")
+    def print_filtered_patients_list_by_diagnosis(self, choice: int, patients) -> None:
+        """Prints a list of filtered patients"""
+        filtered_patients = [
+            patient
+            for patient in patients
+            if patient.diagnosis == diagnoses[choice - 1]
+        ]
 
-    def edit_patient_info(self, patient: Patient):
-        """Edit patient information"""
-        patient.MODIFIABLE_ATTRIBUTES = ["diagnosis"]
+        for patient in self.create_pretty_patient_list(filtered_patients):
+            print(patient)
 
-        while True:
-            edit_choice = display_choice(
-                "What would you like to edit?",
-                ["First Name", "Surname", "Diagnosis", "Exit"],
-                "Please choose from the above options: ",
-            )
-            if edit_choice == 1:
-                new_first_name = input("Please enter the new first name: ")
-                patient.edit_info("first_name", new_first_name)
-            if edit_choice == 2:
-                new_surname = input("Please enter the new surname: ")
-                patient.edit_info("surname", new_surname)
-            if edit_choice == 3:
-                new_diagnosis = input("Please enter the new diagnosis: ")
-                patient.edit_info("diagnosis", new_diagnosis)
-            if edit_choice == 4:
-                return False
-
-    def view_dashboard(self):
-        """View the dashboard.
-
-        All methods used are declared as class methods to allow for other classes to access them.
-        """
-        clear_terminal()
-        dashboard_home_choice = display_choice(
-            "Welcome to your dashboard. Where would you like to go?",
-            ["View All", "Filter By Diagnosis", "Exit"],
-        )
-        if dashboard_home_choice == 1:
-            clear_terminal()
-            patients = self.get_all_patients()
-            print("Here are all your patients:")
-            for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
-            decision = input(
-                "Would you like to edit any patient's information? (Y/N): "
-            )
-            if decision == "Y":
-                patient_id = int(input("Please enter the patient's ID: "))
-                patient_details = self.database.cursor.execute(
-                    """
-                    SELECT * 
-                    FROM Patients
-                    INNER JOIN Users ON Patients.user_id = Users.user_id
-                    WHERE Patients.user_id = ?""",
-                    [patient_id],
-                ).fetchone()
-                patient = Patient(self.database, **patient_details)
-                self.edit_patient_info(patient)
-                clear_terminal()
-                return False
-            if decision == "N":
-                wait_terminal()
-
-        if dashboard_home_choice == 2:
-            clear_terminal()
-            # Filter by diagnosis
-            diagnosis = display_choice(
-                "Please enter the diagnosis you would like to filter by: ", diagnoses
-            )
-            patients = self.get_all_patients_by_diagnosis(diagnosis)
-            print(f"Here are all your patients with the diagnosis {diagnosis}:")
-            for patient in patients:
-                print(
-                    f"ID: {patient['user_id']} - {patient['first_name']} {patient['surname']} - {patient['diagnosis']}"
-                )
-            wait_terminal()
-        if dashboard_home_choice == 3:
-            # Edit patient info
-            clear_terminal()
+        if not filtered_patients:
+            print("There are no patients with that diagnosis.")
             return False
-
-    def flow(self) -> bool:
-        """Controls flow of the program from the clinician class
-
-        The program stays within the while loop until a condition is met that
-        breaks the flow. We return to False to indicate to Main.py that our User
-        has quit.
-        """
-        while True:
-            clear_terminal()
-            print(f"Hello, {self.first_name} {self.surname}!")
-            self.print_notifications()
-
-            choices = [
-                "Calendar",
-                "Your Patient Dashboard",
-                "View Requested Appointments",
-                "Quit",
-            ]
-            selection = display_choice("What would you like to do?", choices)
-
-            if selection == 1:
-                self.view_calendar()
-            if selection == 2:
-                self.view_dashboard()
-            if selection == 3:
-                self.view_requested_appointments()
-            if selection == 4:
-                clear_terminal()
-                print("Thanks for using Breeze!")
-                return False
