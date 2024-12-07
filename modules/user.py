@@ -7,7 +7,8 @@ class User:
     database: Database
     user_id: int
     username: str
-    name: str
+    first_name: str
+    surname: str
     email: str
     is_active: bool
 
@@ -16,7 +17,8 @@ class User:
         database: Database,
         user_id: int,
         username: str,
-        name: str,
+        first_name: str,
+        surname: str,
         email: str,
         is_active: bool,
         *args,
@@ -25,7 +27,8 @@ class User:
         self.database = database
         self.user_id = user_id
         self.username = username
-        self.name = name
+        self.first_name = first_name
+        self.surname = surname
         self.email = email
         self.is_active = is_active
 
@@ -34,9 +37,6 @@ class User:
         Updates the attribute both in the object and in the database,
         returns the result of the update
         """
-        if attribute not in self.MODIFIABLE_ATTRIBUTES:
-            print("You don't have the permissions to change this value.")
-            return False
 
         try:
             # First update on the database
@@ -56,9 +56,9 @@ class User:
             return True
 
         # If there is an error with the query
-        except sqlite3.OperationalError:
+        except sqlite3.OperationalError as e:
             print(
-                "Error updating, likely the selected attribute does not exist for Users"
+                f"There was an error updating the {attribute.replace('_', ' ').capitalize()}.\n Error: {e}"
             )
             return False
 

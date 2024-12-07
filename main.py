@@ -1,17 +1,20 @@
 from database.setup import Database
 from modules.login import login, signup
 from modules.emergency import display_emergency_numbers
-from modules.utilities.display import display_choice
-from modules
-
-db = Database()
+from modules.utilities.display_utils import (
+    display_choice,
+    clear_terminal,
+    wait_terminal,
+)
 
 try:
+    db = Database()
     clear_terminal()
     print("Welcome to Breeze, your Mental Health and Wellbeing partner!\n")
     display_emergency_numbers()
     run = True
     while run:
+        clear_terminal()
         selection = display_choice(
             "Please select an option to continue:", ["Log In", "Sign Up", "Quit"]
         )
@@ -23,15 +26,21 @@ try:
             continue
         user = login(db)
         if user:
-            run = user.flow()
+            if user.is_active:
+                run = user.flow()
+            else:
+                print(
+                    "Your account is currently inactive. Please contact an administrator."
+                )
+                wait_terminal("Press enter to log out.")
+
             # NOTE: if flow returns True -> login screen
             # if flow returns False -> quits app
-
-except ValueError as e:
-    # If instead of selecting a number the user types something, we get a ValueError
-    # Note: at some point we need to review that this fails gracefully anywhere in the app
-    print(e)  # TODO: delete this when we finish development
-    print("Please make sure your input is a number.")
+except KeyboardInterrupt:
+    # Do nothing if the user presses Ctrl+C, just move to the finally block
+    pass
 finally:
     # If we pass the execution loop, explicitly closes db connection
+    clear_terminal()
+    print("\nThanks for using Breeze. Goodbye!")
     db.close()
