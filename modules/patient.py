@@ -229,11 +229,35 @@ class Patient(User):
         - Creates a new mood entry if none exists.
         """
 
+        self.database.cursor.execute(
+            "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?",
+            (self.user_id, datetime.now().strftime("%Y-%m-%d")),
+        )
+        entry = self.database.cursor.fetchone()
+
+        if entry:
+            print("You already have an entry for today.")
+            old_mood = MOODS[str(entry["mood"])]
+            show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
+            print(
+                f"\nExisting entry found:\nMood: {show_mood}\nComment: {entry['text']}"
+            )
+            choice = display_choice(
+                "Select an option:",
+                ["Continue to update mood"],
+                enable_zero_quit=True,
+                zero_option_message="Go Back to Main Menu",
+            )
+
+            if not choice:
+                return False
+
         def mood_input():
             """
             Get mood input from the patient using a number or color name.
             """
             clear_terminal()
+
             print("\nMOOD TRACKER:\n")
 
             # display mood options
