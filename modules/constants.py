@@ -130,3 +130,24 @@ MOODS = {
         "ansi": "\033[31m",
     },
 }
+
+SEARCH_OPTIONS = [
+    "Abuse",
+    "Stress",
+    "Work",
+    "Trauma",
+    "Tension",
+    "Substance Misuse",
+    "Sleep",
+    "Phobias",
+    "Panic Attacks",
+    "Alcohol",
+    "Anxiety",
+    "OCD",
+    "Self-Esteem",
+    "Eating",
+    "Suicidal Thoughts",
+    "Bereavement",
+    "Anger",
+    "Low Mood",
+]

@@ -21,7 +21,7 @@ from modules.appointments import (
     cancel_appointment,
     get_patient_appointments,
 )
-from modules.constants import RELAXATION_RESOURCES, MOODS
+from modules.constants import RELAXATION_RESOURCES, MOODS, SEARCH_OPTIONS
 from modules.user import User
 
 
@@ -382,22 +382,84 @@ class Patient(User):
         Looks up exercises and displays them with
         both an audio file and the relevant transcript.
         """
-        if keyword:
-            filtered_resources = [
-                resource
-                for resource in RELAXATION_RESOURCES
-                if keyword.lower() in resource["title"].lower()
-            ]
-        else:
-            filtered_resources = RELAXATION_RESOURCES
+        clear_terminal()
 
-        if not filtered_resources:
-            print("No resources found matching the search criteria.")
+        def searching_exercises(keyword):
+            clear_terminal()
+            if keyword:
+                filtered_resources = [
+                    resource
+                    for resource in RELAXATION_RESOURCES
+                    if keyword.lower() in resource["title"].lower()
+                ]
+            else:
+                filtered_resources = RELAXATION_RESOURCES
 
-        for resource in filtered_resources:
-            print(f"Title: {resource['title']}")
-            print(f"Audio File: {resource['audio_file']}")
-            print(f"Transcript: {resource['transcript']}")
+            if not filtered_resources:
+                print(f"No resources found matching {keyword}.")
+                search_decision = display_choice(
+                    "Would you like to:",
+                    [
+                        "Search keywords again with different keyword",
+                        "Choose from given keywords",
+                    ],
+                    choice_str="Your selection: ",
+                    enable_zero_quit=True,
+                    zero_option_message="Go back to main menu",
+                )
+                if search_decision == 0:
+                    clear_terminal()
+                    return False
+
+                elif search_decision == 1:
+                    clear_terminal()
+                    try_search_again = input("Enter keyword to search for exercises: ")
+                    searching_exercises(try_search_again)
+                else:
+                    clear_terminal()
+                    search_decision = display_choice(
+                        "Choose a keyword or go back to main menu:",
+                        SEARCH_OPTIONS,
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Go back to main menu",
+                    )
+                    if search_decision == 0:
+                        clear_terminal()
+                        return False
+
+                    else:
+                        clear_terminal()
+                        search_decision -= 1
+                        searching_exercises(SEARCH_OPTIONS[search_decision])
+
+            for resource in filtered_resources:
+                print(f"Title: {resource['title']}")
+                print(f"Audio File: {resource['audio_file']}")
+                print(f"Transcript: {resource['transcript']}\n")
+
+            if filtered_resources:
+                do_again = display_choice(
+                    "Would you like to:",
+                    ["Search exercises again"],
+                    choice_str="Your selection: ",
+                    enable_zero_quit=True,
+                    zero_option_message="Go back to main menu",
+                )
+                if do_again == 0:
+                    clear_terminal()
+                    return False
+                elif do_again == 1:
+                    clear_terminal()
+                    searching_exercises(
+                        input("Enter keyword to search for exercises: ")
+                    )
+            else:
+                return False
+
+        leave = searching_exercises(keyword)
+        if not leave:
+            return False
 
     def view_appointments(self) -> list[dict[str, Any]]:
         """
@@ -512,8 +574,16 @@ class Patient(User):
                         )
                         self.display_journal(date.strftime("%Y-%m-%d") if date else "")
                     case 6:
-                        keyword = input("Enter keyword to search for exercises: ")
-                        self.search_exercises(keyword)
+                        clear_terminal()
+                        keyword = input(
+                            "Enter 0 to go back to main menu."
+                            "\nEnter keyword to search for exercises: "
+                        )
+                        if keyword == "0":
+                            return False
+                        else:
+                            self.search_exercises(keyword)
+                        action = "Exit back to main menu"
                     case 7:
                         clear_terminal()
                         appointment_options = [
