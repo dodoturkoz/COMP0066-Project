@@ -74,21 +74,41 @@ def get_valid_yes_or_no(prompt: str = "Your input (Y/N): ") -> bool:
             continue
 
 
-def get_valid_string(prompt: str, max_len: int = 250, min_len: int = 0) -> str:
+def get_valid_string(
+    prompt: str,
+    max_len: int = 250,
+    min_len: int = 0,
+    is_name: bool = False,
+    allow_spaces: bool = True,
+) -> str:
     """
     Get a valid string of more than 2 characters and less than 50
-    from the user and return it
+    from the user and return it; with options to allow only names
+    and disallow spaces.
+
+    Not that is_name always allows spaces.
     """
     while True:
         value = input(prompt)
-        if value and len(value) > min_len and len(value) < max_len:
-            return value
+        if len(value) >= min_len and len(value) <= max_len:
+            if is_name:
+                # Check that the name only contains letters, spaces, hyphens, and apostrophes
+                if re.match("^[A-Za-z]+([ '-][A-Za-z]+)*$", value):
+                    return value
+                else:
+                    print("Your input contains invalid characters. Please try again.")
+                    continue
+            else:
+                if allow_spaces or " " not in value:
+                    return value
+                else:
+                    print("Your input can't contain spaces. Please try again.")
+                    continue
         else:
             print(
                 f"Invalid input. Please try again. Input must be between {min_len} and {max_len} characters."
             )
             continue
-
 
 def get_user_input_with_limited_choice(
     prompt: str,
