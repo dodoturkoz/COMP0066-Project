@@ -488,7 +488,7 @@ class Patient(User):
                         self.mood_of_the_day()
                     case 3:
                         date = get_valid_date(
-                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                            "Enter a valid date (DD-MM-YYYY) or leave blank to view all entries: ",
                             min_date=datetime(1900, 1, 1),
                             max_date=datetime.now(),
                             min_date_message="Date must be after 1900-01-01.",
@@ -503,7 +503,7 @@ class Patient(User):
                         self.journal(content)
                     case 5:
                         date = get_valid_date(
-                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
+                            "Enter a valid date (DD-MM-YYYY) or leave blank to view all entries: ",
                             min_date=datetime(1900, 1, 1),
                             max_date=datetime.now(),
                             min_date_message="Date must be after 1900-01-01.",

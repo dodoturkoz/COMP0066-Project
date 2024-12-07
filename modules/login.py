@@ -118,7 +118,7 @@ def registration_input(
             prompt="Your emergency contact email: "
         )
         registration_info["date_of_birth"] = get_valid_date(
-            prompt="Your date of birth (YYYY-MM-DD): ",
+            prompt="Your date of birth (DD-MM-YYYY): ",
             min_date=datetime(1900, 1, 1),
             max_date=datetime.today(),
             max_date_message="Date of birth cannot be in the future. Please try again.",
