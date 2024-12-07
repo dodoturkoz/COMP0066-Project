@@ -261,8 +261,9 @@ class Patient(User):
             # display mood options
             for num, mood in MOODS.items():
                 print(
-                    f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
+                    f"{mood['ansi']}[{num}] {mood['description']} [{mood['color']}]\033[00m"
                 )
+            print("[0] Return back to main menu")
             valid_inputs = {str(num): mood for num, mood in MOODS.items()}
             valid_inputs.update(
                 {mood["color"].lower(): mood for mood in MOODS.values()}
@@ -526,8 +527,33 @@ class Patient(User):
                             date.strftime("%Y-%m-%d") if date else ""
                         )
                     case 4:
-                        content = get_valid_string("Enter new journal entry: ")
-                        self.journal(content)
+
+                        def write():
+                            """
+                            Add journal entries or go back using 0.
+                            """
+                            clear_terminal()
+                            content = get_valid_string(
+                                "Enter new journal entry or 0 to go back:  "
+                            )
+                            if content == "0":
+                                return False
+                            else:
+                                self.journal(content)
+                                decision = display_choice(
+                                    "Would you like to:",
+                                    ["Write further journal entries"],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Return back to the main menu",
+                                )
+                                if decision == 0:
+                                    return False
+                                else:
+                                    write()
+
+                        write()
+                        action = "Exit back to main menu"
                     case 5:
                         date = get_valid_date(
                             "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
@@ -584,6 +610,7 @@ class Patient(User):
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
+                    clear_terminal()
                     if choice != 1:
                         next_step = display_choice(
                             "Would you like to:",
