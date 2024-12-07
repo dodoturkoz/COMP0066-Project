@@ -188,6 +188,7 @@ class Patient(User):
         """
         Displays patient's moods, optionally filtering by a specific date.
         """
+        clear_terminal()
         query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
         params = [self.user_id]
 
@@ -488,18 +489,51 @@ class Patient(User):
                     case 2:
                         self.mood_of_the_day()
                     case 3:
-                        date = get_valid_date(
-                            "Enter a valid date (YYYY-MM-DD) or leave blank to view all entries: ",
-                            min_date=datetime(1900, 1, 1),
-                            max_date=datetime.now(),
-                            min_date_message="Date must be after 1900-01-01.",
-                            max_date_message="Date cannot be in the future.",
-                            allow_blank=True,
-                            allow_0=True,
-                        )
-                        self.display_previous_moods(
-                            date.strftime("%Y-%m-%d") if date else ""
-                        )
+                        clear_terminal()
+
+                        def date_options():
+                            clear_terminal()
+                            selected_option = display_choice(
+                                "Would you like to:",
+                                ["View all entries", "View a particular date"],
+                                choice_str="Your selection: ",
+                                enable_zero_quit=True,
+                                zero_option_message="Go back to main menu",
+                            )
+                            if selected_option == 0:
+                                return False
+                            elif selected_option == 1:
+                                date = ""
+                            else:
+                                date = get_valid_date(
+                                    "Enter a valid date (YYYY-MM-DD): ",
+                                    min_date=datetime(1900, 1, 1),
+                                    max_date=datetime.now(),
+                                    min_date_message="Date must be after 1900-01-01.",
+                                    max_date_message="Date cannot be in the future.",
+                                    allow_blank=False,
+                                )
+
+                            self.display_previous_moods(
+                                date.strftime("%Y-%m-%d") if date else ""
+                            )
+                            if selected_option == 2:
+                                date_decision = display_choice(
+                                    "Would you like to:",
+                                    [
+                                        "Go to date menu",
+                                    ],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Go back to main menu",
+                                )
+                                if date_decision == 1:
+                                    date_options()
+                                elif date_decision == 0:
+                                    return False
+
+                        date_options()
+                        action = "Exit back to main menu"
                     case 4:
                         content = get_valid_string("Enter new journal entry: ")
                         self.journal(content)
@@ -532,7 +566,6 @@ class Patient(User):
                             self.display_journal(
                                 date.strftime("%Y-%m-%d") if date else ""
                             )
-                            # self.display_previous_moods(date.strftime("%Y-%m-%d") if date else "")
                             if selected_option == 2:
                                 date_decision = display_choice(
                                     "Would you like to:",
