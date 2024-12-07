@@ -385,6 +385,10 @@ class Patient(User):
         clear_terminal()
 
         def searching_exercises(keyword):
+            """
+            Recursive fuction to search exercises with keyword or if you do not get
+            results, choose a given keyword.
+            """
             clear_terminal()
             if keyword:
                 filtered_resources = [
