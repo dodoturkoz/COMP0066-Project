@@ -583,9 +583,10 @@ class Patient(User):
                     case 6:
                         clear_terminal()
                         keyword = input(
-                            "Enter 0 to go back to main menu."
-                            "\nEnter keyword to search for exercises. "
-                            "\nPress enter to see all exercises:"
+                            "Choose an option:"
+                            "\n- Enter keyword to search for exercises. "
+                            "\n- Press enter to see all exercises."
+                            "\n- Enter 0 to go back to main menu.\n"
                         )
                         if keyword == "0":
                             return False
