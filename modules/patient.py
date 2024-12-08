@@ -242,9 +242,9 @@ class Patient(User):
             print(f"Existing entry found:\nMood: {show_mood}\nComment: {entry['text']}")
             choice = display_choice(
                 "\nSelect an option:",
-                ["Continue to update mood"],
+                ["Continue to replace old mood entry"],
                 enable_zero_quit=True,
-                zero_option_message="Go Back to Main Menu",
+                zero_option_message="Go Back to Main Menu to keep old mood entry",
             )
 
             if not choice:
@@ -322,7 +322,7 @@ class Patient(User):
                 print(f"\nNew entry:\nMood: {show_new_mood}\nComment: {comment}")
                 # Confirm update
                 if get_valid_yes_or_no(
-                    "Are you sure you want to update the mood entry for today? (Y/N): "
+                    "Are you sure you want to replace and not keep the old mood entry for today? (Y/N): "
                 ):
                     self.database.cursor.execute(
                         query_update, (comment, mood, self.user_id, today_date)
