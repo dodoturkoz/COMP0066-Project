@@ -480,7 +480,6 @@ class Patient(User):
                 """
                 # Recursively handles menu actions. Users can retry the same option
                 # or exit back to the main menu.
-                action = "Option to redo previous action"
                 match choice:
                     case 1:
                         self.edit_self_info()
@@ -515,59 +514,115 @@ class Patient(User):
                         keyword = input("Enter keyword to search for exercises: ")
                         self.search_exercises(keyword)
                     case 7:
-                        clear_terminal()
-                        appointment_options = [
-                            "Book Appointment",
-                            "View Appointments",
-                            "Cancel Appointment",
-                        ]
-                        selected_choice = display_choice(
-                            "Please select an option:",
-                            appointment_options,
-                            enable_zero_quit=True,
-                        )
-                        if not selected_choice:
-                            return False
 
-                        # Options within appointments option in patient menu.
-                        match selected_choice:
-                            case 1:
-                                # Book Appointment
-                                request_appointment(
-                                    self.database, self.user_id, self.clinician_id
-                                )
-                            case 2:
-                                # View Appointments
-                                self.view_appointments()
-                            case 3:
-                                # Cancel appointment
-                                my_appointments = self.view_appointments()
-                                appointment_id = get_user_input_with_limited_choice(
-                                    "Enter appointment ID to cancel: ",
-                                    [
-                                        appointment["appointment_id"]
-                                        for appointment in my_appointments
-                                        if appointment["date"] >= datetime.now()
-                                    ],
-                                    "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
-                                )
-                                cancel_appointment(self.database, appointment_id)
-                            case 4:
-                                action = "Exit back to main menu"
+                        def appointments_menu():
+                            """Handles all appointment functionality"""
+                            clear_terminal()
+                            appointment_options = [
+                                "Book Appointment",
+                                "View Appointments",
+                                "Cancel Appointment",
+                            ]
+                            selected_choice = display_choice(
+                                "Please select an option:",
+                                appointment_options,
+                                enable_zero_quit=True,
+                            )
+                            if not selected_choice:
+                                return False
 
-                # Provide option to retry the action unless exiting back to the menu.
-                if action != "Exit back to main menu":
-                    if choice != 1:
-                        next_step = display_choice(
-                            "Would you like to:",
-                            ["Retry the same action"],
-                            choice_str="Your selection: ",
-                            enable_zero_quit=True,
-                        )
-                        if not next_step:
+                            # Options within appointments option in patient menu.
+                            match selected_choice:
+                                case 1:
+                                    # Book Appointment
+                                    clear_terminal()
+                                    request_appointment(
+                                        self.database, self.user_id, self.clinician_id
+                                    )
+                                    # Return to appointments menu
+                                    # Return patient menu
+
+                                    next_step = display_choice(
+                                        "Would you like to:",
+                                        ["Return to Appointments Menu"],
+                                        choice_str="Your selection: ",
+                                        enable_zero_quit=True,
+                                    )
+                                    if next_step == 1:
+                                        appointments_menu()
+                                    if next_step == 0:
+                                        return False
+
+                                case 2:
+                                    # View Appointments
+                                    clear_terminal()
+                                    self.view_appointments()
+
+                                    # Just add display option of go back to appointments
+                                    # menu
+                                    # or go to main menu
+                                    next_step = display_choice(
+                                        "Would you like to:",
+                                        ["Return to Appointments Menu"],
+                                        choice_str="Your selection: ",
+                                        enable_zero_quit=True,
+                                    )
+                                    if next_step == 1:
+                                        appointments_menu()
+                                    if next_step == 0:
+                                        return False
+                                case 3:
+                                    # Cancel appointment
+                                    clear_terminal()
+
+                                    def cancel_appointment():
+                                        """Cancel appointment."""
+                                        my_appointments = self.view_appointments()
+                                        appointment_id = get_user_input_with_limited_choice(
+                                            "Enter appointment ID to cancel: ",
+                                            [
+                                                appointment["appointment_id"]
+                                                for appointment in my_appointments
+                                                if appointment["date"] >= datetime.now()
+                                            ],
+                                            "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
+                                        )
+                                        cancel_appointment(
+                                            self.database, appointment_id
+                                        )
+                                        next_step = display_choice(
+                                            "Would you like to:",
+                                            [
+                                                "Cancel another appointment",
+                                                "Return to Appointments Menu",
+                                            ],
+                                            choice_str="Your selection: ",
+                                            enable_zero_quit=True,
+                                        )
+                                        if next_step == 1:
+                                            cancel_appointment()
+                                        elif next_step == 2:
+                                            appointments_menu()
+                                        elif next_step == 0:
+                                            return False
+                                        # @Dogukan, evaluate if you would like the
+                                        # option to cancel another appointment.
+                                        # if not, delete case 3 next step and remove
+                                        # the things out of cancel_appointment function
+                                        # and just stick the thing from case 1 and 2
+                                        # into case 3 at the end.
+                                        # if yes, consider sticking this from case 3 into
+                                        # case 1, not case 2, of appointments as well.
+                                        # With these method we do not really need
+                                        # acting on choice recursive function or action
+                                        # variable. kept just in case to be used for othe
+                                        # r methods.
+                                case 4:
+                                    clear_terminal()
+
+                        exit_appointments = appointments_menu()
+                        if exit_appointments == 2:
                             return False
-                        if next_step == 1:
-                            acting_on_choice(choice)
 
             # Call to process the selected option.
             acting_on_choice(choice)
