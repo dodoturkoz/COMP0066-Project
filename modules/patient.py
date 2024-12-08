@@ -608,7 +608,6 @@ class Patient(User):
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
-                    clear_terminal()
                     if choice != 1:
                         next_step = display_choice(
                             "Would you like to:",
