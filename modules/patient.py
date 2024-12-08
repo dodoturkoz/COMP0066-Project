@@ -586,19 +586,7 @@ class Patient(User):
                                     enable_zero_quit=True,
                                     zero_option_message="Go back to main menu",
                                 )
-                                # @Dogukan, if they have seen mood and journal
-                                # entries for all dates, should they be allowed
-                                # to return to date menu and given the option
-                                # to choose a specific date. Or should they be
-                                # taken straight to patient menu. With new date
-                                # menu, have not discussed with group.
-                                # If they should get option to see date menu,
-                                # stick "or selected_option == 1" without "
-                                # in the next if statement. and remove the
-                                # if selected_option == 1: display_choice if statement
-                                # put just before this comment.
-                                # Please delete this comment when you are done.
-                                # Thanks for cleaning the code.
+
                             if selected_option == 2:
                                 date_decision = display_choice(
                                     "Would you like to:",
