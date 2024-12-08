@@ -329,9 +329,11 @@ class Patient(User):
                     )
                     self.database.connection.commit()
                     print("Mood entry updated successfully.")
+                    wait_terminal("Press enter to return to main menu.")
                     return True
                 else:
                     print("Mood entry was not updated.")
+                    wait_terminal("Press enter to return to main menu.")
                     return False
             else:
                 # Insert new mood entry
