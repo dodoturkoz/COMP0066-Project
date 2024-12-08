@@ -518,7 +518,7 @@ class Patient(User):
                         clear_terminal()
                         appointment_options = [
                             "Book Appointment",
-                            "View Appointments",
+                            "View all Appointment details",
                             "Cancel Appointment",
                         ]
                         selected_choice = display_choice(
