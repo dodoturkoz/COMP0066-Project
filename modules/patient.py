@@ -14,7 +14,6 @@ from modules.utilities.input_utils import (
 from modules.utilities.display_utils import (
     display_choice,
     clear_terminal,
-    wait_terminal,
 )
 from modules.appointments import (
     request_appointment,
@@ -154,28 +153,54 @@ class Patient(User):
             if not choice:
                 return False
 
-            attribute = options[choice - 1].lower().replace(" ", "_")
+            def update_attribute():
+                """
+                Requests new value and update patient details. Give option to return
+                to main menu or edit personal info main.
+                """
+                attribute = options[choice - 1].lower().replace(" ", "_")
 
-            # Handle specific validation for emails
-            if attribute in ["email", "emergency_email"]:
-                value = get_valid_email(
-                    f"Enter the new value for {options[choice - 1]}: "
-                )
-            else:
-                # General string validation for other attributes
-                # TODO for things like username/email we should check if it's unique
-                value = get_valid_string(
-                    f"Enter the new value for {options[choice - 1]}: "
-                )
+                # Handle specific validation for emails
+                if attribute in ["email", "emergency_email"]:
+                    value = get_valid_email(
+                        f"Enter the new value for {options[choice - 1]}: "
+                    )
+                else:
+                    # General string validation for other attributes
+                    # TODO for things like username/email we should check if it's unique
+                    value = get_valid_string(
+                        f"Enter the new value for {options[choice - 1]}: "
+                    )
 
-            # Use the parent class's edit_info method for all updates
-            success = self.edit_info(attribute, value)
+                # Use the parent class's edit_info method for all updates
+                success = self.edit_info(attribute, value)
 
-            if success:
-                wait_terminal("Press enter to continue.")
-                return True
-            else:
-                print(f"Failed to update {options[choice - 1]}. Please try again.")
+                if success:
+                    clear_terminal()
+                    print(
+                        f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+                    )
+                    the_step = display_choice(
+                        "Would you like to:",
+                        ["Go back to editing info"],
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Go to Main Menu",
+                    )
+
+                    if the_step == 1:
+                        return 2
+                    if the_step == 0:
+                        return True
+                else:
+                    clear_terminal()
+                    print(f"Failed to update {options[choice - 1]}. Please try again.")
+                    return 2
+
+            selected = update_attribute()
+            if selected == 2:
+                self.edit_self_info()
+            if selected:
                 return False
 
         except Exception as e:
