@@ -527,9 +527,9 @@ class Patient(User):
 
             # Add options based on whether patient has an assigned clinician
             if self.clinician_id:
-                options.extend(["Search Exercises", "Appointments"])
+                options.extend(["Self-Help Exercises", "Appointments"])
             else:
-                options.append("Search Exercises")
+                options.append("Self-Help Exercises")
 
             choice = display_choice(
                 "Please select an option:",
@@ -583,10 +583,13 @@ class Patient(User):
                     case 6:
                         clear_terminal()
                         keyword = input(
-                            "Choose an option:"
-                            "\n- Enter keyword to search for exercises. "
-                            "\n- Press enter to see all exercises."
-                            "\n- Enter 0 to go back to main menu.\n"
+                            "Here you can find self-help exercises by the NHS on various topics.\n"
+                            "If individual links are broken in the future, you can access all the audio files and their transcripts at:\n"
+                            "https://www.cntw.nhs.uk/home/accessible-information/audio/audio-files/\n\n"
+                            "Choose an option:\n"
+                            "- Enter a keyword to search for exercises.\n"
+                            "- Leave blank and press Enter to see all exercises.\n"
+                            "- Enter 0 to go back to the main menu.\n\n"
                         )
                         if keyword == "0":
                             return False
