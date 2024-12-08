@@ -14,6 +14,7 @@ from modules.utilities.input_utils import (
 from modules.utilities.display_utils import (
     display_choice,
     clear_terminal,
+    wait_terminal,
 )
 from modules.appointments import (
     request_appointment,
