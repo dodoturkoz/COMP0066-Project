@@ -86,18 +86,22 @@ class Patient(User):
                 return User(self.database, *clinician_data)
         return None
 
-    def edit_info(self, attribute: str, value: Any) -> bool:
+    def edit_info(self, attribute: str, value: Any, confirmation: str = None) -> bool:
         if attribute in [
             "clinician_id",
             "diagnosis",
             "emergency_email",
             "date_of_birth",
         ]:
-            return self.edit_patient_info(attribute, value)
+            return self.edit_patient_info(
+                attribute, value, success_message=confirmation
+            )
         else:
-            return super().edit_info(attribute, value)
+            return super().edit_info(attribute, value, success_message=confirmation)
 
-    def edit_patient_info(self, attribute: str, value: Any) -> bool:
+    def edit_patient_info(
+        self, attribute: str, value: Any, success_message: str = None
+    ) -> bool:
         """
         Updates attributes fromt the Patients table both in the object
         and in the database, returns the result of the update
@@ -115,7 +119,12 @@ class Patient(User):
             if hasattr(self, attribute):
                 setattr(self, attribute, value)
 
-            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+            if success_message is None:
+                print(
+                    f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+                )
+            else:
+                print(success_message)
 
             # Return true as the update was successful
             return True
