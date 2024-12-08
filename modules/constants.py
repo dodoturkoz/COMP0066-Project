@@ -117,6 +117,29 @@ RELAXATION_RESOURCES = [
 ]
 
 
+SEARCH_OPTIONS = [
+    "Abuse",
+    "Alcohol",
+    "Anxiety",
+    "Anger",
+    "Bereavement",
+    "Depression",
+    "Eating Disorders",
+    "Health Anxiety",
+    "Hearing Voices",
+    "Obsessions and Compulsions",
+    "Panic",
+    "Post-Traumatic Stress",
+    "Postnatal Depression",
+    "Self-Harm",
+    "Sleeping Problems",
+    "Social Anxiety",
+    "Stress",
+    "Work and Tension",
+    "Substance Misuse",
+]
+
+
 MOODS = {
     "6": {
         "int": 6,
@@ -155,25 +178,3 @@ MOODS = {
         "ansi": "\033[31m",
     },
 }
-
-SEARCH_OPTIONS = [
-    "Abuse",
-    "Alcohol",
-    "Anxiety",
-    "Anger",
-    "Bereavement",
-    "Depression",
-    "Eating Disorders",
-    "Health Anxiety",
-    "Hearing Voices",
-    "Obsessions and Compulsions",
-    "Panic",
-    "Post-Traumatic Stress",
-    "Postnatal Depression",
-    "Self-Harm",
-    "Sleeping Problems",
-    "Social Anxiety",
-    "Stress",
-    "Work and Tension",
-    "Substance Misuse",
-]
