@@ -541,16 +541,14 @@ class Patient(User):
                             else:
                                 self.journal(content)
                                 decision = display_choice(
-                                    "Would you like to:",
-                                    ["Write further journal entries"],
+                                    "Press 0 when ready to:",
+                                    [],
                                     choice_str="Your selection: ",
                                     enable_zero_quit=True,
                                     zero_option_message="Return back to the main menu",
                                 )
                                 if decision == 0:
                                     return False
-                                else:
-                                    write()
 
                         write()
                         action = "Exit back to main menu"
