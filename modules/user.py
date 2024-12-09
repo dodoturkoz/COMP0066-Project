@@ -32,7 +32,9 @@ class User:
         self.email = email
         self.is_active = is_active
 
-    def edit_info(self, attribute: str, value: Any) -> bool:
+    def edit_info(
+        self, attribute: str, value: Any, success_message: str = None
+    ) -> bool:
         """
         Updates the attribute both in the object and in the database,
         returns the result of the update
@@ -50,7 +52,13 @@ class User:
             if hasattr(self, attribute):
                 setattr(self, attribute, value)
 
-            print(f"{attribute.replace('_', ' ').capitalize()} updated successfully.")
+            # Optional message to show the user when the operation is complete
+            if success_message is None:
+                print(
+                    f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+                )
+            else:
+                print(success_message)
 
             # Return true as the update was successful
             return True

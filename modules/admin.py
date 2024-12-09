@@ -168,7 +168,7 @@ class Admin(User):
             unregistered_patient_df = unregistered_patient_df.filter(
                 items=["username", "email", "name", "is_active", "clinician_id"]
             )
-            print("\nPatientes without a clinician assinged:")
+            print("\nPatients without a clinician assigned:")
             print(unregistered_patient_df)
             return unregistered_patient_df.index, unregistered_patient_df.columns
 
@@ -255,7 +255,9 @@ class Admin(User):
         # class
         pass
 
-    def alter_user(self, user_id: int, attribute: str, value: Any) -> bool:
+    def alter_user(
+        self, user_id: int, attribute: str, value: Any, success_message: str = None
+    ) -> bool:
         """
         Executes the query to update the relevant entry in the database
         """
@@ -284,7 +286,7 @@ class Admin(User):
             altered_user = Clinician(self.database, **altered_user_data)
         else:
             altered_user = User(self.database, **altered_user_data)
-        result = altered_user.edit_info(attribute, value)
+        result = altered_user.edit_info(attribute, value, success_message)
         self.refresh_user_df()
         return result
 
@@ -312,7 +314,7 @@ class Admin(User):
 
         # TODO: Add checks that these methods can only be applied to patients and practitioners
 
-    def assing_patient_flow(self) -> bool:
+    def assign_patient_flow(self) -> bool:
         """
         Assigns a patient to a clinician, returns bool with the result
         of the update
@@ -350,11 +352,13 @@ class Admin(User):
             invalid_options_text="Invalid Clinician ID, please chose from list.",
         )
 
-        result = self.alter_user(patient_id, "clinician_id", clinician_id)
+        result = self.alter_user(
+            patient_id,
+            "clinician_id",
+            clinician_id,
+            f"Patient {patient_id} successfully assigned to Clinician {clinician_id}.\n",
+        )
         if result:
-            print(
-                f"Patient {patient_id} successfully assigned to Clinician {clinician_id}."
-            )
             return wait_terminal(return_value=True)
         else:
             print("Error assigning patient to clinician.")
@@ -402,7 +406,16 @@ class Admin(User):
         elif attribute == "is_active":
             value = get_valid_yes_or_no(f"Enter the new value for {attribute} (Y/N): ")
         elif attribute == "diagnosis":
-            value = display_choice("Select the diagnosis for the patient: ", diagnoses)
+            index = display_choice(
+                "\nSelect the diagnosis for the patient: ",
+                diagnoses,
+                enable_zero_quit=True,
+                zero_option_message="Return to main menu",
+            )
+            # Returning to main menu on a 0 option
+            if not index:
+                return False
+            value = diagnoses[index - 1]
         elif attribute == "date_of_birth":
             value = get_valid_date(
                 "Enter the new date of birth (DD-MM-YYYY): ",
@@ -422,8 +435,12 @@ class Admin(User):
                 min_len=0 if attribute == "password" else 1,
             )
 
-        result = self.alter_user(user_id, attribute, value)
-        print(f"\n Successfully updated {attribute} for User {user_id} to {value}.")
+        result = self.alter_user(
+            user_id,
+            attribute,
+            value,
+            f"Successfully updated {attribute} for User {user_id} to {value}.\n",
+        )
         return wait_terminal(return_value=result)
 
     def disable_user_flow(self) -> bool:
@@ -436,8 +453,16 @@ class Admin(User):
 
         actions = ["Disable", "Re-enable"]
         choice = display_choice(
-            "Would you like to disable or re-enable a user?", actions
+            "Would you like to disable or re-enable a user?",
+            actions,
+            enable_zero_quit=True,
+            zero_option_message="Return to main menu",
         )
+        clear_terminal()
+
+        # Send user back to the admin menu
+        if not choice:
+            return False
 
         # Display users and get ids
         user_ids, _ = self.view_table("users", "active" if choice == 1 else "inactive")
@@ -445,28 +470,25 @@ class Admin(User):
             print(f"No users available to {actions[choice - 1]}.")
             return wait_terminal()
 
-        # chose someone
+        # Choose someone
         user_id = get_user_input_with_limited_choice(
-            f"Enter the user ID to {actions[choice - 1]}: ",
+            f"\nEnter the user ID to {actions[choice - 1].lower()}: ",
             user_ids,
             invalid_options_text="Invalid User ID, please try again.",
         )
 
-        # confirm
+        # Confirm
         confirm = get_valid_yes_or_no(
-            f"Are you sure you want to disable User {user_id}? (Y/N): "
+            f"Are you sure you want to {actions[choice - 1].lower()} User {user_id}? (Y/N): "
         )
         if confirm:
             new_status = False if choice == 1 else True
-            result = self.alter_user(user_id, "is_active", new_status)
-            if result:
-                print(
-                    f"\n User {user_id} has been sucessfully {"disabled" if choice == 1 else "re-enabled"}."
-                )
-            else:
-                print(
-                    f"Error {"disabling" if choice == 1 else "enabling"} user {user_id}."
-                )
+            result = self.alter_user(
+                user_id,
+                "is_active",
+                new_status,
+                f"User {user_id} has been sucessfully {"disabled" if choice == 1 else "re-enabled"}.\n",
+            )
         else:
             print("\nCancelled.")
             result = False
@@ -519,8 +541,12 @@ class Admin(User):
         # Step 1: Get the user_type
         user_options = ["Patient", "Clinician"]
         user_choice = display_choice(
-            "Would you like to view patient or clinician appointments?", user_options
+            "Would you like to view patient or clinician appointments?",
+            user_options,
+            enable_zero_quit=True,
         )
+        if not user_choice:
+            return False
         if user_choice == 1:
             user_type = "patient"
         elif user_choice == 2:
@@ -604,12 +630,11 @@ class Admin(User):
                 "Assign Patient to Clinician",
                 "View User Information",
                 "Edit User Information",
-                "Disable or Enable User",
+                "Disable or Re-enable User",
                 "Delete User",
                 "View Appointments",
                 "Log Out",
             ]
-            # TODO: We should probably have a cancel option during any of these 7 operations
 
             # Menu choices
             selection = display_choice("What would you like to do?", choices)
@@ -617,7 +642,7 @@ class Admin(User):
             # Assign a patient to clinician
 
             if selection == 1:
-                self.assing_patient_flow()
+                self.assign_patient_flow()
 
             # View all user info
             elif selection == 2:
