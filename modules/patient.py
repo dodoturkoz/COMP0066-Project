@@ -21,7 +21,7 @@ from modules.appointments import (
     cancel_appointment,
     get_patient_appointments,
 )
-from modules.constants import RELAXATION_RESOURCES, MOODS
+from modules.constants import RELAXATION_RESOURCES, MOODS, SEARCH_OPTIONS
 from modules.user import User
 
 
@@ -148,34 +148,60 @@ class Patient(User):
                 "Select an attribute to edit:",
                 options,
                 enable_zero_quit=True,
-                zero_option_message="Go Back to Main Menu",
+                zero_option_message="Go back to main menu",
             )
 
             if not choice:
                 return False
 
-            attribute = options[choice - 1].lower().replace(" ", "_")
+            def update_attribute():
+                """
+                Requests new value and update patient details. Give option to return
+                to main menu or edit personal info main.
+                """
+                attribute = options[choice - 1].lower().replace(" ", "_")
 
-            # Handle specific validation for emails
-            if attribute in ["email", "emergency_email"]:
-                value = get_valid_email(
-                    f"Enter the new value for {options[choice - 1]}: "
-                )
-            else:
-                # General string validation for other attributes
-                # TODO for things like username/email we should check if it's unique
-                value = get_valid_string(
-                    f"Enter the new value for {options[choice - 1]}: "
-                )
+                # Handle specific validation for emails
+                if attribute in ["email", "emergency_email"]:
+                    value = get_valid_email(
+                        f"Enter the new value for {options[choice - 1]}: "
+                    )
+                else:
+                    # General string validation for other attributes
+                    # TODO for things like username/email we should check if it's unique
+                    value = get_valid_string(
+                        f"Enter the new value for {options[choice - 1]}: "
+                    )
 
-            # Use the parent class's edit_info method for all updates
-            success = self.edit_info(attribute, value)
+                # Use the parent class's edit_info method for all updates
+                success = self.edit_info(attribute, value)
 
-            if success:
-                wait_terminal("Press enter to continue.")
-                return True
-            else:
-                print(f"Failed to update {options[choice - 1]}. Please try again.")
+                if success:
+                    clear_terminal()
+                    print(
+                        f"{attribute.replace('_', ' ').capitalize()} updated successfully."
+                    )
+                    the_step = display_choice(
+                        "Would you like to:",
+                        ["Go back to editing info"],
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Go to Main Menu",
+                    )
+
+                    if the_step == 1:
+                        return 2
+                    if the_step == 0:
+                        return True
+                else:
+                    clear_terminal()
+                    print(f"Failed to update {options[choice - 1]}. Please try again.")
+                    return 2
+
+            selected = update_attribute()
+            if selected == 2:
+                self.edit_self_info()
+            if selected:
                 return False
 
         except Exception as e:
@@ -188,6 +214,7 @@ class Patient(User):
         """
         Displays patient's moods, optionally filtering by a specific date.
         """
+        clear_terminal()
         query = "SELECT date, text, mood FROM MoodEntries WHERE user_id = ?"
         params = [self.user_id]
 
@@ -228,20 +255,42 @@ class Patient(User):
         - Updates the existing entry if one exists.
         - Creates a new mood entry if none exists.
         """
+        clear_terminal()
+        self.database.cursor.execute(
+            "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?",
+            (self.user_id, datetime.now().strftime("%Y-%m-%d")),
+        )
+        entry = self.database.cursor.fetchone()
+
+        if entry:
+            print("You already have an entry for today.")
+            old_mood = MOODS[str(entry["mood"])]
+            show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
+            print(f"Existing entry found:\nMood: {show_mood}\nComment: {entry['text']}")
+            choice = display_choice(
+                "\nSelect an option:",
+                ["Continue to replace old mood entry"],
+                enable_zero_quit=True,
+                zero_option_message="Go back to main menu to keep old mood entry",
+            )
+
+            if not choice:
+                return False
 
         def mood_input():
             """
             Get mood input from the patient using a number or color name.
             """
             clear_terminal()
+
             print("\nMOOD TRACKER:\n")
 
             # display mood options
             for num, mood in MOODS.items():
                 print(
-                    f"{mood['ansi']}{num}. {mood['description']} [{mood['color']}]\033[00m"
+                    f"{mood['ansi']}[{num}] {mood['description']} [{mood['color']}]\033[00m"
                 )
-
+            print("[0] Return back to main menu")
             valid_inputs = {str(num): mood for num, mood in MOODS.items()}
             valid_inputs.update(
                 {mood["color"].lower(): mood for mood in MOODS.values()}
@@ -249,14 +298,20 @@ class Patient(User):
 
             while True:
                 mood_choice = get_valid_string(
-                    "\nEnter your mood for today (number 6 to 1 or color name): "
+                    "\nEnter your mood for today (number 6 to 1 or color name)."
+                    "\nAlternatively, enter 0 to return to main menu."
+                    "\nYour selection: "
                 ).lower()
-                if mood_choice in valid_inputs:
+                print(mood_choice)
+                if mood_choice == "0":
+                    return mood_choice
+                elif mood_choice in valid_inputs:
                     selected_mood = valid_inputs[mood_choice]
                     return selected_mood["int"]
-                print(
-                    "Invalid input. Please enter a number from 6 to 1 or a valid color name."
-                )
+                else:
+                    print(
+                        "Invalid input. Please enter a number from 6 to 1 or a valid color name."
+                    )
 
         def comment_input():
             """
@@ -267,8 +322,10 @@ class Patient(User):
             return "No comment provided."
 
         mood = mood_input()
+        if mood == "0":
+            return False
         comment = comment_input()
-
+        clear_terminal()
         today_date = datetime.now().strftime("%Y-%m-%d")
         query_check = (
             "SELECT text, mood FROM MoodEntries WHERE user_id = ? AND DATE(date) = ?"
@@ -286,25 +343,24 @@ class Patient(User):
             if entry:
                 old_mood = MOODS[str(entry["mood"])]
                 show_mood = f"{old_mood['ansi']} {old_mood['description']}\033[00m"
-                print(
-                    f"\nExisting entry found:\nMood: {show_mood}\nComment: {entry['text']}"
-                )
+                print(f"\nExisting entry:\nMood: {show_mood}\nComment: {entry['text']}")
                 new_mood = MOODS[str(mood)]
                 show_new_mood = f"{new_mood['ansi']} {new_mood['description']}\033[00m"
-                print("New Mood: ", show_new_mood)
-                print("New Comment: ", comment)
+                print(f"\nNew entry:\nMood: {show_new_mood}\nComment: {comment}")
                 # Confirm update
                 if get_valid_yes_or_no(
-                    "Do you want to update the mood entry for today? (Y/N): "
+                    "Are you sure you want to replace old mood entry for today? (Y/N): "
                 ):
                     self.database.cursor.execute(
                         query_update, (comment, mood, self.user_id, today_date)
                     )
                     self.database.connection.commit()
                     print("Mood entry updated successfully.")
+                    wait_terminal("Press enter to return to main menu.")
                     return True
                 else:
                     print("Mood entry was not updated.")
+                    wait_terminal("Press enter to return to main menu.")
                     return False
             else:
                 # Insert new mood entry
@@ -326,6 +382,7 @@ class Patient(User):
         """
         Displays patient's journal entries, optionally filtering by a specific date.
         """
+        clear_terminal()
         query = "SELECT date, text FROM JournalEntries WHERE user_id = ?"
         params = [self.user_id]
 
@@ -382,22 +439,91 @@ class Patient(User):
         Looks up exercises and displays them with
         both an audio file and the relevant transcript.
         """
-        if keyword:
-            filtered_resources = [
-                resource
-                for resource in RELAXATION_RESOURCES
-                if keyword.lower() in resource["title"].lower()
-            ]
-        else:
-            filtered_resources = RELAXATION_RESOURCES
+        clear_terminal()
 
-        if not filtered_resources:
-            print("No resources found matching the search criteria.")
+        def searching_exercises(keyword):
+            """
+            Recursive fuction to search exercises with keyword or if you do not get
+            results, choose a given keyword.
+            """
+            clear_terminal()
+            if keyword:
+                filtered_resources = [
+                    resource
+                    for resource in RELAXATION_RESOURCES
+                    if keyword.lower() in resource["title"].lower()
+                ]
+            else:
+                filtered_resources = RELAXATION_RESOURCES
 
-        for resource in filtered_resources:
-            print(f"Title: {resource['title']}")
-            print(f"Audio File: {resource['audio_file']}")
-            print(f"Transcript: {resource['transcript']}")
+            if not filtered_resources:
+                print(f"No resources found matching {keyword}.")
+                search_decision = display_choice(
+                    "Would you like to:",
+                    [
+                        "Search keywords again with different keyword",
+                        "Choose from given keywords",
+                    ],
+                    choice_str="Your selection: ",
+                    enable_zero_quit=True,
+                    zero_option_message="Go back to main menu",
+                )
+                if search_decision == 0:
+                    clear_terminal()
+                    return False
+
+                elif search_decision == 1:
+                    clear_terminal()
+                    try_search_again = input(
+                        "Enter keyword to search for exercises. "
+                        "\nPress enter to see all exercises:"
+                    )
+                    searching_exercises(try_search_again)
+                else:
+                    clear_terminal()
+                    search_decision = display_choice(
+                        "Choose a keyword or go back to main menu:",
+                        SEARCH_OPTIONS,
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Go back to main menu",
+                    )
+                    if search_decision == 0:
+                        clear_terminal()
+                        return False
+
+                    else:
+                        clear_terminal()
+                        search_decision -= 1
+                        searching_exercises(SEARCH_OPTIONS[search_decision])
+
+            for resource in filtered_resources:
+                print(f"Title: {resource['title']}")
+                print(f"Audio File: {resource['audio_file']}")
+                print(f"Transcript: {resource['transcript']}\n")
+
+            if filtered_resources:
+                do_again = display_choice(
+                    "Would you like to:",
+                    ["Search exercises again"],
+                    choice_str="Your selection: ",
+                    enable_zero_quit=True,
+                    zero_option_message="Go back to main menu",
+                )
+                if do_again == 0:
+                    clear_terminal()
+                    return False
+                elif do_again == 1:
+                    clear_terminal()
+                    searching_exercises(
+                        input("Enter keyword to search for exercises: ")
+                    )
+            else:
+                return False
+
+        leave = searching_exercises(keyword)
+        if not leave:
+            return False
 
     def view_appointments(self) -> list[dict[str, Any]]:
         """
@@ -458,9 +584,9 @@ class Patient(User):
 
             # Add options based on whether patient has an assigned clinician
             if self.clinician_id:
-                options.extend(["Search Exercises", "Appointments"])
+                options.extend(["Self-Help Exercises", "Appointments"])
             else:
-                options.append("Search Exercises")
+                options.append("Self-Help Exercises")
 
             choice = display_choice(
                 "Please select an option:",
@@ -486,34 +612,162 @@ class Patient(User):
                         self.edit_self_info()
                     case 2:
                         self.mood_of_the_day()
+                        action = "Exit back to main menu"
                     case 3:
-                        date = get_valid_date(
-                            "Enter a valid date (DD-MM-YYYY) or leave blank to view all entries: ",
-                            min_date=datetime(1900, 1, 1),
-                            max_date=datetime.now(),
-                            min_date_message="Date must be after 1900-01-01.",
-                            max_date_message="Date cannot be in the future.",
-                            allow_blank=True,
-                        )
-                        self.display_previous_moods(
-                            date.strftime("%Y-%m-%d") if date else ""
-                        )
+                        clear_terminal()
+
+                        def date_options():
+                            clear_terminal()
+                            selected_option = display_choice(
+                                "Would you like to:",
+                                ["View all entries", "View a particular date"],
+                                choice_str="Your selection: ",
+                                enable_zero_quit=True,
+                                zero_option_message="Go back to main menu",
+                            )
+                            if selected_option == 0:
+                                return False
+                            elif selected_option == 1:
+                                clear_terminal()
+                                date = ""
+                            else:
+                                clear_terminal()
+                                date = get_valid_date(
+                                    "Enter a valid date (DD-MM-YY): ",
+                                    min_date=datetime(1900, 1, 1),
+                                    max_date=datetime.now(),
+                                    min_date_message="Date must be after 1900-01-01.",
+                                    max_date_message="Date cannot be in the future.",
+                                    allow_blank=False,
+                                )
+
+                            self.display_previous_moods(
+                                date.strftime("%Y-%m-%d") if date else ""
+                            )
+                            if selected_option == 1:
+                                display_choice(
+                                    "When you are ready, enter 0:",
+                                    [],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Go back to main menu",
+                                )
+                            if selected_option == 2:
+                                date_decision = display_choice(
+                                    "Would you like to:",
+                                    [
+                                        "Go to date menu",
+                                    ],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Go back to main menu",
+                                )
+                                if date_decision == 1:
+                                    date_options()
+                                elif date_decision == 0:
+                                    return False
+
+                        date_options()
+                        action = "Exit back to main menu"
                     case 4:
-                        content = get_valid_string("Enter new journal entry: ")
-                        self.journal(content)
+
+                        def write():
+                            """
+                            Add journal entries or go back using 0.
+                            """
+                            clear_terminal()
+                            content = get_valid_string(
+                                "Enter new journal entry or 0 to go back:  "
+                            )
+                            if content == "0":
+                                return False
+                            else:
+                                self.journal(content)
+                                decision = display_choice(
+                                    "Press 0 when ready to:",
+                                    [],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Return back to the main menu",
+                                )
+                                if decision == 0:
+                                    return False
+
+                        write()
+                        action = "Exit back to main menu"
                     case 5:
-                        date = get_valid_date(
-                            "Enter a valid date (DD-MM-YYYY) or leave blank to view all entries: ",
-                            min_date=datetime(1900, 1, 1),
-                            max_date=datetime.now(),
-                            min_date_message="Date must be after 1900-01-01.",
-                            max_date_message="Date cannot be in the future.",
-                            allow_blank=True,
-                        )
-                        self.display_journal(date.strftime("%Y-%m-%d") if date else "")
+                        clear_terminal()
+
+                        def date_options():
+                            clear_terminal()
+                            selected_option = display_choice(
+                                "Would you like to:",
+                                ["View all entries", "View a particular date"],
+                                choice_str="Your selection: ",
+                                enable_zero_quit=True,
+                                zero_option_message="Go back to main menu",
+                            )
+                            if selected_option == 0:
+                                return False
+                            elif selected_option == 1:
+                                clear_terminal()
+                                date = ""
+                            else:
+                                clear_terminal()
+                                date = get_valid_date(
+                                    "Enter a valid date (DD-MM-YYYY): ",
+                                    min_date=datetime(1900, 1, 1),
+                                    max_date=datetime.now(),
+                                    min_date_message="Date must be after 1900-01-01.",
+                                    max_date_message="Date cannot be in the future.",
+                                    allow_blank=False,
+                                )
+
+                            self.display_journal(
+                                date.strftime("%Y-%m-%d") if date else ""
+                            )
+                            if selected_option == 1:
+                                display_choice(
+                                    "When you are ready, enter 0:",
+                                    [],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Go back to main menu",
+                                )
+
+                            if selected_option == 2:
+                                date_decision = display_choice(
+                                    "Would you like to:",
+                                    [
+                                        "Go to date menu",
+                                    ],
+                                    choice_str="Your selection: ",
+                                    enable_zero_quit=True,
+                                    zero_option_message="Go back to main menu",
+                                )
+                                if date_decision == 1:
+                                    date_options()
+                                elif date_decision == 0:
+                                    return False
+
+                        date_options()
+                        action = "Exit back to main menu"
                     case 6:
-                        keyword = input("Enter keyword to search for exercises: ")
-                        self.search_exercises(keyword)
+                        clear_terminal()
+                        keyword = input(
+                            "Here you can find self-help exercises by the NHS on various topics.\n"
+                            "If individual links are broken in the future, you can access all the audio files and their transcripts at:\n"
+                            "https://www.cntw.nhs.uk/home/accessible-information/audio/audio-files/\n\n"
+                            "Choose an option:\n"
+                            "- Enter a keyword to search for exercises.\n"
+                            "- Leave blank and press Enter to see all exercises.\n"
+                            "- Enter 0 to go back to the main menu.\n\n"
+                        )
+                        if keyword == "0":
+                            return False
+                        else:
+                            self.search_exercises(keyword)
+                        action = "Exit back to main menu"
                     case 7:
                         clear_terminal()
                         appointment_options = [
