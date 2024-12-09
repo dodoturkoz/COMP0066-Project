@@ -405,7 +405,7 @@ class Admin(User):
             value = display_choice("Select the diagnosis for the patient: ", diagnoses)
         elif attribute == "date_of_birth":
             value = get_valid_date(
-                "Enter the new date of birth (YYYY-MM-DD): ",
+                "Enter the new date of birth (DD-MM-YYYY): ",
                 datetime(1900, 1, 1),
                 datetime.now(),
             )

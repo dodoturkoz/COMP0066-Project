@@ -37,7 +37,7 @@ def get_valid_date(
         if allow_blank and not date:
             return None
         try:
-            valid_date = datetime.strptime(date, "%Y-%m-%d")
+            valid_date = datetime.strptime(date, "%d-%m-%Y")
             if valid_date > max_date:
                 print(
                     max_date_message
