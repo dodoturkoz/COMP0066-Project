@@ -94,7 +94,10 @@ def get_valid_string(
             if is_name:
                 # Check that the name only contains letters, spaces, hyphens, and apostrophes
                 if re.match("^[A-Za-z]+([ '-][A-Za-z]+)*$", value):
-                    return value
+                    if value.count(" ") <= 3:
+                        return value
+                    else:
+                        print("You can't input more three names. Please try again.")
                 else:
                     print("Your input contains invalid characters. Please try again.")
                     continue
