@@ -305,10 +305,10 @@ class Clinician(User):
             "What would you like to do now?",
             options,
             enable_zero_quit=True,
-            zero_option_message="Return to Main Menu",
+            zero_option_message="Return to appointments overview",
         )
-        if not next:
-            return False
+        if next == 0:
+            return self.view_calendar()
 
         # View appointment notes
         if next == 1:
@@ -316,8 +316,13 @@ class Clinician(User):
             if len(appointments) > 1:
                 clear_terminal()
                 selected = display_choice(
-                    "Please choose an appointment to view", appointment_strings
+                    "Please choose an appointment to view",
+                    appointment_strings,
+                    enable_zero_quit=True,
+                    zero_option_message="Back to appointments",
                 )
+                if selected == 0:
+                    return self.display_appointment_options(appointments)
                 selected_appointment = appointments[selected - 1]
             else:
                 selected_appointment = appointments[0]
@@ -343,8 +348,13 @@ class Clinician(User):
             if len(appointments) > 1:
                 clear_terminal()
                 selected = display_choice(
-                    "Please choose an appointment to add notes to", appointment_strings
+                    "Please choose an appointment to add notes to",
+                    appointment_strings,
+                    enable_zero_quit=True,
+                    zero_option_message="Back to appointments",
                 )
+                if selected == 0:
+                    return self.display_appointment_options(appointments)
                 selected_appointment = appointments[selected - 1]
             else:
                 selected_appointment = appointments[0]
@@ -354,7 +364,6 @@ class Clinician(User):
         # Confirm/Reject appointments
         elif next == 3:
             self.view_requested_appointments()
-        # Exit
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
@@ -435,7 +444,6 @@ class Clinician(User):
                 f"{appointment['date'].strftime('%a %d %b %Y, %I:%M%p')}"
                 + f" - {appointment['first_name']} {appointment['surname']}"
             )
-        choice_strings.append("Exit")
 
         # If there are unconfirmed appointments, offer choice to the user
         while unconfirmed_appointments:
@@ -443,11 +451,12 @@ class Clinician(User):
             confirm_choice = display_choice(
                 "Here are your unconfirmed appointments:",
                 choice_strings,
-                f"Would you like to confirm or reject any appointment? Please choose from the following options {[*range(1, len(unconfirmed_appointments) + 2)]}: ",
+                enable_zero_quit=True,
+                zero_option_message="Return to Main Menu",
             )
 
             # If user selects 'Exit', go back to the main menu
-            if confirm_choice == len(unconfirmed_appointments) + 1:
+            if confirm_choice == 0:
                 return False
             else:
                 clear_terminal()
