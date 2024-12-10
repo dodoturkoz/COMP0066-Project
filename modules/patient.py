@@ -1,7 +1,8 @@
 import sqlite3
 from typing import Optional, Any
 from datetime import datetime
-
+import random
+import time
 
 from database.setup import Database
 from modules.utilities.input_utils import (
@@ -21,7 +22,7 @@ from modules.appointments import (
     cancel_appointment,
     get_patient_appointments,
 )
-from modules.constants import RELAXATION_RESOURCES, MOODS
+from modules.constants import RELAXATION_RESOURCES, MOODS, QUOTES
 from modules.user import User
 
 
@@ -434,6 +435,60 @@ class Patient(User):
             print(f"Error viewing appointments: {e}")
             return []
 
+    @staticmethod
+    def see_quotes():
+        """
+        See inspirational quotes
+        """
+        clear_terminal()
+        print("""                    
+          \U0001f381""")
+        time.sleep(0.5)
+        clear_terminal()
+        print("          \U0001f381")
+        time.sleep(0.5)
+        clear_terminal()
+        print("""                    
+          \U0001f381""")
+        time.sleep(0.5)
+        clear_terminal()
+        print("          \U0001f381")
+        time.sleep(0.5)
+        clear_terminal()
+        print("""                    
+          \U0001f381""")
+        time.sleep(0.5)
+        clear_terminal()
+        print("          \U0001f381")
+        time.sleep(0.5)
+        clear_terminal()
+        print("""                    
+          \U0001f381""")
+        time.sleep(0.5)
+        clear_terminal()
+        print("          \U0001f381")
+        time.sleep(0.5)
+        clear_terminal()
+        # Wierd present movements
+
+        def see_present():
+            clear_terminal()
+            print("          \U0001f381")
+            choice = input(
+                "Press 0 to exit or only press enter to unwrap surprise quote from present "
+            )
+            if choice != "0" and choice != "":
+                choice = see_present()
+            return choice
+
+        choice = see_present()
+        if choice == "":
+            x = random.randint(1, 164)
+            print(QUOTES[x])
+            wait_terminal()
+        elif choice == 0:
+            return False
+
     def flow(self):
         """
         Displays the main patient menu and handles the selection of various options.
@@ -458,9 +513,9 @@ class Patient(User):
 
             # Add options based on whether patient has an assigned clinician
             if self.clinician_id:
-                options.extend(["Search Exercises", "Appointments"])
+                options.extend(["Search Exercises", "Appointments", "Presents"])
             else:
-                options.append("Search Exercises")
+                options.append("Search Exercises", "Presents")
 
             choice = display_choice(
                 "Please select an option:",
@@ -515,45 +570,53 @@ class Patient(User):
                         keyword = input("Enter keyword to search for exercises: ")
                         self.search_exercises(keyword)
                     case 7:
-                        clear_terminal()
-                        appointment_options = [
-                            "Book Appointment",
-                            "View Appointments",
-                            "Cancel Appointment",
-                        ]
-                        selected_choice = display_choice(
-                            "Please select an option:",
-                            appointment_options,
-                            enable_zero_quit=True,
-                        )
-                        if not selected_choice:
-                            return False
+                        if self.clinician_id:
+                            clear_terminal()
+                            appointment_options = [
+                                "Book Appointment",
+                                "View Appointments",
+                                "Cancel Appointment",
+                            ]
+                            selected_choice = display_choice(
+                                "Please select an option:",
+                                appointment_options,
+                                enable_zero_quit=True,
+                            )
+                            if not selected_choice:
+                                return False
 
-                        # Options within appointments option in patient menu.
-                        match selected_choice:
-                            case 1:
-                                # Book Appointment
-                                request_appointment(
-                                    self.database, self.user_id, self.clinician_id
-                                )
-                            case 2:
-                                # View Appointments
-                                self.view_appointments()
-                            case 3:
-                                # Cancel appointment
-                                my_appointments = self.view_appointments()
-                                appointment_id = get_user_input_with_limited_choice(
-                                    "Enter appointment ID to cancel: ",
-                                    [
-                                        appointment["appointment_id"]
-                                        for appointment in my_appointments
-                                        if appointment["date"] >= datetime.now()
-                                    ],
-                                    "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
-                                )
-                                cancel_appointment(self.database, appointment_id)
-                            case 4:
-                                action = "Exit back to main menu"
+                            # Options within appointments option in patient menu.
+                            match selected_choice:
+                                case 1:
+                                    # Book Appointment
+                                    request_appointment(
+                                        self.database, self.user_id, self.clinician_id
+                                    )
+                                case 2:
+                                    # View Appointments
+                                    self.view_appointments()
+                                case 3:
+                                    # Cancel appointment
+                                    my_appointments = self.view_appointments()
+                                    appointment_id = get_user_input_with_limited_choice(
+                                        "Enter appointment ID to cancel: ",
+                                        [
+                                            appointment["appointment_id"]
+                                            for appointment in my_appointments
+                                            if appointment["date"] >= datetime.now()
+                                        ],
+                                        "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
+                                    )
+                                    cancel_appointment(self.database, appointment_id)
+                                case 4:
+                                    action = "Exit back to main menu"
+                        else:
+                            self.see_quotes()
+                            action = "Exit back to main menu"
+                    case 8:
+                        if self.clinician_id:
+                            self.see_quotes()
+                            action = "Exit back to main menu"
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
