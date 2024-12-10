@@ -504,7 +504,9 @@ class Clinician(User):
                     # Option to go back and choose another appointment
                     next_action = display_choice(
                         "What would you like to do next?",
-                        ["Accept/Reject another appointment", "Exit"],
+                        ["Accept/Reject another appointment"],
+                        enable_zero_quit=True,
+                        zero_option_message='Exit'
                     )
                     if next_action == 1:
                         continue
@@ -555,7 +557,9 @@ class Clinician(User):
 
                     next_action = display_choice(
                         "What would you like to do next?",
-                        ["Accept/Reject another appointment", "Exit"],
+                        ["Accept/Reject another appointment"],
+                        enable_zero_quit=True,
+                        zero_option_message="Exit",
                     )
                     if next_action == 1:
                         continue
