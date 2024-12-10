@@ -179,7 +179,10 @@ class Patient(User):
                     # General string validation for other attributes
                     # TODO for things like username/email we should check if it's unique
                     value = get_valid_string(
-                        f"Enter the new value for {options[choice - 1]}: "
+                        f"Enter the new value for {options[choice - 1]}: ",
+                        max_len=25,
+                        min_len=0 if attribute == "password" else 1,
+                        is_name=True if attribute in ["first_name", "surname"] else False,
                     )
 
                 # Use the parent class's edit_info method for all updates

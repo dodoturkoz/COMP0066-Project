@@ -433,6 +433,8 @@ class Admin(User):
                 f"Enter the new value for {attribute}: ",
                 max_len=25,
                 min_len=0 if attribute == "password" else 1,
+                is_name=True if attribute in ["first_name", "surname"] else False,
+                allow_spaces=False if attribute == "username" else True,
             )
 
         result = self.alter_user(
