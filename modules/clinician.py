@@ -380,7 +380,7 @@ class Clinician(User):
             print("You have no registered appointments.")
         else:
             # Offer a choice of different sets of appointments, grouped by time
-            view_options = ["All", "Past", "Upcoming"]
+            view_options = ["All", "Past", "Upcoming", "Past appointments without notes"]
             view = display_choice(
                 "Which appointments would you like to view?",
                 view_options,
@@ -407,6 +407,10 @@ class Clinician(User):
                         filter(lambda app: app["date"] >= datetime.now(), appointments)
                     ),
                 )
+
+            # Show past appointments without notes
+            elif view == 4:
+                self.display_appointment_options(self.get_all_appointments_without_notes())
 
     def view_requested_appointments(self):
         """This allows the clinician to view all appointments that have been
