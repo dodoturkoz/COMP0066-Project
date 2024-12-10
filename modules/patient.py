@@ -644,7 +644,7 @@ class Patient(User):
                 """
                 # Recursively handles menu actions. Users can retry the same option
                 # or exit back to the main menu.
-                action = "Option to redo previous action"
+                action = 0
                 match choice:
                     case 1:
                         self.edit_self_info()
@@ -826,14 +826,23 @@ class Patient(User):
                             match selected_choice:
                                 case 1:
                                     # Book Appointment
+                                    clear_terminal()
                                     request_appointment(
                                         self.database, self.user_id, self.clinician_id
                                     )
+                                    action = 1
+
                                 case 2:
                                     # View Appointments
+                                    clear_terminal()
                                     self.view_appointments()
+
+                                    action = 1
                                 case 3:
                                     # Cancel appointment
+                                    clear_terminal()
+
+                                    """Cancel appointment."""
                                     my_appointments = self.view_appointments()
                                     appointment_id = get_user_input_with_limited_choice(
                                         "Enter appointment ID to cancel: ",
@@ -845,29 +854,32 @@ class Patient(User):
                                         "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
                                     )
                                     cancel_appointment(self.database, appointment_id)
+                                    action = 1
+
                                 case 4:
-                                    action = "Exit back to main menu"
+                                    clear_terminal()
                         else:
                             self.see_quotes()
                             action = "Exit back to main menu"
+
                     case 8:
                         if self.clinician_id:
                             self.see_quotes()
                             action = "Exit back to main menu"
 
-                # Provide option to retry the action unless exiting back to the menu.
-                if action != "Exit back to main menu":
-                    if choice != 1:
-                        next_step = display_choice(
-                            "Would you like to:",
-                            ["Retry the same action"],
-                            choice_str="Your selection: ",
-                            enable_zero_quit=True,
-                        )
-                        if not next_step:
-                            return False
-                        if next_step == 1:
-                            acting_on_choice(choice)
+                # handling flow after appointment option
+                if action == 1 and choice != 1:
+                    next_step = display_choice(
+                        "Would you like to:",
+                        ["Return to appointment menu"],
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Return to patient menu",
+                    )
+                    if not next_step:
+                        return False
+                    if next_step == 1:
+                        acting_on_choice(choice)
 
             # Call to process the selected option.
             acting_on_choice(choice)
