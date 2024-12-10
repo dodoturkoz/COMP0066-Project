@@ -1066,8 +1066,8 @@ class Database:
                         5,
                         old_appointment_day(3, 9),
                         "Attended",
-                        "I feel changes in medication is required given current change in condition.",
-                        "I feel patient should continue with the given medication.",
+                        "I feel changes in medication is required given current change in condition. [1/12/2024, 16:10:30]",
+                        "I feel patient should continue with the given medication. [05/11/2024, 12:14:50]",
                     ),
                     (
                         2,
