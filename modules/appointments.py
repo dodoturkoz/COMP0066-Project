@@ -156,7 +156,7 @@ Please choose out of the following options: {[*range(1, len(slots) + 2)]} """,
         )
 
         if chosen_slot == len(time_slot_strings):
-            return False
+            continue
         else:
             chosen_time = slots[chosen_slot - 1]
 
