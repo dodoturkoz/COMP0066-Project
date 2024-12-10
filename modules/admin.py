@@ -626,7 +626,7 @@ class Admin(User):
             print(appointments)
 
             return_options = [
-                "User type Choice",
+                "User type choice",
                 "Specific user choice",
                 "Timeframe choice",
             ]
