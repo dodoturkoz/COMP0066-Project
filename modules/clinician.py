@@ -174,8 +174,9 @@ class Clinician(User):
                 return False
 
             diagnosis = diagnoses[choice - 1]
-            patient.edit_info("diagnosis", diagnosis)
-            print(f"Diagnosis updated to {diagnosis}.")
+            patient.edit_info(
+                "diagnosis", diagnosis, f"Diagnosis updated to {diagnosis}."
+            )
             wait_terminal(
                 "Press enter to return to patient overview.",
                 redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
