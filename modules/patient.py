@@ -183,7 +183,9 @@ class Patient(User):
                         f"Enter the new value for {options[choice - 1]}: ",
                         max_len=25,
                         min_len=0 if attribute == "password" else 1,
-                        is_name=True if attribute in ["first_name", "surname"] else False,
+                        is_name=True
+                        if attribute in ["first_name", "surname"]
+                        else False,
                     )
 
                 # Use the parent class's edit_info method for all updates
@@ -590,7 +592,7 @@ class Patient(User):
         print("Here's a quote for you:")
 
         # Print a random quote from the list
-        x = random.randint(1, 164)
+        x = random.randint(1, len(QUOTES))
         print(QUOTES[x])
         return wait_terminal()
 
@@ -622,7 +624,7 @@ class Patient(User):
                     ["Self-Help Exercises", "Appointments", "Get a present from Breeze"]
                 )
             else:
-                options.extend(["Self-Help Exercises", "Presents"])
+                options.extend(["Self-Help Exercises", "Get a present from Breeze"])
 
             choice = display_choice(
                 "Please select an option:",
