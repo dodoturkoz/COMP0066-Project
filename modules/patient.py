@@ -158,7 +158,7 @@ class Patient(User):
                 "Select an attribute to edit:",
                 options,
                 enable_zero_quit=True,
-                zero_option_message="Return to the dashboard",
+                zero_option_message="Return to main menu",
             )
 
             if not choice:
@@ -201,7 +201,7 @@ class Patient(User):
                         ["Return to editing info"],
                         choice_str="Your selection: ",
                         enable_zero_quit=True,
-                        zero_option_message="Return to the dashboard",
+                        zero_option_message="Return to main menu",
                     )
 
                     if the_step == 1:
@@ -286,7 +286,7 @@ class Patient(User):
                 "\nSelect an option:",
                 ["Continue to replace old mood entry"],
                 enable_zero_quit=True,
-                zero_option_message="Return to the dashboard to keep old mood entry",
+                zero_option_message="Return to main menu to keep old mood entry",
             )
 
             if not choice:
@@ -481,7 +481,7 @@ class Patient(User):
                     ],
                     choice_str="Your selection: ",
                     enable_zero_quit=True,
-                    zero_option_message="Return to the dashboard",
+                    zero_option_message="Return to main menu",
                 )
                 if search_decision == 0:
                     clear_terminal()
@@ -497,11 +497,11 @@ class Patient(User):
                 else:
                     clear_terminal()
                     search_decision = display_choice(
-                        "Choose a keyword or return to the dashboard:",
+                        "Choose a keyword or return to main menu:",
                         SEARCH_OPTIONS,
                         choice_str="Your selection: ",
                         enable_zero_quit=True,
-                        zero_option_message="Return to the dashboard",
+                        zero_option_message="Return to main menu",
                     )
                     if search_decision == 0:
                         clear_terminal()
@@ -523,7 +523,7 @@ class Patient(User):
                     ["Search exercises again"],
                     choice_str="Your selection: ",
                     enable_zero_quit=True,
-                    zero_option_message="Return to the dashboard",
+                    zero_option_message="Return to main menu",
                 )
                 if do_again == 0:
                     clear_terminal()
@@ -661,7 +661,7 @@ class Patient(User):
                                 ["View all entries", "View a particular date"],
                                 choice_str="Your selection: ",
                                 enable_zero_quit=True,
-                                zero_option_message="Return to the dashboard",
+                                zero_option_message="Return to main menu",
                             )
                             if selected_option == 0:
                                 return False
@@ -691,7 +691,7 @@ class Patient(User):
                                     ],
                                     choice_str="Your selection: ",
                                     enable_zero_quit=True,
-                                    zero_option_message="Return to the dashboard",
+                                    zero_option_message="Return to main menu",
                                 )
                                 if date_decision == 1:
                                     date_options()
@@ -704,11 +704,11 @@ class Patient(User):
 
                         def write():
                             """
-                            Add journal entries or return to the dashboard using 0.
+                            Add journal entries or return to main menu using 0.
                             """
                             clear_terminal()
                             content = get_valid_string(
-                                "Enter new journal entry or 0 return to the dashboard:  "
+                                "Enter new journal entry or 0 to return to main menu:  "
                             )
                             if content == "0":
                                 return False
@@ -730,7 +730,7 @@ class Patient(User):
                                 ["View all entries", "View a particular date"],
                                 choice_str="Your selection: ",
                                 enable_zero_quit=True,
-                                zero_option_message="Return to the dashboard",
+                                zero_option_message="Return to main menu",
                             )
                             if selected_option == 0:
                                 return False
@@ -761,7 +761,7 @@ class Patient(User):
                                     ],
                                     choice_str="Your selection: ",
                                     enable_zero_quit=True,
-                                    zero_option_message="Return to the dashboard",
+                                    zero_option_message="Return to main menu",
                                 )
                                 if date_decision == 1:
                                     date_options()
@@ -779,7 +779,7 @@ class Patient(User):
                             "Choose an option:\n"
                             "- Enter a keyword to search for exercises.\n"
                             "- Leave blank and press Enter to see all exercises.\n"
-                            "- Enter 0 to return to the dashboard.\n\n"
+                            "- Enter 0 to return to main menu.\n\n"
                         )
                         if keyword == "0":
                             return False
