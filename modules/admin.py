@@ -391,8 +391,14 @@ class Admin(User):
             return wait_terminal()
 
         attribute_choice = display_choice(
-            "Select the attribute to edit:", 
-            editable_attributes)
+            "\nSelect the attribute to edit:", 
+            editable_attributes, 
+            enable_zero_quit=True, 
+            zero_option_message= "Return to main menu")
+        
+        if attribute_choice == 0:
+            return False
+
         attribute = editable_attributes[attribute_choice - 1]
 
 
