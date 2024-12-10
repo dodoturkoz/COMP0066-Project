@@ -682,7 +682,8 @@ class Patient(User):
                             self.display_previous_moods(
                                 date.strftime("%Y-%m-%d") if date else ""
                             )
-                            wait_terminal()
+                            if selected_option == 1:
+                                wait_terminal()
                             if selected_option == 2:
                                 date_decision = display_choice(
                                     "Would you like to:",
@@ -751,7 +752,8 @@ class Patient(User):
                             self.display_journal(
                                 date.strftime("%Y-%m-%d") if date else ""
                             )
-                            wait_terminal()
+                            if selected_option == 1:
+                                wait_terminal()
 
                             if selected_option == 2:
                                 date_decision = display_choice(
