@@ -15,24 +15,27 @@ class StreakService:
         streak = self.mood_streaks[user_id]
         position = self.get_current_user_position(streak)
         ties = self.get_current_user_ties(streak)
-        print(
-            f"You have logged your mood for {streak} days in a row."
-        )
-
-        position_string = ""
-        if position == 1:
-            position_string = "You have the longest streak in the leaderboard"
+        if streak == 0:
+            print("You need to log your mood to start a streak.")
         else:
-            position_string = f"Your position in the leaderboard is {position}"
+            print(
+                f"You have logged your mood for {streak} days in a row."
+            )
 
-        tie_string = f", tied with {ties} other users" if ties > 0 else ""
+            position_string = ""
+            if position == 1:
+                position_string = "You have the longest streak in the leaderboard"
+            else:
+                position_string = f"Your position in the leaderboard is {position}"
 
-        print(f"{position_string}{tie_string}.")
+            tie_string = f", tied with {ties} other users" if ties > 0 else ""
 
-        if position == 1:
-            print("Continue logging your mood daily to maintain your lead!")
-        else:
-            print("Continue registering your mood daily to advance in the leaderboard!")
+            print(f"{position_string}{tie_string}.")
+
+            if position == 1:
+                print("Continue logging your mood daily to maintain your lead!")
+            else:
+                print("Continue registering your mood daily to advance in the leaderboard!")
 
     def get_current_user_position(self, streak: int) -> int:
         """
