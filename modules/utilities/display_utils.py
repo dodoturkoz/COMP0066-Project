@@ -30,7 +30,7 @@ def display_choice(
             if zero_option_callback:
                 return zero_option_callback()
             else:
-                return False
+                return 0
 
         else:
             print("Invalid choice. Please try again.")
