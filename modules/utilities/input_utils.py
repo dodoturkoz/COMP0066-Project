@@ -142,12 +142,12 @@ def get_user_input_with_limited_choice(
             print(invalid_options_text)
             continue
 
-def get_new_username(db: Database) -> str:
+def get_new_username(db: Database, user_prompt = "Your username: ") -> str:
     existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
 
     while True:
         username = get_valid_string(
-            "Your username: ", max_len=25, min_len=3, allow_spaces=False
+            user_prompt, max_len=25, min_len=3, allow_spaces=False
         )
         if username in existing_usernames:
             print("Username already exists. Please try again.")
@@ -155,8 +155,8 @@ def get_new_username(db: Database) -> str:
         else:
             return username
 
-def get_new_user_email(db: Database) -> str:
+def get_new_user_email(db: Database, user_prompt = "Your email: ") -> str:
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
     return get_valid_email(
-        prompt="Your email: ", existing_emails=existing_emails
+        prompt=user_prompt, existing_emails=existing_emails
     )

@@ -413,9 +413,9 @@ class Admin(User):
             print(f"Attribute {attribute} cannot be changed for a clinician.")
             return wait_terminal()
         elif attribute == "username":
-            value = get_new_username(self.database)
+            value = get_new_username(self.database, user_prompt=f"Enter the new value for {attribute}: ")
         elif attribute == "email":
-            value = get_new_user_email(self.database)
+            value = get_new_user_email(self.database, user_prompt=f"Enter the new value for {attribute}: ")
         elif attribute == "emergency_email":
             value = get_valid_email(f"Enter the new value for {attribute}: ")
         elif attribute == "is_active":
