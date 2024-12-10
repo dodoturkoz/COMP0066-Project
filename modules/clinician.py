@@ -104,6 +104,7 @@ class Clinician(User):
             f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to do?",
             [
                 "Edit Diagnosis",
+                "View Patient Moods"
             ],
             "Please choose from the above options: ",
             enable_zero_quit=True,
@@ -119,6 +120,9 @@ class Clinician(User):
             #     "Press enter to continue",
             #     redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
             # )
+        if choice == 2:
+            patient.display_previous_moods()
+            wait_terminal()
         if not choice:
             return False
 
