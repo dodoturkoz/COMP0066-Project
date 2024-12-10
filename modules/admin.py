@@ -396,7 +396,7 @@ class Admin(User):
             enable_zero_quit=True, 
             zero_option_message= "Return to main menu")
         
-        if not attribute_choice:
+        if attribute_choice == 0:
             return False
 
         attribute = editable_attributes[attribute_choice - 1]
