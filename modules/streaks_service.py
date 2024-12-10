@@ -34,8 +34,6 @@ class StreakService:
 
             if position == 1:
                 print("Continue logging your mood daily to maintain your lead!")
-            elif position == 0:
-                print("Register your mood daily to advance in the leaderboard!")
             else:
                 print(
                     "Continue registering your mood daily to advance in the leaderboard!"
