@@ -642,7 +642,7 @@ class Patient(User):
                             else:
                                 clear_terminal()
                                 date = get_valid_date(
-                                    "Enter a valid date (DD-MM-YY): ",
+                                    "Enter a valid date (DD-MM-YYYY): ",
                                     min_date=datetime(1900, 1, 1),
                                     max_date=datetime.now(),
                                     min_date_message="Date must be after 1900-01-01.",
