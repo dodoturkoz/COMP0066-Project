@@ -104,7 +104,7 @@ def get_available_slots(database, clinician_id: int, day: datetime) -> list:
         if (
             datetime(day.year, day.month, day.day, hour, 0)
             not in [appointment["date"] for appointment in appointments]
-            and datetime(day.year, day.month, day.day) > datetime.now()
+            and datetime(day.year, day.month, day.day, hour) > datetime.now()
         ):
             available_slots.append(datetime(day.year, day.month, day.day, hour, 0))
 
