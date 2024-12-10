@@ -472,6 +472,7 @@ class Patient(User):
         # Wierd present movements
 
         def see_present():
+            """Gets enter to show quote or 0 to return to patient menu"""
             clear_terminal()
             print("          \U0001f381")
             choice = input(
