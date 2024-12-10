@@ -5,7 +5,10 @@ import random
 import time
 
 from database.setup import Database
+from modules.streaks_service import StreakService
 from modules.utilities.input_utils import (
+    get_new_user_email,
+    get_new_username,
     get_user_input_with_limited_choice,
     get_valid_string,
     get_valid_email,
@@ -27,6 +30,7 @@ from modules.user import User
 
 
 class Patient(User):
+
     def __init__(
         self,
         database: Database,
@@ -159,7 +163,7 @@ class Patient(User):
         """
         Allows the patient to change their details.
         """
-        # TODO: Add option to edit birth date
+
         options = [
             "Username",
             "Email",
@@ -189,7 +193,11 @@ class Patient(User):
                 attribute = options[choice - 1].lower().replace(" ", "_")
 
                 # Handle specific validation for emails
-                if attribute in ["email", "emergency_email"]:
+                if attribute == "username":
+                    value = get_new_username(self.database)
+                elif attribute == "email":
+                    value = get_new_user_email(self.database)
+                elif attribute == "emergency_email":
                     value = get_valid_email(
                         f"Enter the new value for {options[choice - 1]}: "
                     )
@@ -632,6 +640,10 @@ class Patient(User):
                 else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
             print(greeting)
+
+            # Display the current streak and position in the leaderboard
+            streak_service = StreakService(self.database)
+            streak_service.print_current_user_streak(user_id=self.user_id)
 
             options = [
                 "View/Edit Personal Info",
