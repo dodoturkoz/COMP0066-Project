@@ -4,20 +4,19 @@ from database.setup import Database
 
 
 class StreakService:
-    mood_streaks: list[int]
-    current_user_streak: int
+    mood_streaks: dict[int, int]
     database: Database
 
-    def __init__(self, db: Database, crr_user_id: int):
+    def __init__(self, db: Database) -> None:
         self.database = db
-        self.mood_streaks = self.get_all_user_mood_streaks(crr_user_id)
-        self.mood_streaks.sort(reverse=True)
+        self.mood_streaks = self.get_all_user_mood_streaks()
 
-    def print_current_user_streak(self) -> None:
-        position = self.get_current_user_position()
-        ties = self.get_current_user_ties()
+    def print_current_user_streak(self, user_id: int) -> None:
+        streak = self.mood_streaks[user_id]
+        position = self.get_current_user_position(streak)
+        ties = self.get_current_user_ties(streak)
         print(
-            f"You have logged your mood for {self.current_user_streak} days in a row."
+            f"You have logged your mood for {streak} days in a row."
         )
 
         position_string = ""
@@ -35,30 +34,30 @@ class StreakService:
         else:
             print("Continue registering your mood daily to advance in the leaderboard!")
 
-    def get_current_user_position(self) -> int:
+    def get_current_user_position(self, streak: int) -> int:
         """
         Get the current user's position in the streak leaderboard.
         """
-        return self.mood_streaks.index(self.current_user_streak) + 1
+        ordered_streaks = sorted(list(self.mood_streaks.values()), reverse=True)
+        return ordered_streaks.index(streak) + 1
 
-    def get_current_user_ties(self) -> int:
+    def get_current_user_ties(self, streak: int) -> int:
         """
         Get the number of users who have the same streak as the current user.
         """
-        return self.mood_streaks.count(self.current_user_streak) - 1
+        all_streaks = list(self.mood_streaks.values())
+        return all_streaks.count(streak) - 1
 
-    def get_all_user_mood_streaks(self, crr_user_id: int) -> list[int]:
+    def get_all_user_mood_streaks(self) -> list[int]:
         """
         Get the mood streaks of all users.
         """
         self.database.cursor.execute("SELECT user_id FROM Users WHERE role = 'patient'")
         users = self.database.cursor.fetchall()
-        mood_streaks = []
+        mood_streaks = {}
 
         for user in users:
-            mood_streaks.append(self.get_user_mood_streak(user))
-            if user == crr_user_id:
-                self.current_user_streak = mood_streaks[-1]
+            mood_streaks[user] = self.get_user_mood_streak(user)
 
         return mood_streaks
 
