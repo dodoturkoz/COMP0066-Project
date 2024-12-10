@@ -381,11 +381,18 @@ class Admin(User):
             user_ids,
             invalid_options_text="Invalid User ID, please try again.",
         )
-        attribute = get_user_input_with_limited_choice(
-            "Enter the attribute to edit: ",
-            attributes,
-            invalid_options_text="Invalid attribute. Please select a valid option from the columns of the previous table.",
-        )
+        
+        
+        excluded_attributes = {"diagnosis", "role", "user_id"}
+        editable_attributes = [attr for attr in attributes if attr not in excluded_attributes]
+
+        if not editable_attributes:
+            print("No editable attributes available.")
+            return wait_terminal()
+
+        attribute_choice = display_choice("Select the attribute to edit:", editable_attributes)
+        attribute = editable_attributes[attribute_choice - 1]
+
 
         clinician_ids = self.user_df.query(('role == "clinician"')).index
 
