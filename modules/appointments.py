@@ -1,38 +1,36 @@
 import sqlite3
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 from database.setup import Database
 from modules.utilities.display_utils import display_choice, clear_terminal
 from modules.utilities.dataframe_utils import filter_df_by_date
+from modules.utilities.input_utils import get_valid_date
 
 
 def choose_date() -> datetime:
     """Loop to take a valid requested date from the user to book an appointment with a clinician"""
     while True:
-        try:
-            date_string = input(
-                "Please enter a date when you would like to see your clinician (DD/MM/YY): "
-            )
+        # Constructing a datetime for today's date minus the current time -
+        # this allows patients to book slots on the day
+        today = datetime.today()
+        current_day = datetime(today.year, today.month, today.day)
 
-            requested_date = datetime.strptime(date_string.strip(), "%d/%m/%y")
+        requested_date = get_valid_date(
+            "Please enter a date when you would like to see your clinician (DD-MM-YYYY): ",
+            current_day,
+            current_day + timedelta(weeks=52),
+            "You cannot book an appointment before the current date.",
+            "You can only book appointments up to a year in advance.",
+        )
 
-            # Constructing a datetime for today's date minus the current time -
-            # this allows patients to book slots on the day
-            today = datetime.today()
-            current_day = datetime(today.year, today.month, today.day)
-            if requested_date < current_day:
-                print("You cannot book an appointment before the current date.")
-            elif requested_date.weekday() in [5, 6]:
-                print(
-                    "Your clinician only works Monday-Friday. Please choose a date during the week."
-                )
-            else:
-                return requested_date
-        except ValueError:
+        # Make sure the patient hasn't requested a weekend
+        if requested_date.weekday() in [5, 6]:
             print(
-                "You have entered an invalid date. Please enter in the format DD/MM/YY."
+                "Your clinician only works Monday-Friday. Please choose a date during the week."
             )
+        else:
+            return requested_date
 
 
 def get_clinician_appointments(database, clinician_id: int) -> list:
@@ -106,7 +104,7 @@ def get_available_slots(database, clinician_id: int, day: datetime) -> list:
         if (
             datetime(day.year, day.month, day.day, hour, 0)
             not in [appointment["date"] for appointment in appointments]
-            and datetime(day.year, day.month, day.day) > datetime.now()
+            and datetime(day.year, day.month, day.day, hour) > datetime.now()
         ):
             available_slots.append(datetime(day.year, day.month, day.day, hour, 0))
 

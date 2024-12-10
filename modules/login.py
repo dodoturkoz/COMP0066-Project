@@ -81,7 +81,9 @@ def registration_input(
 
     # Get a unique username
     while True:
-        username = get_valid_string("Your username: ", max_len=25, min_len=3)
+        username = get_valid_string(
+            "Your username: ", max_len=25, min_len=3, allow_spaces=False
+        )
         if username in existing_usernames:
             print("Username already exists. Please try again.")
             continue
@@ -103,10 +105,10 @@ def registration_input(
             break
 
     registration_info["first_name"] = get_valid_string(
-        "Your first name: ", max_len=50, min_len=1
+        "Your first name: ", max_len=50, min_len=1, is_name=True
     )
     registration_info["surname"] = get_valid_string(
-        "Your surname: ", max_len=50, min_len=1
+        "Your surname: ", max_len=50, min_len=1, is_name=True
     )
     # Get a valid email that is not already in the database
     registration_info["email"] = get_valid_email(
@@ -118,7 +120,7 @@ def registration_input(
             prompt="Your emergency contact email: "
         )
         registration_info["date_of_birth"] = get_valid_date(
-            prompt="Your date of birth (YYYY-MM-DD): ",
+            prompt="Your date of birth (DD-MM-YYYY): ",
             min_date=datetime(1900, 1, 1),
             max_date=datetime.today(),
             max_date_message="Date of birth cannot be in the future. Please try again.",
