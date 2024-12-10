@@ -601,7 +601,7 @@ class Database:
                         13,
                         4,
                         old_date(3),
-                        "My family is angry with me and think I overeacted with Rex's death.",
+                        "My family is angry with me and think I overreacted with Rex's death.",
                     ),
                     (
                         14,
@@ -799,13 +799,13 @@ class Database:
                         46,
                         14,
                         old_date(3),
-                        "I know this is not real, but it feels so real. I cannot trust my own mind anymore.",
+                        "I know this is not real, but it feels so real. I cannot trust my own mind any more.",
                     ),
                     (
                         47,
                         14,
                         old_date(2),
-                        "I keep thinking I am being followed. I don't know who I can trust anymore.",
+                        "I keep thinking I am being followed. I don't know who I can trust any more.",
                     ),
                     (
                         48,
@@ -913,7 +913,7 @@ class Database:
                         65,
                         19,
                         old_date(4),
-                        "It's like I can't trust my senses anymore. What if it's all in my head?",
+                        "It's like I can't trust my senses any more. What if it's all in my head?",
                     ),
                     (
                         66,
@@ -1047,7 +1047,7 @@ class Database:
                     (66, 19, old_day(3), 3, "Confused on reality."),
                     (67, 19, old_day(2), 1, "Constantly hearing voices."),
                     (68, 20, old_day(5), 3, "Overwhelmed by hallucinations."),
-                    (69, 20, old_day(4), 1, "IDK what is real anymore."),
+                    (69, 20, old_day(4), 1, "IDK what is real any more."),
                     (70, 20, old_day(3), 3, "No comment provided."),
                     (71, 20, old_day(2), 2, "Confused."),
                 ]
