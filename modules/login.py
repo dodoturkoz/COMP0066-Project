@@ -12,6 +12,8 @@ from modules.utilities.display_utils import (
 )
 from database.setup import Database, roles
 from modules.utilities.input_utils import (
+    get_new_user_email,
+    get_new_username,
     get_valid_email,
     get_valid_date,
     get_valid_yes_or_no,
@@ -57,9 +59,7 @@ def login(db: Database) -> Union[User, None]:
         return None
 
 
-def registration_input(
-    existing_usernames: list[str], existing_emails: list[str]
-) -> dict[str, Union[str, datetime]]:
+def registration_input(db: Database) -> dict[str, Union[str, datetime]]:
     """
     Gets the registration information and returns it
     """
@@ -80,16 +80,7 @@ def registration_input(
     registration_info["role"] = roles[user_type]
 
     # Get a unique username
-    while True:
-        username = get_valid_string(
-            "Your username: ", max_len=25, min_len=3, allow_spaces=False
-        )
-        if username in existing_usernames:
-            print("Username already exists. Please try again.")
-            continue
-        else:
-            registration_info["username"] = username
-            break
+    registration_info["username"] = get_new_username(db)
 
     # Get a password and confirm it
     while True:
@@ -110,10 +101,9 @@ def registration_input(
     registration_info["surname"] = get_valid_string(
         "Your surname: ", max_len=50, min_len=1, is_name=True
     )
+
     # Get a valid email that is not already in the database
-    registration_info["email"] = get_valid_email(
-        prompt="Your email: ", existing_emails=existing_emails
-    )
+    registration_info["email"] = get_new_user_email(db)
 
     if registration_info["role"] == "patient":
         registration_info["emergency_email"] = get_valid_email(
@@ -132,7 +122,7 @@ def registration_input(
     if register:
         return registration_info
     else:
-        return registration_input(existing_usernames, existing_emails)
+        return registration_input(db)
 
 
 def signup(db: Database) -> bool:
@@ -145,13 +135,12 @@ def signup(db: Database) -> bool:
 
     clear_terminal()
 
-    # Get a list of registered unique usernames
-    existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
-    existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
-    user_info = registration_input(existing_usernames, existing_emails)
+    # Get the number of registered users
+    existing_users = db.cursor.execute("SELECT COUNT(*) FROM Users").fetchall()
+    user_info = registration_input(db)
 
     try:
-        user_id = len(existing_usernames) + 1
+        user_id = existing_users[0] + 1
         is_patient = user_info["role"] == "patient"
 
         # Insert general user info
