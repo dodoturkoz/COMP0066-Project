@@ -15,9 +15,12 @@ try:
     run = True
     while run:
         selection = display_choice(
-            "\nPlease select an option to continue:", ["Log In", "Sign Up", "Quit"]
+            "\nPlease select an option to continue:",
+            ["Log In", "Sign Up"],
+            enable_zero_quit=True,
+            zero_option_message="Quit",
         )
-        if selection == 3:
+        if selection == 0:
             run = False
             continue
         if selection == 2:
