@@ -581,14 +581,17 @@ class Patient(User):
         See inspirational quotes after a loading animation.
         """
 
+        icon = "\U0001f381"
+
         # Display a loading animation
         for i in range(6):
             clear_terminal()
-            print(f"{" " * ( i % 3 )}\U0001f381")
+            print("Getting your present, please wait")
+            print(f"{" " * ( i % 3 )}{icon}")
             time.sleep(0.5)
 
         clear_terminal()
-        print("\U0001f381")
+        print(icon)
         print("Here's a quote for you:")
 
         # Print a random quote from the list
