@@ -383,7 +383,7 @@ class Admin(User):
         )
         
         
-        excluded_attributes = {"diagnosis", "role", "user_id"}
+        excluded_attributes = {"diagnosis", "role", "user_id","clinician_id","is_active"}
         editable_attributes = [attr for attr in attributes if attr not in excluded_attributes]
 
         if not editable_attributes:
