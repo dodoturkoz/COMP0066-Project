@@ -442,11 +442,11 @@ class Patient(User):
         """
 
         # Display a loading animation
-        for i in range(6):    
+        for i in range(6):
             clear_terminal()
             print(f"{" " * ( i % 3 )}\U0001f381")
             time.sleep(0.5)
-        
+
         clear_terminal()
         print("\U0001f381")
         print("Here's a quote for you:")
@@ -480,7 +480,9 @@ class Patient(User):
 
             # Add options based on whether patient has an assigned clinician
             if self.clinician_id:
-                options.extend(["Search Exercises", "Appointments", "Presents"])
+                options.extend(
+                    ["Search Exercises", "Appointments", "Get a present from Breeze"]
+                )
             else:
                 options.extend(["Search Exercises", "Presents"])
 
