@@ -487,6 +487,7 @@ class Clinician(User):
 
                         # Remove the appointment from the list so it is not displayed to the user again
                         unconfirmed_appointments.remove(accepted_appointment)
+                        choice_strings.remove(choice_strings[confirm_choice - 1])
 
                         # Email messages to send to the client and the clinician
                         clinician_confirmation = f"Your appointment with {appointment["first_name"]} {appointment["surname"]} has been confirmed for {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
@@ -510,15 +511,20 @@ class Clinician(User):
                         print(f"Failed to confirm appointment: {e}")
                         return False
 
-                    # Option to go back and choose another appointment
-                    next_action = display_choice(
-                        "What would you like to do next?",
-                        ["Accept/Reject another appointment"],
+                    # If there are unconfirmed appointments, offer 
+                    # option to go back and choose another appointment
+                    if unconfirmed_appointments:
+                        next_action = display_choice(
+                            "What would you like to do next?",
+                            ["Accept/Reject another appointment"],
                         enable_zero_quit=True,
                         zero_option_message='Exit'
-                    )
-                    if next_action == 1:
-                        continue
+                        )
+                        if next_action == 1:
+                            clear_terminal()
+                            continue
+                        else:
+                            return True
                     else:
                         return True
 
@@ -541,6 +547,7 @@ class Clinician(User):
 
                         # Remove the appointment from the list so it is not displayed to the user again
                         unconfirmed_appointments.remove(rejected_appointment)
+                        choice_strings.remove(choice_strings[confirm_choice - 1])
 
                         # Send emails to the client and the clinician
                         clinician_rejection = f"You have rejected {appointment["first_name"]} {appointment["surname"]}'s request for an appointment on {appointment['date'].strftime('%I:%M%p on %A %d %B %Y')}."
@@ -564,14 +571,20 @@ class Clinician(User):
                         print(f"Failed to confirm appointment: {e}")
                         return False
 
-                    next_action = display_choice(
-                        "What would you like to do next?",
-                        ["Accept/Reject another appointment"],
+                    # If there are still unconfirmed appointments, offer the choice of
+                    # what to do next
+                    if unconfirmed_appointments:
+                        next_action = display_choice(
+                            "What would you like to do next?",
+                            ["Accept/Reject another appointment"],
                         enable_zero_quit=True,
                         zero_option_message="Exit",
-                    )
-                    if next_action == 1:
-                        continue
+                        )
+                        if next_action == 1:
+                            clear_terminal()
+                            continue
+                        else:
+                            return True
                     else:
                         return True
 
