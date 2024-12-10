@@ -203,7 +203,7 @@ def cancel_appointment(database, appointment_id: int) -> bool:
         if database.cursor.rowcount > 0:
             database.connection.commit()
             clear_terminal()
-            print("Appointment canceled successfully.")
+            print("Appointment cancelled successfully.")
             return True
         else:
             clear_terminal()
