@@ -373,11 +373,11 @@ class Admin(User):
 
         user_ids, attributes = self.view_table("users")
         if user_ids.empty:
-            print(" No users found.")
+            print("\nNo users found.")
             return wait_terminal()
 
         user_id = get_user_input_with_limited_choice(
-            "Enter the user ID to edit: ",
+            "\nEnter the user ID to edit: ",
             user_ids,
             invalid_options_text="Invalid User ID, please try again.",
         )
@@ -539,87 +539,118 @@ class Admin(User):
 
         clear_terminal()
         print("\nView appointments\n")
-
-        # Step 1: Get the user_type
-        user_options = ["Patient", "Clinician"]
-        user_choice = display_choice(
-            "Would you like to view patient or clinician appointments?",
-            user_options,
-            enable_zero_quit=True,
-        )
-        if not user_choice:
-            return False
-        if user_choice == 1:
-            user_type = "patient"
-        elif user_choice == 2:
-            user_type = "clinician"
-
-        # Step 2: Get a specific user to filter by, if relevant
-        filter_specific_user = get_valid_yes_or_no(
-            "Would you like to filter for a specific user? (Y/N): "
-        )
-        if filter_specific_user:
-            if user_type == "patient":
-                clear_terminal()
-                patient_ids, _ = self.view_table("patients", "none", "none")
-                filter_id = get_user_input_with_limited_choice(
-                    "\nEnter the ID of the patient you want to see: ",
-                    patient_ids,
-                    invalid_options_text="Invalid Patient ID, please choose from list.",
+        # Establishing a loop and variables for redirect at the end
+        user_type_start = True
+        specific_user_start = True
+        repeat = True
+        while repeat is True:
+            # Step 1: Get the user_type
+            if user_type_start is True:
+                user_options = ["Patient", "Clinician"]
+                user_choice = display_choice(
+                    "Would you like to view patient or clinician appointments?",
+                    user_options,
+                    enable_zero_quit=True,
                 )
-            elif user_type == "clinician":
-                clear_terminal()
-                clinician_ids, _ = self.view_table(
-                    "clinicians",
-                    "none",
-                    "none",
+                if not user_choice:
+                    return False
+                if user_choice == 1:
+                    user_type = "patient"
+                elif user_choice == 2:
+                    user_type = "clinician"
+
+            # Step 2: Get a specific user to filter by, if relevant
+            if specific_user_start is True:
+                filter_specific_user = get_valid_yes_or_no(
+                    "Would you like to filter for a specific user? (Y/N): "
                 )
-                filter_id = get_user_input_with_limited_choice(
-                    "\nEnter the ID of the clinician you want to see: ",
-                    clinician_ids,
-                    invalid_options_text="Invalid Clinician ID, please choose from list.",
-                )
-        else:
-            filter_id = None
+                if filter_specific_user:
+                    if user_type == "patient":
+                        clear_terminal()
+                        patient_ids, _ = self.view_table("patients", "none", "none")
+                        filter_id = get_user_input_with_limited_choice(
+                            "\nEnter the ID of the patient you want to see: ",
+                            patient_ids,
+                            invalid_options_text="Invalid Patient ID, please choose from list.",
+                        )
+                    elif user_type == "clinician":
+                        clear_terminal()
+                        clinician_ids, _ = self.view_table(
+                            "clinicians",
+                            "none",
+                            "none",
+                        )
+                        filter_id = get_user_input_with_limited_choice(
+                            "\nEnter the ID of the clinician you want to see: ",
+                            clinician_ids,
+                            invalid_options_text="Invalid Clinician ID, please choose from list.",
+                        )
+                else:
+                    filter_id = None
 
-        # Step 3: Get a timeframe
-        time_options = [
-            "See all appointments",
-            "Current day",
-            "Current week",
-            "Current month",
-            "Current year",
-            "Next day",
-            "Next week",
-            "Next month",
-            "Next year",
-            "Last day",
-            "Last week",
-            "Last month",
-            "Last year",
-        ]
+            # Step 3: Get a timeframe
+            time_options = [
+                "See all appointments",
+                "Current day",
+                "Current week",
+                "Current month",
+                "Current year",
+                "Next day",
+                "Next week",
+                "Next month",
+                "Next year",
+                "Last day",
+                "Last week",
+                "Last month",
+                "Last year",
+            ]
 
-        choice = display_choice("Select a time period to filter by:", time_options)
+            choice = display_choice("Select a time period to filter by:", time_options)
 
-        # Breaking the string into the relevant variables
-        if choice == 1:
-            relative_time = "none"
-            time_period = "none"
-        else:
-            relative_time, time_period = time_options[choice - 1].lower().split()
+            # Breaking the string into the relevant variables
+            if choice == 1:
+                relative_time = "none"
+                time_period = "none"
+            else:
+                relative_time, time_period = time_options[choice - 1].lower().split()
 
-        # Run the function
-        clear_terminal()
-        print(
-            display_appointment_engagement(
+            # Run the function
+            clear_terminal()
+            appointments = display_appointment_engagement(
                 self.database,
                 user_type,
                 filter_id,
                 relative_time,
                 time_period,
             )
-        )
-        wait_terminal()
+            print(appointments)
+
+            return_options = [
+                "User type Choice",
+                "Specific user choice",
+                "Timeframe choice",
+            ]
+
+            if isinstance(appointments, str):
+                user_choice = display_choice(
+                    "Where would you like to return?",
+                    return_options,
+                    enable_zero_quit=True,
+                    zero_option_message="Main menu\n",
+                )
+                if user_choice == 1:
+                    clear_terminal()
+                    continue
+                if user_choice == 2:
+                    user_type_start = False
+                elif user_choice == 3:
+                    user_type_start = False
+                    specific_user_start = False
+                else:
+                    repeat = False
+                clear_terminal()
+            else:
+                return wait_terminal()
 
     # Admin FLow
     def flow(self) -> bool:

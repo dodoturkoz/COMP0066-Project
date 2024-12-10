@@ -279,4 +279,4 @@ def display_appointment_engagement(
         return status_counts
 
     else:
-        return "\nNo appointments could be found\n"
+        return "\nNo appointments could be found.\n"
