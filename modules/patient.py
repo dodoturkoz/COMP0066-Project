@@ -438,57 +438,23 @@ class Patient(User):
     @staticmethod
     def see_quotes():
         """
-        See inspirational quotes
+        See inspirational quotes after a loading animation.
         """
-        clear_terminal()
-        print("""                    
-          \U0001f381""")
-        time.sleep(0.5)
-        clear_terminal()
-        print("          \U0001f381")
-        time.sleep(0.5)
-        clear_terminal()
-        print("""                    
-          \U0001f381""")
-        time.sleep(0.5)
-        clear_terminal()
-        print("          \U0001f381")
-        time.sleep(0.5)
-        clear_terminal()
-        print("""                    
-          \U0001f381""")
-        time.sleep(0.5)
-        clear_terminal()
-        print("          \U0001f381")
-        time.sleep(0.5)
-        clear_terminal()
-        print("""                    
-          \U0001f381""")
-        time.sleep(0.5)
-        clear_terminal()
-        print("          \U0001f381")
-        time.sleep(0.5)
-        clear_terminal()
-        # Wierd present movements
 
-        def see_present():
-            """Gets enter to show quote or 0 to return to patient menu"""
+        # Display a loading animation
+        for i in range(6):    
             clear_terminal()
-            print("          \U0001f381")
-            choice = input(
-                "Press 0 to exit or only press enter to unwrap surprise quote from present "
-            )
-            if choice != "0" and choice != "":
-                choice = see_present()
-            return choice
+            print(f"{" " * ( i % 3 )}\U0001f381")
+            time.sleep(0.5)
+        
+        clear_terminal()
+        print("\U0001f381")
+        print("Here's a quote for you:")
 
-        choice = see_present()
-        if choice == "":
-            x = random.randint(1, 164)
-            print(QUOTES[x])
-            wait_terminal()
-        elif choice == 0:
-            return False
+        # Print a random quote from the list
+        x = random.randint(1, 164)
+        print(QUOTES[x])
+        return wait_terminal()
 
     def flow(self):
         """
