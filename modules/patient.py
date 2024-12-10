@@ -28,7 +28,6 @@ from modules.user import User
 
 
 class Patient(User):
-    streak_service: StreakService
 
     def __init__(
         self,
@@ -72,7 +71,6 @@ class Patient(User):
         self.diagnosis = patient_data["diagnosis"]
         self.clinician_id = patient_data["clinician_id"]
         self.clinician = self.get_clinician()
-        self.streak_service = StreakService(database)
 
     def get_clinician(self) -> Optional[User]:
         if self.clinician_id:
@@ -637,7 +635,9 @@ class Patient(User):
             )
             print(greeting)
 
-            self.streak_service.print_current_user_streak(user_id=self.user_id)
+            # Display the current streak and position in the leaderboard
+            streak_service = StreakService(self.database)
+            streak_service.print_current_user_streak(user_id=self.user_id)
 
             options = [
                 "View/Edit Personal Info",
