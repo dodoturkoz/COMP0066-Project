@@ -861,29 +861,25 @@ class Patient(User):
                         else:
                             self.see_quotes()
                             action = "Exit back to main menu"
-                        
+
                     case 8:
                         if self.clinician_id:
                             self.see_quotes()
                             action = "Exit back to main menu"
 
-                # Removed action variable from other methods so that default is to
-                # not do the below.
-                # However, action ==1 in appointments so that appointments lead to
-                # this option.
-                if action == 1:
-                    if choice != 1:
-                        next_step = display_choice(
-                            "Would you like to:",
-                            ["Return to appointment menu"],
-                            choice_str="Your selection: ",
-                            enable_zero_quit=True,
-                            zero_option_message="Return to patient menu",
-                        )
-                        if not next_step:
-                            return False
-                        if next_step == 1:
-                            acting_on_choice(choice)
+                # handling flow after appointment option
+                if action == 1 and choice != 1:
+                    next_step = display_choice(
+                        "Would you like to:",
+                        ["Return to appointment menu"],
+                        choice_str="Your selection: ",
+                        enable_zero_quit=True,
+                        zero_option_message="Return to patient menu",
+                    )
+                    if not next_step:
+                        return False
+                    if next_step == 1:
+                        acting_on_choice(choice)
 
             # Call to process the selected option.
             acting_on_choice(choice)
