@@ -58,8 +58,9 @@ class Clinician(User):
                 self.view_requested_appointments()
             if not selection:
                 self.should_logout = True
-                return True
                 clear_terminal()
+                return True
+
                 # return True because flow() logs out when True is returned
 
     def flow_patient_dashboard(self):
