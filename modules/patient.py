@@ -104,7 +104,7 @@ class Patient(User):
         self, attribute: str, value: Any, success_message: str = None
     ) -> bool:
         """
-        Updates attributes fromt the Patients table both in the object
+        Updates attributes from the Patients table both in the object
         and in the database, returns the result of the update
         """
 
@@ -458,7 +458,7 @@ class Patient(User):
 
         def searching_exercises(keyword):
             """
-            Recursive fuction to search exercises with keyword or if you do not get
+            Recursive function to search exercises with keyword or if you do not get
             results, choose a given keyword.
             """
             clear_terminal()

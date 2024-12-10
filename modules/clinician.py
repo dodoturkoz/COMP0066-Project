@@ -253,7 +253,7 @@ class Clinician(User):
             print(f"Failed to add note: {e}")
 
     def print_notifications(self):
-        """Checks if the clinican has requested appointments, or past appointments
+        """Checks if the clinician has requested appointments, or past appointments
         without notes, to display as notifications on the main menu"""
         requested_appointments = get_unconfirmed_clinician_appointments(
             self.database, self.user_id

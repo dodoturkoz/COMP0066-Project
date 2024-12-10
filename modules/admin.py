@@ -291,7 +291,7 @@ class Admin(User):
         return result
 
         # LONGER TERM CONSIDERATIONS:
-        # df.iloc[] takes the data in order of memory, so we can use this to impliment
+        # df.iloc[] takes the data in order of memory, so we can use this to implement
         # crude pagination, perhaps mixed with sorting by name
 
     def delete_user(self, user_id: int):
@@ -489,7 +489,7 @@ class Admin(User):
                 user_id,
                 "is_active",
                 new_status,
-                f"User {user_id} has been sucessfully {"disabled" if choice == 1 else "re-enabled"}.\n",
+                f"User {user_id} has been successfully {"disabled" if choice == 1 else "re-enabled"}.\n",
             )
         else:
             print("\nCancelled.")
