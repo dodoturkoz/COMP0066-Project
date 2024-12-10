@@ -175,7 +175,7 @@ class Patient(User):
                 "Select an attribute to edit:",
                 options,
                 enable_zero_quit=True,
-                zero_option_message="Go back to main menu",
+                zero_option_message="Return to main menu",
             )
 
             if not choice:
@@ -215,10 +215,10 @@ class Patient(User):
                     )
                     the_step = display_choice(
                         "Would you like to:",
-                        ["Go back to editing info"],
+                        ["Return to editing info"],
                         choice_str="Your selection: ",
                         enable_zero_quit=True,
-                        zero_option_message="Go to Main Menu",
+                        zero_option_message="Return to main menu",
                     )
 
                     if the_step == 1:
@@ -305,7 +305,7 @@ class Patient(User):
                 "\nSelect an option:",
                 ["Continue to replace old mood entry"],
                 enable_zero_quit=True,
-                zero_option_message="Go back to main menu to keep old mood entry",
+                zero_option_message="Return to main menu to keep old mood entry",
             )
 
             if not choice:
@@ -403,6 +403,7 @@ class Patient(User):
                 )
                 self.database.connection.commit()
                 print("Mood entry added successfully.")
+                wait_terminal("Press enter to return to main menu.")
                 return True
 
         except sqlite3.Error as e:
@@ -500,7 +501,7 @@ class Patient(User):
                     ],
                     choice_str="Your selection: ",
                     enable_zero_quit=True,
-                    zero_option_message="Go back to main menu",
+                    zero_option_message="Return to main menu",
                 )
                 if search_decision == 0:
                     clear_terminal()
@@ -516,11 +517,11 @@ class Patient(User):
                 else:
                     clear_terminal()
                     search_decision = display_choice(
-                        "Choose a keyword or go back to main menu:",
+                        "Choose a keyword or return to main menu:",
                         SEARCH_OPTIONS,
                         choice_str="Your selection: ",
                         enable_zero_quit=True,
-                        zero_option_message="Go back to main menu",
+                        zero_option_message="Return to main menu",
                     )
                     if search_decision == 0:
                         clear_terminal()
@@ -542,7 +543,7 @@ class Patient(User):
                     ["Search exercises again"],
                     choice_str="Your selection: ",
                     enable_zero_quit=True,
-                    zero_option_message="Go back to main menu",
+                    zero_option_message="Return to main menu",
                 )
                 if do_again == 0:
                     clear_terminal()
@@ -685,7 +686,7 @@ class Patient(User):
                                 ["View all entries", "View a particular date"],
                                 choice_str="Your selection: ",
                                 enable_zero_quit=True,
-                                zero_option_message="Go back to main menu",
+                                zero_option_message="Return to main menu",
                             )
                             if selected_option == 0:
                                 return False
@@ -707,22 +708,16 @@ class Patient(User):
                                 date.strftime("%Y-%m-%d") if date else ""
                             )
                             if selected_option == 1:
-                                display_choice(
-                                    "When you are ready, enter 0:",
-                                    [],
-                                    choice_str="Your selection: ",
-                                    enable_zero_quit=True,
-                                    zero_option_message="Go back to main menu",
-                                )
+                                wait_terminal()
                             if selected_option == 2:
                                 date_decision = display_choice(
                                     "Would you like to:",
                                     [
-                                        "Go to date menu",
+                                        "Return to date menu",
                                     ],
                                     choice_str="Your selection: ",
                                     enable_zero_quit=True,
-                                    zero_option_message="Go back to main menu",
+                                    zero_option_message="Return to main menu",
                                 )
                                 if date_decision == 1:
                                     date_options()
@@ -735,25 +730,17 @@ class Patient(User):
 
                         def write():
                             """
-                            Add journal entries or go back using 0.
+                            Add journal entries or return to main menu using 0.
                             """
                             clear_terminal()
                             content = get_valid_string(
-                                "Enter new journal entry or 0 to go back:  "
+                                "Enter new journal entry or 0 to return to main menu:  "
                             )
                             if content == "0":
                                 return False
                             else:
                                 self.journal(content)
-                                decision = display_choice(
-                                    "Press 0 when ready to:",
-                                    [],
-                                    choice_str="Your selection: ",
-                                    enable_zero_quit=True,
-                                    zero_option_message="Return back to the main menu",
-                                )
-                                if decision == 0:
-                                    return False
+                                wait_terminal()
 
                         write()
                         action = "Exit back to main menu"
@@ -767,7 +754,7 @@ class Patient(User):
                                 ["View all entries", "View a particular date"],
                                 choice_str="Your selection: ",
                                 enable_zero_quit=True,
-                                zero_option_message="Go back to main menu",
+                                zero_option_message="Return to main menu",
                             )
                             if selected_option == 0:
                                 return False
@@ -789,23 +776,17 @@ class Patient(User):
                                 date.strftime("%Y-%m-%d") if date else ""
                             )
                             if selected_option == 1:
-                                display_choice(
-                                    "When you are ready, enter 0:",
-                                    [],
-                                    choice_str="Your selection: ",
-                                    enable_zero_quit=True,
-                                    zero_option_message="Go back to main menu",
-                                )
+                                wait_terminal()
 
                             if selected_option == 2:
                                 date_decision = display_choice(
                                     "Would you like to:",
                                     [
-                                        "Go to date menu",
+                                        "Return to date menu",
                                     ],
                                     choice_str="Your selection: ",
                                     enable_zero_quit=True,
-                                    zero_option_message="Go back to main menu",
+                                    zero_option_message="Return to main menu",
                                 )
                                 if date_decision == 1:
                                     date_options()
@@ -823,7 +804,7 @@ class Patient(User):
                             "Choose an option:\n"
                             "- Enter a keyword to search for exercises.\n"
                             "- Leave blank and press Enter to see all exercises.\n"
-                            "- Enter 0 to go back to the main menu.\n\n"
+                            "- Enter 0 to return to main menu.\n\n"
                         )
                         if keyword == "0":
                             return False
