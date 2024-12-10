@@ -11,6 +11,8 @@ from modules.utilities.display_utils import (
     wait_terminal,
 )
 from modules.utilities.input_utils import (
+    get_new_user_email,
+    get_new_username,
     get_user_input_with_limited_choice,
     get_valid_date,
     get_valid_string,
@@ -416,7 +418,11 @@ class Admin(User):
         ]:
             print(f"Attribute {attribute} cannot be changed for a clinician.")
             return wait_terminal()
-        elif attribute in ["email", "emergency_email"]:
+        elif attribute == "username":
+            value = get_new_username(self.database, user_prompt=f"Enter the new value for {attribute}: ")
+        elif attribute == "email":
+            value = get_new_user_email(self.database, user_prompt=f"Enter the new value for {attribute}: ")
+        elif attribute == "emergency_email":
             value = get_valid_email(f"Enter the new value for {attribute}: ")
         elif attribute == "is_active":
             value = get_valid_yes_or_no(f"Enter the new value for {attribute} (Y/N): ")
@@ -449,7 +455,7 @@ class Admin(User):
                 max_len=25,
                 min_len=0 if attribute == "password" else 1,
                 is_name=True if attribute in ["first_name", "surname"] else False,
-                allow_spaces=False if attribute == "username" else True,
+                allow_spaces=True,
             )
 
         result = self.alter_user(

@@ -3,6 +3,8 @@ from typing import Union
 from datetime import datetime
 from collections.abc import Iterable
 
+from database.setup import Database
+
 
 def get_valid_email(prompt: str, existing_emails: Union[list[str], None] = None) -> str:
     """
@@ -139,3 +141,22 @@ def get_user_input_with_limited_choice(
         else:
             print(invalid_options_text)
             continue
+
+def get_new_username(db: Database, user_prompt = "Your username: ") -> str:
+    existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
+
+    while True:
+        username = get_valid_string(
+            user_prompt, max_len=25, min_len=3, allow_spaces=False
+        )
+        if username in existing_usernames:
+            print("Username already exists. Please try again.")
+            continue
+        else:
+            return username
+
+def get_new_user_email(db: Database, user_prompt = "Your email: ") -> str:
+    existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
+    return get_valid_email(
+        prompt=user_prompt, existing_emails=existing_emails
+    )
