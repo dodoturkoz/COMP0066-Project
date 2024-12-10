@@ -384,6 +384,7 @@ class Patient(User):
                 )
                 self.database.connection.commit()
                 print("Mood entry added successfully.")
+                wait_terminal("Press enter to return to main menu.")
                 return True
 
         except sqlite3.Error as e:
@@ -716,8 +717,6 @@ class Patient(User):
                             else:
                                 self.journal(content)
                                 wait_terminal()
-                                if decision == 0:
-                                    return False
 
                         write()
                         action = "Exit back to main menu"
