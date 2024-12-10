@@ -623,7 +623,7 @@ class Patient(User):
         while True:
             clear_terminal()
             greeting = (
-                f"Hello, {self.first_name} {self.surname}!"
+                f"Hello, {self.first_name} {self.surname}! You do not have an assigned clinician."
                 if not self.clinician
                 else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
