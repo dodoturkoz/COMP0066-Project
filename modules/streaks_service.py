@@ -19,7 +19,7 @@ class StreakService:
             print("You need to log your mood to start a streak.")
         else:
             print(
-                f"You have logged your mood for {streak} days in a row."
+                f"You have logged your mood for {streak} {"day" if streak == 1 else "days"} in a row."
             )
 
             position_string = ""
@@ -28,14 +28,20 @@ class StreakService:
             else:
                 position_string = f"Your position in the leaderboard is {position}"
 
-            tie_string = f", tied with {ties} other users" if ties > 0 else ""
+            tie_string = (
+                f", tied with {ties} other {"user" if ties == 1 else "users"}"
+                if ties > 0
+                else ""
+            )
 
             print(f"{position_string}{tie_string}.")
 
             if position == 1:
                 print("Continue logging your mood daily to maintain your lead!")
             else:
-                print("Continue registering your mood daily to advance in the leaderboard!")
+                print(
+                    "Continue registering your mood daily to advance in the leaderboard!"
+                )
 
     def get_current_user_position(self, streak: int) -> int:
         """
