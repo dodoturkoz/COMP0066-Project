@@ -1,7 +1,8 @@
 import sqlite3
 from typing import Optional, Any
 from datetime import datetime
-
+import random
+import time
 
 from database.setup import Database
 from modules.utilities.input_utils import (
@@ -21,7 +22,7 @@ from modules.appointments import (
     cancel_appointment,
     get_patient_appointments,
 )
-from modules.constants import RELAXATION_RESOURCES, MOODS, SEARCH_OPTIONS
+from modules.constants import RELAXATION_RESOURCES, MOODS, SEARCH_OPTIONS, QUOTES
 from modules.user import User
 
 
@@ -182,7 +183,9 @@ class Patient(User):
                         f"Enter the new value for {options[choice - 1]}: ",
                         max_len=25,
                         min_len=0 if attribute == "password" else 1,
-                        is_name=True if attribute in ["first_name", "surname"] else False,
+                        is_name=True
+                        if attribute in ["first_name", "surname"]
+                        else False,
                     )
 
                 # Use the parent class's edit_info method for all updates
@@ -572,6 +575,27 @@ class Patient(User):
             print(f"Error viewing appointments: {e}")
             return []
 
+    @staticmethod
+    def see_quotes():
+        """
+        See inspirational quotes after a loading animation.
+        """
+
+        # Display a loading animation
+        for i in range(6):
+            clear_terminal()
+            print(f"{" " * ( i % 3 )}\U0001f381")
+            time.sleep(0.5)
+
+        clear_terminal()
+        print("\U0001f381")
+        print("Here's a quote for you:")
+
+        # Print a random quote from the list
+        x = random.randint(1, len(QUOTES))
+        print(QUOTES[x])
+        return wait_terminal()
+
     def flow(self):
         """
         Displays the main patient menu and handles the selection of various options.
@@ -596,9 +620,11 @@ class Patient(User):
 
             # Add options based on whether patient has an assigned clinician
             if self.clinician_id:
-                options.extend(["Self-Help Exercises", "Appointments"])
+                options.extend(
+                    ["Self-Help Exercises", "Appointments", "Get a present from Breeze"]
+                )
             else:
-                options.append("Self-Help Exercises")
+                options.extend(["Self-Help Exercises", "Get a present from Breeze"])
 
             choice = display_choice(
                 "Please select an option:",
@@ -781,45 +807,53 @@ class Patient(User):
                             self.search_exercises(keyword)
                         action = "Exit back to main menu"
                     case 7:
-                        clear_terminal()
-                        appointment_options = [
-                            "Book Appointment",
-                            "View Appointments",
-                            "Cancel Appointment",
-                        ]
-                        selected_choice = display_choice(
-                            "Please select an option:",
-                            appointment_options,
-                            enable_zero_quit=True,
-                        )
-                        if not selected_choice:
-                            return False
+                        if self.clinician_id:
+                            clear_terminal()
+                            appointment_options = [
+                                "Book Appointment",
+                                "View Appointments",
+                                "Cancel Appointment",
+                            ]
+                            selected_choice = display_choice(
+                                "Please select an option:",
+                                appointment_options,
+                                enable_zero_quit=True,
+                            )
+                            if not selected_choice:
+                                return False
 
-                        # Options within appointments option in patient menu.
-                        match selected_choice:
-                            case 1:
-                                # Book Appointment
-                                request_appointment(
-                                    self.database, self.user_id, self.clinician_id
-                                )
-                            case 2:
-                                # View Appointments
-                                self.view_appointments()
-                            case 3:
-                                # Cancel appointment
-                                my_appointments = self.view_appointments()
-                                appointment_id = get_user_input_with_limited_choice(
-                                    "Enter appointment ID to cancel: ",
-                                    [
-                                        appointment["appointment_id"]
-                                        for appointment in my_appointments
-                                        if appointment["date"] >= datetime.now()
-                                    ],
-                                    "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
-                                )
-                                cancel_appointment(self.database, appointment_id)
-                            case 4:
-                                action = "Exit back to main menu"
+                            # Options within appointments option in patient menu.
+                            match selected_choice:
+                                case 1:
+                                    # Book Appointment
+                                    request_appointment(
+                                        self.database, self.user_id, self.clinician_id
+                                    )
+                                case 2:
+                                    # View Appointments
+                                    self.view_appointments()
+                                case 3:
+                                    # Cancel appointment
+                                    my_appointments = self.view_appointments()
+                                    appointment_id = get_user_input_with_limited_choice(
+                                        "Enter appointment ID to cancel: ",
+                                        [
+                                            appointment["appointment_id"]
+                                            for appointment in my_appointments
+                                            if appointment["date"] >= datetime.now()
+                                        ],
+                                        "Invalid appointment ID. Please try again, keeping in mind you can only cancel appointments in the future.",
+                                    )
+                                    cancel_appointment(self.database, appointment_id)
+                                case 4:
+                                    action = "Exit back to main menu"
+                        else:
+                            self.see_quotes()
+                            action = "Exit back to main menu"
+                    case 8:
+                        if self.clinician_id:
+                            self.see_quotes()
+                            action = "Exit back to main menu"
 
                 # Provide option to retry the action unless exiting back to the menu.
                 if action != "Exit back to main menu":
