@@ -515,7 +515,7 @@ class Patient(User):
             if self.clinician_id:
                 options.extend(["Search Exercises", "Appointments", "Presents"])
             else:
-                options.append("Search Exercises", "Presents")
+                options.extend(["Search Exercises", "Presents"])
 
             choice = display_choice(
                 "Please select an option:",
