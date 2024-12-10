@@ -5,6 +5,7 @@ import random
 import time
 
 from database.setup import Database
+from modules.streaks_service import StreakService
 from modules.utilities.input_utils import (
     get_user_input_with_limited_choice,
     get_valid_string,
@@ -27,6 +28,8 @@ from modules.user import User
 
 
 class Patient(User):
+    streak_service: StreakService
+
     def __init__(
         self,
         database: Database,
@@ -69,6 +72,7 @@ class Patient(User):
         self.diagnosis = patient_data["diagnosis"]
         self.clinician_id = patient_data["clinician_id"]
         self.clinician = self.get_clinician()
+        self.streak_service = StreakService(database, user_id)
 
     def get_clinician(self) -> Optional[User]:
         if self.clinician_id:
@@ -632,6 +636,8 @@ class Patient(User):
                 else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
             print(greeting)
+
+            self.streak_service.print_current_user_streak()
 
             options = [
                 "View/Edit Personal Info",
