@@ -75,7 +75,7 @@ class StreakService:
         streak = 0
 
         # Max streak is 10 years
-        for i in range(1, 365 * 10):
+        for i in range(0, 365 * 10):
             # Go back one day at a time and check if the user has a mood entry
             test_date = datetime.combine(
                 date.today() - timedelta(days=i), datetime.min.time()
@@ -84,7 +84,12 @@ class StreakService:
             if test_date in dates:
                 streak += 1
             else:
-                # Stop when we find a day without a mood entry
-                break
+                if test_date.date() == date.today():
+                    # If we are checking today and we don't have a mood entry, continue
+                    # as the streak is not broken (yet)
+                    continue
+                else:
+                    # Stop when we find a day without a mood entry
+                    break
 
         return streak
