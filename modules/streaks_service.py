@@ -28,7 +28,11 @@ class StreakService:
             else:
                 position_string = f"Your position in the leaderboard is {position}"
 
-            tie_string = f", tied with {ties} other users" if ties > 0 else ""
+            tie_string = (
+                f", tied with {ties} other {"user" if ties == 1 else "users"}"
+                if ties > 0
+                else ""
+            )
 
             print(f"{position_string}{tie_string}.")
 
