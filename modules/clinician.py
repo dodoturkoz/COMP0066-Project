@@ -8,6 +8,7 @@ from modules.appointments import (
     print_appointment,
 )
 from modules.patient import Patient
+from modules.streaks_service import StreakService
 from modules.user import User
 from modules.utilities.display_utils import (
     clear_terminal,
@@ -74,7 +75,7 @@ class Clinician(User):
         clear_terminal()
         choice = display_choice(
             "Welcome to your dashboard. Where would you like to go?",
-            ["View All", "Filter By Diagnosis"],
+            ["View All", "Filter By Diagnosis", "View Engagement With Mood Tracker"],
             enable_zero_quit=True,
             zero_option_callback=self.flow,
             zero_option_message="Return to main menu",
@@ -85,6 +86,9 @@ class Clinician(User):
 
         if choice == 2:
             self.flow_filtered_diagnosis_list()
+        
+        if choice == 3:
+            self.flow_patient_mood_tracker()
 
         # Return to main menu
         if not choice:
@@ -158,6 +162,20 @@ class Clinician(User):
             return False
 
         return self.flow_edit_patient_info_screen(patients[selected - 1])
+
+    def flow_patient_mood_tracker(self):
+        if self.should_logout:
+            return True
+        patients: list[Patient] = self.get_all_patients()
+        streak_service = StreakService(self.database)
+        clear_terminal()
+        print("Patient Mood Tracker Engagement (Days in a row)")
+        for patient in patients:
+            print(f"{patient.first_name} {patient.surname} - {streak_service.mood_streaks[patient.user_id]} days")
+
+        wait_terminal("Press enter to return to the patient dashboard")
+        return self.flow_patient_dashboard()
+
 
     def flow_choose_from_list_and_update_diagnosis(self, patient: Patient):
         """Displays a list of diagnoses and allows the user to choose one"""
@@ -393,7 +411,12 @@ class Clinician(User):
             print("You have no registered appointments.")
         else:
             # Offer a choice of different sets of appointments, grouped by time
-            view_options = ["All", "Past", "Upcoming", "Past appointments without notes"]
+            view_options = [
+                "All",
+                "Past",
+                "Upcoming",
+                "Past appointments without notes",
+            ]
             view = display_choice(
                 "Which appointments would you like to view?",
                 view_options,
@@ -423,7 +446,9 @@ class Clinician(User):
 
             # Show past appointments without notes
             elif view == 4:
-                self.display_appointment_options(self.get_all_appointments_without_notes())
+                self.display_appointment_options(
+                    self.get_all_appointments_without_notes()
+                )
 
     def view_requested_appointments(self):
         """This allows the clinician to view all appointments that have been
@@ -511,14 +536,14 @@ class Clinician(User):
                         print(f"Failed to confirm appointment: {e}")
                         return False
 
-                    # If there are unconfirmed appointments, offer 
+                    # If there are unconfirmed appointments, offer
                     # option to go back and choose another appointment
                     if unconfirmed_appointments:
                         next_action = display_choice(
                             "What would you like to do next?",
                             ["Accept/Reject another appointment"],
-                        enable_zero_quit=True,
-                        zero_option_message='Exit'
+                            enable_zero_quit=True,
+                            zero_option_message="Exit",
                         )
                         if next_action == 1:
                             clear_terminal()
@@ -577,8 +602,8 @@ class Clinician(User):
                         next_action = display_choice(
                             "What would you like to do next?",
                             ["Accept/Reject another appointment"],
-                        enable_zero_quit=True,
-                        zero_option_message="Exit",
+                            enable_zero_quit=True,
+                            zero_option_message="Exit",
                         )
                         if next_action == 1:
                             clear_terminal()

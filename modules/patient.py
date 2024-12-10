@@ -5,6 +5,7 @@ import random
 import time
 
 from database.setup import Database
+from modules.streaks_service import StreakService
 from modules.utilities.input_utils import (
     get_new_user_email,
     get_new_username,
@@ -29,6 +30,7 @@ from modules.user import User
 
 
 class Patient(User):
+
     def __init__(
         self,
         database: Database,
@@ -638,6 +640,10 @@ class Patient(User):
                 else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
             print(greeting)
+
+            # Display the current streak and position in the leaderboard
+            streak_service = StreakService(self.database)
+            streak_service.print_current_user_streak(user_id=self.user_id)
 
             options = [
                 "View/Edit Personal Info",
