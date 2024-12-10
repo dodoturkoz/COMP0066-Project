@@ -137,15 +137,15 @@ def registration_input(
 
 def signup(db: Database) -> bool:
     """
-    Signs the user as a practicioner or clinician (not admin for now).
+    Signs the user as a practitioner or clinician (not admin for now).
 
-    Returns a boolean representing wether the signup was successful or not.
-    If it is not successfull, prints a message to the user before quitting the app.
+    Returns a boolean representing whether the signup was successful or not.
+    If it is not successful, prints a message to the user before quitting the app.
     """
 
     clear_terminal()
 
-    # Get a list of registered unique usernams
+    # Get a list of registered unique usernames
     existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
     user_info = registration_input(existing_usernames, existing_emails)
@@ -190,7 +190,7 @@ def signup(db: Database) -> bool:
         db.connection.commit()
         # Send registration email
         if user_info["role"] == "patient":
-            message = f"Welcome to Breeze {user_info['first_name'].title()},\n\nWe will asign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
+            message = f"Welcome to Breeze {user_info['first_name'].title()},\n\nWe will assign you a clinician soon; in the meantime, feel free to use our journaling and mood tracking options.\n\nBest regards,\nBreeze Team"
         else:
             message = f"Welcome to Breeze {user_info['first_name'].title()} {user_info['surname'].title()},\n\nAn admin will review and activate your profile soon.\n\nBest regards,\nBreeze Team"
         send_email(

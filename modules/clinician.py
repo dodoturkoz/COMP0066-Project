@@ -219,6 +219,7 @@ class Clinician(User):
                 )
                 self.database.connection.commit()
                 print(f"Your notes were stored as:\n{note}")
+                wait_terminal()
 
             except sqlite3.IntegrityError as e:
                 print(f"Failed to add note: {e}")
@@ -248,12 +249,14 @@ class Clinician(User):
                 [updated_notes, appointment["appointment_id"]],
             )
             self.database.connection.commit()
+            clear_terminal()
             print(f"Your notes were stored as:\n{updated_notes}")
+            wait_terminal()
         except sqlite3.IntegrityError as e:
             print(f"Failed to add note: {e}")
 
     def print_notifications(self):
-        """Checks if the clinican has requested appointments, or past appointments
+        """Checks if the clinician has requested appointments, or past appointments
         without notes, to display as notifications on the main menu"""
         requested_appointments = get_unconfirmed_clinician_appointments(
             self.database, self.user_id
@@ -504,7 +507,9 @@ class Clinician(User):
                     if unconfirmed_appointments:
                         next_action = display_choice(
                             "What would you like to do next?",
-                            ["Accept/Reject another appointment", "Exit"],
+                            ["Accept/Reject another appointment"],
+                        enable_zero_quit=True,
+                        zero_option_message='Exit'
                         )
                         if next_action == 1:
                             clear_terminal()
@@ -562,7 +567,9 @@ class Clinician(User):
                     if unconfirmed_appointments:
                         next_action = display_choice(
                             "What would you like to do next?",
-                            ["Accept/Reject another appointment", "Exit"],
+                            ["Accept/Reject another appointment"],
+                        enable_zero_quit=True,
+                        zero_option_message="Exit",
                         )
                         if next_action == 1:
                             clear_terminal()

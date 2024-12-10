@@ -64,6 +64,7 @@ class Patient(User):
         if not patient_data:
             raise Exception("Patient data not found for user ID.")
 
+        self.date_of_birth = patient_data["date_of_birth"]
         self.emergency_email = patient_data["emergency_email"]
         self.diagnosis = patient_data["diagnosis"]
         self.clinician_id = patient_data["clinician_id"]
@@ -87,6 +88,23 @@ class Patient(User):
                 return User(self.database, *clinician_data)
         return None
 
+    def view_info(self):
+        """
+        Displays patient's information.
+        """
+        print("Patient Information:")
+        print(f"Username: {self.username}")
+        print(f"First Name: {self.first_name}")
+        print(f"Surname: {self.surname}")
+        print(f"Email: {self.email}")
+        print(f"Emergency Email: {self.emergency_email}")
+        print(f"Date of Birth: {self.date_of_birth}")
+        print(f"Diagnosis: {self.diagnosis}")
+        if self.clinician:
+            print(f"Clinician: {self.clinician.first_name} {self.clinician.surname}\n")
+        else:
+            print("No clinician assigned.\n")
+
     def edit_info(self, attribute: str, value: Any, confirmation: str = None) -> bool:
         if attribute in [
             "clinician_id",
@@ -104,7 +122,7 @@ class Patient(User):
         self, attribute: str, value: Any, success_message: str = None
     ) -> bool:
         """
-        Updates attributes fromt the Patients table both in the object
+        Updates attributes from the Patients table both in the object
         and in the database, returns the result of the update
         """
 
@@ -141,7 +159,6 @@ class Patient(User):
         """
         Allows the patient to change their details.
         """
-        clear_terminal()
         # TODO: Add option to edit birth date
         options = [
             "Username",
@@ -215,6 +232,8 @@ class Patient(User):
 
             selected = update_attribute()
             if selected == 2:
+                clear_terminal()
+                self.view_info()
                 self.edit_self_info()
             if selected:
                 return False
@@ -458,7 +477,7 @@ class Patient(User):
 
         def searching_exercises(keyword):
             """
-            Recursive fuction to search exercises with keyword or if you do not get
+            Recursive function to search exercises with keyword or if you do not get
             results, choose a given keyword.
             """
             clear_terminal()
@@ -581,14 +600,17 @@ class Patient(User):
         See inspirational quotes after a loading animation.
         """
 
+        icon = "\U0001f381"
+
         # Display a loading animation
         for i in range(6):
             clear_terminal()
-            print(f"{" " * ( i % 3 )}\U0001f381")
+            print("Getting your present, please wait")
+            print(f"{" " * ( i % 3 )}{icon}")
             time.sleep(0.5)
 
         clear_terminal()
-        print("\U0001f381")
+        print(icon)
         print("Here's a quote for you:")
 
         # Print a random quote from the list
@@ -604,14 +626,14 @@ class Patient(User):
         while True:
             clear_terminal()
             greeting = (
-                f"Hello, {self.first_name} {self.surname}!"
+                f"Hello, {self.first_name} {self.surname}! You do not have an assigned clinician."
                 if not self.clinician
                 else f"Hello, {self.first_name} {self.surname}! Your assigned clinician is {self.clinician.first_name} {self.clinician.surname}."
             )
             print(greeting)
 
             options = [
-                "Edit Personal Info",
+                "View/Edit Personal Info",
                 "Record Mood of the Day",
                 "Display Previous Moods",
                 "Add Journal Entry",
@@ -647,6 +669,8 @@ class Patient(User):
                 action = 0
                 match choice:
                     case 1:
+                        clear_terminal()
+                        self.view_info()
                         self.edit_self_info()
                     case 2:
                         self.mood_of_the_day()

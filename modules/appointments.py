@@ -211,7 +211,7 @@ def cancel_appointment(database, appointment_id: int) -> bool:
             return False
     except sqlite3.OperationalError as e:
         clear_terminal()
-        print(f"Error canceling appointment: {e}")
+        print(f"Error cancelling appointment: {e}")
         return False
 
 
@@ -279,4 +279,4 @@ def display_appointment_engagement(
         return status_counts
 
     else:
-        return "\nNo appointments could be found\n"
+        return "\nNo appointments could be found.\n"
