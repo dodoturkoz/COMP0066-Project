@@ -219,6 +219,7 @@ class Clinician(User):
                 )
                 self.database.connection.commit()
                 print(f"Your notes were stored as:\n{note}")
+                wait_terminal()
 
             except sqlite3.IntegrityError as e:
                 print(f"Failed to add note: {e}")
@@ -248,7 +249,9 @@ class Clinician(User):
                 [updated_notes, appointment["appointment_id"]],
             )
             self.database.connection.commit()
+            clear_terminal()
             print(f"Your notes were stored as:\n{updated_notes}")
+            wait_terminal()
         except sqlite3.IntegrityError as e:
             print(f"Failed to add note: {e}")
 
