@@ -383,14 +383,16 @@ class Admin(User):
         )
         
         
-        excluded_attributes = {"diagnosis", "role", "user_id","clinician_id","is_active"}
+        excluded_attributes = {"role", "user_id","clinician_id","is_active"}
         editable_attributes = [attr for attr in attributes if attr not in excluded_attributes]
 
         if not editable_attributes:
             print("No editable attributes available.")
             return wait_terminal()
 
-        attribute_choice = display_choice("Select the attribute to edit:", editable_attributes)
+        attribute_choice = display_choice(
+            "Select the attribute to edit:", 
+            editable_attributes)
         attribute = editable_attributes[attribute_choice - 1]
 
 
