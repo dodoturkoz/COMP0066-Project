@@ -420,6 +420,7 @@ class Clinician(User):
 
         if not appointments:
             print("You have no registered appointments.")
+            wait_terminal()
         else:
             # Offer a choice of different sets of appointments, grouped by time
             view_options = [

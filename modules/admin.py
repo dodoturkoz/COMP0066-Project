@@ -97,7 +97,8 @@ class Admin(User):
 
         appointments_data = appointments_query.fetchall()
         self.appointments_df = pd.DataFrame(appointments_data)
-        self.appointments_df.set_index("appointment_id", inplace=True)
+        if not self.appointments_df.empty:
+            self.appointments_df.set_index("appointment_id", inplace=True)
 
     def refresh_patient_journals_df(self):
         """
@@ -111,7 +112,8 @@ class Admin(User):
 
         journal_data = journals_query.fetchall()
         self.patient_journals_df = pd.DataFrame(journal_data)
-        self.patient_journals_df.set_index("entry_id", inplace=True)
+        if not self.patient_journals_df.empty:
+            self.patient_journals_df.set_index("entry_id", inplace=True)
 
     def refresh_patient_moods(self):
         """
@@ -667,11 +669,15 @@ class Admin(User):
                 "Disable or Re-enable User",
                 "Delete User",
                 "View Appointments",
-                "Log Out",
             ]
 
             # Menu choices
-            selection = display_choice("What would you like to do?", choices)
+            selection = display_choice(
+                "What would you like to do?",
+                choices,
+                enable_zero_quit=True,
+                zero_option_message="Log Out",
+            )
 
             # Assign a patient to clinician
 
@@ -701,6 +707,6 @@ class Admin(User):
                 self.appointments_flow()
 
             # Exit
-            elif selection == 7:
+            elif selection == 0:
                 print("Goodbye Admin.")
                 return wait_terminal(return_value=True)
