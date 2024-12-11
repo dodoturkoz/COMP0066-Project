@@ -86,7 +86,7 @@ class Clinician(User):
 
         if choice == 2:
             self.flow_filtered_diagnosis_list()
-        
+
         if choice == 3:
             self.flow_patient_mood_tracker()
 
@@ -115,10 +115,6 @@ class Clinician(User):
         if choice == 1:
             clear_terminal()
             self.flow_choose_from_list_and_update_diagnosis(patient)
-            # wait_terminal(
-            #     "Press enter to continue",
-            #     redirect_function=lambda: self.flow_edit_patient_info_screen(patient),
-            # )
         if not choice:
             return False
 
@@ -141,7 +137,6 @@ class Clinician(User):
 
         clear_terminal()
         self.print_filtered_patients_list_by_diagnosis(choice, patients)
-        ###TO DO -> Select patient from this screen
         wait_terminal()
 
     def flow_patient_summary(self):
@@ -171,11 +166,12 @@ class Clinician(User):
         clear_terminal()
         print("Patient Mood Tracker Engagement (Days in a row)")
         for patient in patients:
-            print(f"{patient.first_name} {patient.surname} - {streak_service.mood_streaks[patient.user_id]} days")
+            print(
+                f"{patient.first_name} {patient.surname} - {streak_service.mood_streaks[patient.user_id]} days"
+            )
 
         wait_terminal("Press enter to return to the patient dashboard")
         return self.flow_patient_dashboard()
-
 
     def flow_choose_from_list_and_update_diagnosis(self, patient: Patient):
         """Displays a list of diagnoses and allows the user to choose one"""
