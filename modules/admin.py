@@ -219,6 +219,7 @@ class Admin(User):
             print(clinician_appointments_df)
             return clinician_appointments_df.index, clinician_appointments_df.columns
 
+        # else assumes user_type == "users"
         else:
             if sub_type == "none":
                 print("\nBreeze Users:")
