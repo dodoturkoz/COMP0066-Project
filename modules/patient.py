@@ -30,7 +30,6 @@ from modules.user import User
 
 
 class Patient(User):
-
     def __init__(
         self,
         database: Database,
@@ -623,7 +622,7 @@ class Patient(User):
         print("Here's a quote for you:")
 
         # Print a random quote from the list
-        x = random.randint(1, len(QUOTES))
+        x = random.randint(0, (len(QUOTES) - 1))
         print(QUOTES[x])
         return wait_terminal()
 
