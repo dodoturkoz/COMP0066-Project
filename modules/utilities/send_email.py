@@ -31,6 +31,7 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
             server.send_message(message)
 
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Your email didn't send: {e}")
         # Return False as email was not sent
         return False
