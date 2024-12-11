@@ -9,7 +9,7 @@ def filter_df_by_date(
     time_period: Literal["year", "month", "week", "day", "none"] = "none",
 ):
     """
-    Plug in a dataframe (in practice, moods or journals) to filters rows for
+    Plug in a dataframe (in practice, moods or journals) to filter rows for
     a specific time
     """
 
@@ -41,7 +41,6 @@ def filter_df_by_date(
 
         # Increments time_periods
         if relative_time == "current":
-            # Might be worth getting rid of this, I don't need to increment this "x"
             pass
         elif relative_time == "next":
             start_of_range += increment
@@ -58,7 +57,3 @@ def filter_df_by_date(
 
     # If the user wants no date-time filters, returns the original dataframe
     return input_df
-
-    # For a later date, want to add the display options:
-    # 1. For months and years, I'd like to add a column to group by week / month.
-    # For days, I'd also like to add a column for the weekday which corresponds to the meetings

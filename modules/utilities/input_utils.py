@@ -101,7 +101,9 @@ def get_valid_string(
                     if value.count(" ") <= 3:
                         return value
                     else:
-                        print("You can't input more than three names. Please try again.")
+                        print(
+                            "You can't input more than three names. Please try again."
+                        )
                 else:
                     print("Your input contains invalid characters. Please try again.")
                     continue
@@ -117,6 +119,7 @@ def get_valid_string(
             )
             continue
 
+
 def get_user_input_with_limited_choice(
     prompt: str,
     options: Iterable[str | int],
@@ -126,8 +129,6 @@ def get_user_input_with_limited_choice(
     Get a valid input from the user from a list of options and return it;
     unlike display_choice, this is a free-form input for the user.
 
-    For now, this function only supports integers and string objects, but
-    can be extended if needed.
     """
     while True:
         raw_value = input(prompt).strip()
@@ -142,7 +143,8 @@ def get_user_input_with_limited_choice(
             print(invalid_options_text)
             continue
 
-def get_new_username(db: Database, user_prompt = "Your username: ") -> str:
+
+def get_new_username(db: Database, user_prompt="Your username: ") -> str:
     existing_usernames = db.cursor.execute("SELECT username FROM Users").fetchall()
 
     while True:
@@ -155,8 +157,7 @@ def get_new_username(db: Database, user_prompt = "Your username: ") -> str:
         else:
             return username
 
-def get_new_user_email(db: Database, user_prompt = "Your email: ") -> str:
+
+def get_new_user_email(db: Database, user_prompt="Your email: ") -> str:
     existing_emails = db.cursor.execute("SELECT email FROM Users").fetchall()
-    return get_valid_email(
-        prompt=user_prompt, existing_emails=existing_emails
-    )
+    return get_valid_email(prompt=user_prompt, existing_emails=existing_emails)
