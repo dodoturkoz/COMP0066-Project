@@ -113,10 +113,6 @@ class Admin(User):
         self.patient_journals_df = pd.DataFrame(journal_data)
         self.patient_journals_df.set_index("entry_id", inplace=True)
 
-        # Load patient journal information into memory. When manipulating it, I
-        # will likely group by date, then join with the big users table to show
-        # to the user
-
     def refresh_patient_moods(self):
         """
         Retrieves an updated version of the patient moods table from SQL and
@@ -129,7 +125,6 @@ class Admin(User):
 
         moods_data = moods_query.fetchall()
         self.patient_moods_df = pd.DataFrame(moods_data)
-        # self.patient_information_df.set_index("user_id", inplace=True)
 
     def view_table(
         self, user_type: str, sub_type: str = "none", time_frame: str = "none"
@@ -138,8 +133,6 @@ class Admin(User):
         Selects the relevant portion of the Pandas dataframe for the user, as
         defined by the inputs.
         """
-
-        # This is getting quite large now, I'm going to have to organise it a bit
 
         if user_type == "patients" and sub_type == "none" and time_frame == "none":
             patient_df = self.user_df.query(('role == "patient"'))
@@ -225,9 +218,7 @@ class Admin(User):
             )[["username", "Appointments this week"]]
             print(clinician_appointments_df)
             return clinician_appointments_df.index, clinician_appointments_df.columns
-            # I'm not sure we need to return anything here
 
-        # else assumes user_type == "users"
         else:
             if sub_type == "none":
                 print("\nBreeze Users:")
@@ -245,17 +236,6 @@ class Admin(User):
                 print(f"\n{sub_type.capitalize()} Breeze Users:")
                 print(users_df)
                 return users_df.index, users_df.columns
-
-        # IDEA: crude pagination.
-        # Can implement a crude pagination using either the index or df.iloc[], taking values
-        # 0 - 25 then giving the user a [1] [0] choice to go forwards or backwards
-        # (adding or subtracting 25 from the range, perhaps using the index as a check)
-
-    def view_user(self, user_id: int, attribute: str, value: any):
-        # This is a working assumption, but I think whenever an admin wants to
-        # view or edit an individual row, they should use a function from that
-        # class
-        pass
 
     def alter_user(
         self, user_id: int, attribute: str, value: Any, success_message: str = None
@@ -292,10 +272,6 @@ class Admin(User):
         self.refresh_user_df()
         return result
 
-        # LONGER TERM CONSIDERATIONS:
-        # df.iloc[] takes the data in order of memory, so we can use this to implement
-        # crude pagination, perhaps mixed with sorting by name
-
     def delete_user(self, user_id: int):
         """
         Executes the query to delete the relevant user in the database
@@ -313,8 +289,6 @@ class Admin(User):
         except sqlite3.OperationalError:
             print("Error updating, likely you selected an invalid user_id")
             return False
-
-        # TODO: Add checks that these methods can only be applied to patients and practitioners
 
     def assign_patient_flow(self) -> bool:
         """
@@ -383,26 +357,27 @@ class Admin(User):
             user_ids,
             invalid_options_text="Invalid User ID, please try again.",
         )
-        
-        
-        excluded_attributes = {"role", "user_id","clinician_id","is_active"}
-        editable_attributes = [attr for attr in attributes if attr not in excluded_attributes]
+
+        excluded_attributes = {"role", "user_id", "clinician_id", "is_active"}
+        editable_attributes = [
+            attr for attr in attributes if attr not in excluded_attributes
+        ]
 
         if not editable_attributes:
             print("No editable attributes available.")
             return wait_terminal()
 
         attribute_choice = display_choice(
-            "\nSelect the attribute to edit:", 
-            editable_attributes, 
-            enable_zero_quit=True, 
-            zero_option_message= "Return to main menu")
-        
+            "\nSelect the attribute to edit:",
+            editable_attributes,
+            enable_zero_quit=True,
+            zero_option_message="Return to main menu",
+        )
+
         if attribute_choice == 0:
             return False
 
         attribute = editable_attributes[attribute_choice - 1]
-
 
         clinician_ids = self.user_df.query(('role == "clinician"')).index
 
@@ -419,9 +394,13 @@ class Admin(User):
             print(f"Attribute {attribute} cannot be changed for a clinician.")
             return wait_terminal()
         elif attribute == "username":
-            value = get_new_username(self.database, user_prompt=f"Enter the new value for {attribute}: ")
+            value = get_new_username(
+                self.database, user_prompt=f"Enter the new value for {attribute}: "
+            )
         elif attribute == "email":
-            value = get_new_user_email(self.database, user_prompt=f"Enter the new value for {attribute}: ")
+            value = get_new_user_email(
+                self.database, user_prompt=f"Enter the new value for {attribute}: "
+            )
         elif attribute == "emergency_email":
             value = get_valid_email(f"Enter the new value for {attribute}: ")
         elif attribute == "is_active":
