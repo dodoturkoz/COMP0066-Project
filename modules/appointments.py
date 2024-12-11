@@ -228,7 +228,7 @@ def display_appointment_engagement(
 
     id_attribute = "user_id" if user_type == "patient" else "clinician_id"
 
-    # Query to build a dataframe form database information
+    # Query to build a dataframe from database information
     query = f"""
     SELECT a.status, a.{id_attribute}, u.first_name, u.surname, a.date
     FROM Appointments a JOIN Users u ON a.{id_attribute} = u.user_id
