@@ -320,75 +320,78 @@ class Clinician(User):
                 + f"{appointment['status']}"
             )
 
-        # Offer choice to the user
-        options = [
-            "View appointment notes",
-            "Add notes to an appointment",
-            "Confirm/Reject Appointments",
-        ]
-        next = display_choice(
-            "What would you like to do now?",
-            options,
-            enable_zero_quit=True,
-            zero_option_message="Return to appointments overview",
-        )
-        if next == 0:
-            return self.view_calendar()
+        if appointments:
+            # Offer choice to the user
+            options = [
+                "View appointment notes",
+                "Add notes to an appointment",
+                "Confirm/Reject Appointments",
+            ]
+            next = display_choice(
+                "What would you like to do now?",
+                options,
+                enable_zero_quit=True,
+                zero_option_message="Return to appointments overview",
+            )
+            if next == 0:
+                return self.view_calendar()
+            # View appointment notes
+            if next == 1:
+                # If there is only one appointment, select that - otherwise offer a choice
+                if len(appointments) > 1:
+                    clear_terminal()
+                    selected = display_choice(
+                        "Please choose an appointment to view",
+                        appointment_strings,
+                        enable_zero_quit=True,
+                        zero_option_message="Back to appointments",
+                    )
+                    if selected == 0:
+                        return self.display_appointment_options(appointments)
+                    selected_appointment = appointments[selected - 1]
+                else:
+                    selected_appointment = appointments[0]
 
-        # View appointment notes
-        if next == 1:
-            # If there is only one appointment, select that - otherwise offer a choice
-            if len(appointments) > 1:
-                clear_terminal()
-                selected = display_choice(
-                    "Please choose an appointment to view",
-                    appointment_strings,
-                    enable_zero_quit=True,
-                    zero_option_message="Back to appointments",
-                )
-                if selected == 0:
-                    return self.display_appointment_options(appointments)
-                selected_appointment = appointments[selected - 1]
-            else:
-                selected_appointment = appointments[0]
+                # Display the appointment notes
+                self.view_notes(selected_appointment)
 
-            # Display the appointment notes
-            self.view_notes(selected_appointment)
-
-            # If notes already exist, offer the option to edit
-            if selected_appointment["clinician_notes"]:
-                if get_valid_yes_or_no(
-                    "Would you like to edit your notes for this appointment? (Y/N) "
+                # If notes already exist, offer the option to edit
+                if selected_appointment["clinician_notes"]:
+                    if get_valid_yes_or_no(
+                        "Would you like to edit your notes for this appointment? (Y/N) "
+                    ):
+                        self.edit_notes(selected_appointment)
+                # If not, offer the option to add notes
+                elif get_valid_yes_or_no(
+                    "Would you like to add notes to this appointment? (Y/N) "
                 ):
-                    self.edit_notes(selected_appointment)
-            # If not, offer the option to add notes
-            elif get_valid_yes_or_no(
-                "Would you like to add notes to this appointment? (Y/N) "
-            ):
+                    self.add_notes(selected_appointment)
+
+            # Add notes
+            elif next == 2:
+                # If there is only one appointment, select that - otherwise offer a choice
+                if len(appointments) > 1:
+                    clear_terminal()
+                    selected = display_choice(
+                        "Please choose an appointment to add notes to",
+                        appointment_strings,
+                        enable_zero_quit=True,
+                        zero_option_message="Back to appointments",
+                    )
+                    if selected == 0:
+                        return self.display_appointment_options(appointments)
+                    selected_appointment = appointments[selected - 1]
+                else:
+                    selected_appointment = appointments[0]
+
                 self.add_notes(selected_appointment)
 
-        # Add notes
-        elif next == 2:
-            # If there is only one appointment, select that - otherwise offer a choice
-            if len(appointments) > 1:
-                clear_terminal()
-                selected = display_choice(
-                    "Please choose an appointment to add notes to",
-                    appointment_strings,
-                    enable_zero_quit=True,
-                    zero_option_message="Back to appointments",
-                )
-                if selected == 0:
-                    return self.display_appointment_options(appointments)
-                selected_appointment = appointments[selected - 1]
-            else:
-                selected_appointment = appointments[0]
-
-            self.add_notes(selected_appointment)
-
-        # Confirm/Reject appointments
-        elif next == 3:
-            self.view_requested_appointments()
+            # Confirm/Reject appointments
+            elif next == 3:
+                self.view_requested_appointments()
+        else:
+            print("No appointments found.")
+            wait_terminal()
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
