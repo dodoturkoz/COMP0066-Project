@@ -8,6 +8,8 @@ from modules.clinician import Clinician
 from modules.utilities.display_utils import (
     clear_terminal,
     display_choice,
+    display_menu,
+    new_screen,
     wait_terminal,
 )
 from modules.utilities.input_utils import (
@@ -293,13 +295,13 @@ class Admin(User):
             print("Error updating, likely you selected an invalid user_id")
             return False
 
+    @new_screen(wait=True)
     def assign_patient_flow(self) -> bool:
         """
         Assigns a patient to a clinician, returns bool with the result
         of the update
         """
 
-        clear_terminal()
         print("\nAssign Patient to Clinician \n")
 
         # show the unregistered patients
@@ -307,7 +309,6 @@ class Admin(User):
 
         if patient_ids.empty:
             print("No unassigned patients found.")
-            wait_terminal()
             return False
 
         # choose a patient
@@ -322,7 +323,7 @@ class Admin(User):
 
         if clinician_ids.empty:
             print("No clinicians found.")
-            return wait_terminal()
+            return False
 
         # choose a clinician
         clinician_id = get_user_input_with_limited_choice(
@@ -338,16 +339,24 @@ class Admin(User):
             f"Patient {patient_id} successfully assigned to Clinician {clinician_id}.\n",
         )
         if result:
-            return wait_terminal(return_value=True)
+            return True
         else:
             print("Error assigning patient to clinician.")
-            return wait_terminal()
+            return False
+    
+    @new_screen(wait=True)
+    def view_all_users(self) -> None:
+        """
+        Displays all users in the database
+        """
+        print("\nBreeze Users:\n")
+        self.view_table("users")
 
+    @new_screen(wait=True)
     def edit_user_flow(self) -> bool:
         """
         Logic to edit any user in the database
         """
-        clear_terminal()
         print("\nEdit User Information")
 
         user_ids, attributes = self.view_table("users")
@@ -446,7 +455,7 @@ class Admin(User):
             value,
             f"Successfully updated {attribute} for User {user_id} to {value}.\n",
         )
-        return wait_terminal(return_value=result)
+        return result
 
     def disable_user_flow(self) -> bool:
         """
@@ -659,54 +668,19 @@ class Admin(User):
     def flow(self) -> bool:
         while True:
             clear_terminal()
+            menu = {
+                "Assign Patient to Clinician": self.assign_patient_flow,
+                "Manage Users": {
+                    "View User Information": self.view_all_users,
+                    "Edit User Information": self.edit_user_flow,
+                    "Disable or Re-enable User": self.disable_user_flow,
+                    "Delete User": self.delete_user_flow,
+                },
+                "View Appointments": self.appointments_flow,
+            }
+
             print(f"Hello, {self.username}!")
+            result = display_menu(menu=menu)
+            if result is None:
+                return True
 
-            # Display the Admin menu
-            choices = [
-                "Assign Patient to Clinician",
-                "View User Information",
-                "Edit User Information",
-                "Disable or Re-enable User",
-                "Delete User",
-                "View Appointments",
-            ]
-
-            # Menu choices
-            selection = display_choice(
-                "What would you like to do?",
-                choices,
-                enable_zero_quit=True,
-                zero_option_message="Log Out",
-            )
-
-            # Assign a patient to clinician
-
-            if selection == 1:
-                self.assign_patient_flow()
-
-            # View all user info
-            elif selection == 2:
-                clear_terminal()
-                self.view_table("users")
-                wait_terminal()
-
-            # Edit info
-            elif selection == 3:
-                self.edit_user_flow()
-
-            # Disable someone
-            elif selection == 4:
-                self.disable_user_flow()
-
-            # Deleting user
-            elif selection == 5:
-                self.delete_user_flow()
-
-            # User appointments
-            elif selection == 6:
-                self.appointments_flow()
-
-            # Exit
-            elif selection == 0:
-                print("Goodbye Admin.")
-                return wait_terminal(return_value=True)

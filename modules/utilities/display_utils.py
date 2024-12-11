@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Union, Callable
 
 
 def display_choice(
@@ -68,3 +69,40 @@ def wait_terminal(
                 return redirect_function()
 
             return return_value
+
+def new_screen(wait: bool = True):
+    """
+    Decorator to clear the terminal before a function is called.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            clear_terminal()
+            result = func(*args, **kwargs)
+            if wait:
+                wait_terminal()
+            return result
+
+        return wrapper
+
+    return decorator
+
+def display_menu(
+    menu: dict[str, Union[Callable, dict[str, Union[Callable, dict]]]],
+    header: str = "What would you like to do?",
+    quit_message: str = "Log Out",
+) -> None | Callable:
+    """
+    Displays a menu with options and calls the corresponding function.
+    """
+    while True:
+        clear_terminal()
+        options = list(menu.keys())
+        choice = display_choice(
+            header, options, enable_zero_quit=True, zero_option_message=quit_message
+        )
+        if choice == 0:
+            return
+        elif type(menu[options[choice - 1]]) is dict:
+            display_menu(menu[options[choice - 1]], header, "Go Back")
+        else:
+            menu[options[choice - 1]]()
