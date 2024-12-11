@@ -30,7 +30,6 @@ from modules.user import User
 
 
 class Patient(User):
-
     def __init__(
         self,
         database: Database,
@@ -75,6 +74,7 @@ class Patient(User):
         self.clinician = self.get_clinician()
 
     def get_clinician(self) -> Optional[User]:
+        """Get data of the patient's clinician if the patient has a clinician."""
         if self.clinician_id:
             clinician_data = (
                 self.database.cursor.execute(
@@ -110,6 +110,7 @@ class Patient(User):
             print("No clinician assigned.\n")
 
     def edit_info(self, attribute: str, value: Any, confirmation: str = None) -> bool:
+        """Allows patient to edit details stored on them"""
         if attribute in [
             "clinician_id",
             "diagnosis",
@@ -203,7 +204,6 @@ class Patient(User):
                     )
                 else:
                     # General string validation for other attributes
-                    # TODO for things like username/email we should check if it's unique
                     value = get_valid_string(
                         f"Enter the new value for {options[choice - 1]}: ",
                         max_len=25,
@@ -570,7 +570,7 @@ class Patient(User):
 
     def view_appointments(self) -> list[dict[str, Any]]:
         """
-        Views all appointments for the patient, including their status.
+        View all appointments for the patient, including their status.
         """
 
         try:
