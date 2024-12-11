@@ -29,10 +29,9 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
         with smtplib.SMTP_SSL(server, port, context=context) as server:
             server.login(username, password)
             server.send_message(message)
-        
+
         return True
     except Exception as e:
-        # Print any error messages (DELETE THIS AT THE END)
-        print(e)
+        print(f"Your email didn't send: {e}")
         # Return False as email was not sent
         return False

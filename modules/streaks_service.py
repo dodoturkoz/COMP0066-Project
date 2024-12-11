@@ -76,7 +76,6 @@ class StreakService:
         """
 
         # Get all dates where the user has mood entries
-        # NOTE: this is not the most efficient as we call the db for each user
         self.database.cursor.execute(
             "SELECT date FROM MoodEntries WHERE user_id = ?", (user_id,)
         )

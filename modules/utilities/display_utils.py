@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 
 
-# I have added the option to change the input string given when the choice is offered
 def display_choice(
     header: str,
     options: list[str],

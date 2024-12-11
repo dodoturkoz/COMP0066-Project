@@ -25,9 +25,6 @@ def old_day(days_ago):
 
 def old_appointment_day(days_ago, hour):
     """Returns a date relative to today's date with a time that was passed into function."""
-    # Only used for future and past dates.
-    # have so many cases to ensure appointment not given on Sat or Sun for dummy dat
-    # but will change this to a dictionary to make code cleaner.
     day_of_week = datetime.today().weekday()
     match day_of_week:
         case 0:
@@ -83,11 +80,11 @@ def old_appointment_day(days_ago, hour):
         case 6:
             # Today is Sunday
             if days_ago == 1:
-                # Could have been  Sat
+                # Could have been Saturday
                 days_ago = 2
                 # Now will be Monday
             elif days_ago == -6:
-                # Could have been Sat
+                # Could have been Saturday
                 days_ago = -8
                 # Now will be Friday
     return datetime.combine(date.today(), time(hour, 0)) - timedelta(days=days_ago)
@@ -161,7 +158,6 @@ class Database:
 
     def __init__(self):
         # Connect to the database and make the connection and cursor available
-        # TODO: evaluate if we want to put a try/except block here
         self.connection = sqlite3.connect(
             "breeze.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
@@ -188,7 +184,6 @@ class Database:
         )
 
         # Patient Information Table
-        # Please keep in mind dates are stored as text in SQLite
         self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Patients (
                 user_id INTEGER PRIMARY KEY,
@@ -213,8 +208,6 @@ class Database:
         """)
 
         # Mood Table (Mood + Text)
-        # To simplify, I am thinking of storing the mood as a whole string (with colour and all)
-        # Nevertheless, we can change this to a FK to a Mood table or whatever we think is best
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS MoodEntries (
                 entry_id INTEGER PRIMARY KEY,
@@ -227,8 +220,6 @@ class Database:
         """)
 
         # Appointments Table
-        # If the clinician is deleted the appointment still remains so we dont lose the
-        # notes for the user, but we can change this to CASCADE
         self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS Appointments (
                 appointment_id INTEGER PRIMARY KEY,
@@ -446,9 +437,6 @@ class Database:
                 "INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?, ?)", users
             )
 
-            # NOTE: We need to define the default state we want for the app
-            # For now, we are defining that patient1 is assigned to mhwp1 and the othet two are not assigned
-            # This should allow us to test what happens when a patient is not assigned to a clinician
             patients = [
                 (2, "emergency1@gmail.com", datetime(2000, 1, 1), None, 5),
                 (3, "emergency2@gmail.com", datetime(1990, 6, 1), None, None),
@@ -1055,8 +1043,6 @@ class Database:
                     "INSERT INTO MoodEntries VALUES(?, ?, ?, ?, ?)", MoodEntries
                 )
 
-            # First appointment was datetime(2024, 11, 20, hour=12, minute=0).
-            # Second appointment was datetime(2024, 12, 11, hour=16, minute=0).
             appointments = self.cursor.execute("SELECT user_id FROM Appointments")
             if len(appointments.fetchall()) == 0:
                 appointments = [

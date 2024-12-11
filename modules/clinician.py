@@ -84,6 +84,7 @@ class Clinician(User):
         if choice == 2:
             self.flow_filtered_diagnosis_list()
 
+
         if choice == 3:
             self.flow_patient_mood_tracker()
 
