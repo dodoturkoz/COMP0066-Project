@@ -65,10 +65,7 @@ class Clinician(User):
                 # return True because flow() logs out when True is returned
 
     def flow_patient_dashboard(self):
-        """View the dashboard.
-
-        All methods used are declared as class methods to allow for other classes to access them.
-        """
+        """Patient dashboard screen"""
         if self.should_logout:
             return True
 
@@ -87,6 +84,7 @@ class Clinician(User):
         if choice == 2:
             self.flow_filtered_diagnosis_list()
 
+
         if choice == 3:
             self.flow_patient_mood_tracker()
 
@@ -99,24 +97,24 @@ class Clinician(User):
         if self.should_logout:
             return True
         clear_terminal()
-
+        patient.view_info()
         choice = display_choice(
-            f"Your patient is {patient.first_name} {patient.surname}. Diagnosis: {patient.diagnosis}. What would you like to do?",
-            [
-                "Edit Diagnosis",
-            ],
+            "Choose an option:",
+            ["Edit Diagnosis", "View Patient Moods"],
             "Please choose from the above options: ",
             enable_zero_quit=True,
-            zero_option_callback=self.flow_patient_summary,
             zero_option_message="Return to patient list",
         )
 
         # Edit Diagnosis
         if choice == 1:
             clear_terminal()
-            self.flow_choose_from_list_and_update_diagnosis(patient)
-        if not choice:
-            return False
+            return self.flow_choose_from_list_and_update_diagnosis(patient)
+        if choice == 2:
+            patient.display_previous_moods()
+            wait_terminal()
+        if choice == 0:
+            return self.flow_patient_summary()
 
     def flow_filtered_diagnosis_list(self):
         if self.should_logout:
@@ -128,12 +126,11 @@ class Clinician(User):
             "Please enter the diagnosis you would like to filter by: ",
             diagnoses,
             enable_zero_quit=True,
-            zero_option_callback=self.flow_patient_dashboard,
             zero_option_message="Return to the dashboard",
         )
 
-        if not choice:
-            return False
+        if choice == 0:
+            return self.flow_patient_dashboard()
 
         clear_terminal()
         self.print_filtered_patients_list_by_diagnosis(choice, patients)
@@ -165,11 +162,26 @@ class Clinician(User):
         streak_service = StreakService(self.database)
         clear_terminal()
         print("Patient Mood Tracker Engagement (Days in a row)")
-        for patient in patients:
-            print(
-                f"{patient.first_name} {patient.surname} - {streak_service.mood_streaks[patient.user_id]} days"
-            )
+        mood_streaks = [
+            f"{patient.first_name} {patient.surname} - {streak_service.mood_streaks[patient.user_id]} days"
+            for patient in patients
+        ]
+        max_lengths = [0, 0, 0]
 
+        for patient_string in mood_streaks:
+            parts = patient_string.split(" - ")
+            for i, part in enumerate(parts):
+                if len(part) > max_lengths[i]:
+                    max_lengths[i] = len(part)
+        justified_patient_strings = []
+        for patient_string in mood_streaks:
+            parts = patient_string.split(" - ")
+            justified_patient = " - ".join(
+                part.ljust(max_lengths[i]) for i, part in enumerate(parts)
+            )
+            justified_patient_strings.append(justified_patient)
+        for patient in justified_patient_strings:
+            print(patient)
         wait_terminal("Press enter to return to the patient dashboard")
         return self.flow_patient_dashboard()
 
@@ -309,75 +321,78 @@ class Clinician(User):
                 + f"{appointment['status']}"
             )
 
-        # Offer choice to the user
-        options = [
-            "View appointment notes",
-            "Add notes to an appointment",
-            "Confirm/Reject Appointments",
-        ]
-        next = display_choice(
-            "What would you like to do now?",
-            options,
-            enable_zero_quit=True,
-            zero_option_message="Return to appointments overview",
-        )
-        if next == 0:
-            return self.view_calendar()
+        if appointments:
+            # Offer choice to the user
+            options = [
+                "View appointment notes",
+                "Add notes to an appointment",
+                "Confirm/Reject Appointments",
+            ]
+            next = display_choice(
+                "What would you like to do now?",
+                options,
+                enable_zero_quit=True,
+                zero_option_message="Return to appointments overview",
+            )
+            if next == 0:
+                return self.view_calendar()
+            # View appointment notes
+            if next == 1:
+                # If there is only one appointment, select that - otherwise offer a choice
+                if len(appointments) > 1:
+                    clear_terminal()
+                    selected = display_choice(
+                        "Please choose an appointment to view",
+                        appointment_strings,
+                        enable_zero_quit=True,
+                        zero_option_message="Back to appointments",
+                    )
+                    if selected == 0:
+                        return self.display_appointment_options(appointments)
+                    selected_appointment = appointments[selected - 1]
+                else:
+                    selected_appointment = appointments[0]
 
-        # View appointment notes
-        if next == 1:
-            # If there is only one appointment, select that - otherwise offer a choice
-            if len(appointments) > 1:
-                clear_terminal()
-                selected = display_choice(
-                    "Please choose an appointment to view",
-                    appointment_strings,
-                    enable_zero_quit=True,
-                    zero_option_message="Back to appointments",
-                )
-                if selected == 0:
-                    return self.display_appointment_options(appointments)
-                selected_appointment = appointments[selected - 1]
-            else:
-                selected_appointment = appointments[0]
+                # Display the appointment notes
+                self.view_notes(selected_appointment)
 
-            # Display the appointment notes
-            self.view_notes(selected_appointment)
-
-            # If notes already exist, offer the option to edit
-            if selected_appointment["clinician_notes"]:
-                if get_valid_yes_or_no(
-                    "Would you like to edit your notes for this appointment? (Y/N) "
+                # If notes already exist, offer the option to edit
+                if selected_appointment["clinician_notes"]:
+                    if get_valid_yes_or_no(
+                        "Would you like to edit your notes for this appointment? (Y/N) "
+                    ):
+                        self.edit_notes(selected_appointment)
+                # If not, offer the option to add notes
+                elif get_valid_yes_or_no(
+                    "Would you like to add notes to this appointment? (Y/N) "
                 ):
-                    self.edit_notes(selected_appointment)
-            # If not, offer the option to add notes
-            elif get_valid_yes_or_no(
-                "Would you like to add notes to this appointment? (Y/N) "
-            ):
+                    self.add_notes(selected_appointment)
+
+            # Add notes
+            elif next == 2:
+                # If there is only one appointment, select that - otherwise offer a choice
+                if len(appointments) > 1:
+                    clear_terminal()
+                    selected = display_choice(
+                        "Please choose an appointment to add notes to",
+                        appointment_strings,
+                        enable_zero_quit=True,
+                        zero_option_message="Back to appointments",
+                    )
+                    if selected == 0:
+                        return self.display_appointment_options(appointments)
+                    selected_appointment = appointments[selected - 1]
+                else:
+                    selected_appointment = appointments[0]
+
                 self.add_notes(selected_appointment)
 
-        # Add notes
-        elif next == 2:
-            # If there is only one appointment, select that - otherwise offer a choice
-            if len(appointments) > 1:
-                clear_terminal()
-                selected = display_choice(
-                    "Please choose an appointment to add notes to",
-                    appointment_strings,
-                    enable_zero_quit=True,
-                    zero_option_message="Back to appointments",
-                )
-                if selected == 0:
-                    return self.display_appointment_options(appointments)
-                selected_appointment = appointments[selected - 1]
-            else:
-                selected_appointment = appointments[0]
-
-            self.add_notes(selected_appointment)
-
-        # Confirm/Reject appointments
-        elif next == 3:
-            self.view_requested_appointments()
+            # Confirm/Reject appointments
+            elif next == 3:
+                self.view_requested_appointments()
+        else:
+            print("No appointments found.")
+            wait_terminal()
 
     def get_all_appointments_without_notes(self) -> list:
         """Returns all the clinician's past appointments that have no notes recorded"""
@@ -481,10 +496,11 @@ class Clinician(User):
                 return False
             else:
                 clear_terminal()
-                options = ["Confirm", "Reject", "Go Back"]
+                options = ["Confirm", "Reject"]
                 accept_or_reject = display_choice(
                     f"You have selected {choice_strings[confirm_choice - 1]} - would you like to confirm or reject the appointment?",
                     options,
+                    enable_zero_quit=True,
                 )
 
                 # Confirm the appointment
@@ -609,7 +625,8 @@ class Clinician(User):
                     else:
                         return True
 
-                elif accept_or_reject == 3:
+                elif accept_or_reject == 0:
+                    clear_terminal()
                     continue
 
         if not unconfirmed_appointments:
@@ -618,10 +635,26 @@ class Clinician(User):
         wait_terminal()
 
     def create_pretty_patient_list(self, patients: list[Patient]) -> list:
-        return [
-            f"""ID: {patient.user_id} - {patient.first_name} {patient.surname} - {patient.diagnosis} - {patient.mood}"""
+        patients = [
+            f"""{patient.first_name} {patient.surname} - {patient.diagnosis} - Most Recent Mood Score: {patient.mood}/6"""
             for patient in patients
         ]
+        max_lengths = [0, 0, 0]
+
+        for patient in patients:
+            parts = patient.split(" - ")
+            for i, part in enumerate(parts):
+                if len(part) > max_lengths[i]:
+                    max_lengths[i] = len(part)
+        justified_patients = []
+        # Print the justified list
+        for patient in patients:
+            parts = patient.split(" - ")
+            justified_patient = " - ".join(
+                part.ljust(max_lengths[i]) for i, part in enumerate(parts)
+            )
+            justified_patients.append(justified_patient)
+        return justified_patients
 
     def get_all_patients(self) -> list[Patient]:
         try:
