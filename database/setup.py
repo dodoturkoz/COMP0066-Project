@@ -137,7 +137,7 @@ def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
         return row[0]
 
 
-# Functions allowing us to insert and retrieve dates as python datetimes
+# Functions copied from the sqlite3 documentation - allowing us to insert and retrieve dates as python datetimes
 def adapt_datetime_iso(val):
     """Adapt datetime.datetime to timezone-naive ISO 8601 date."""
     return val.isoformat()
