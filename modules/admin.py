@@ -665,22 +665,22 @@ class Admin(User):
                 return wait_terminal()
 
     # Admin FLow
+    @new_screen(wait=False)
     def flow(self) -> bool:
-        while True:
-            clear_terminal()
-            menu = {
-                "Assign Patient to Clinician": self.assign_patient_flow,
-                "Manage Users": {
-                    "View User Information": self.view_all_users,
-                    "Edit User Information": self.edit_user_flow,
-                    "Disable or Re-enable User": self.disable_user_flow,
-                    "Delete User": self.delete_user_flow,
-                },
-                "View Appointments": self.appointments_flow,
-            }
+        menu = {
+            "Assign Patient to Clinician": self.assign_patient_flow,
+            "Manage Users": {
+                "View User Information": self.view_all_users,
+                "Edit User Information": self.edit_user_flow,
+                "Disable or Re-enable User": self.disable_user_flow,
+                "Delete User": self.delete_user_flow,
+            },
+            "View Appointments": self.appointments_flow,
+        }
 
-            print(f"Hello, {self.username}!")
-            result = display_menu(menu=menu)
-            if result is None:
-                return True
+        print(f"Hello, {self.username}!")
+        result = display_menu(menu=menu)
+        if result is None:
+            clear_terminal()
+            return True
 
