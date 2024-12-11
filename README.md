@@ -7,6 +7,11 @@ Breeze is a mental health management system designed to support administrators, 
 
 ## Getting Started
 
+The following instructions assume you do not have these files already in your system
+and you do not have pandas 2.2.2 or higher already installed in your global environment.
+
+If you do, you can just run the app with ```python3 main.py```
+
 ### Prerequisites
 - Python 3.10 or higher
 - SQLite (built-in with Python)
